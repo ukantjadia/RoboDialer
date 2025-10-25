@@ -1,0 +1,615 @@
+{% extends "base.html" %}
+
+{% block title %}Lead Drafts - LeadGen{% endblock %}
+
+{% block content %}
+<style>
+/* Modern dark table style for drafts */
+.table-modern-dark {
+    background: #181c24;
+    color: #cfd8dc;
+    border-radius: 8px;
+    overflow: hidden;
+    font-size: 0.97rem;
+}
+.table-modern-dark thead th {
+    background: #23293a;
+    color: #f1f1f1;
+    font-weight: 600;
+    border-bottom: 1.5px solid #23293a;
+    vertical-align: middle;
+}
+.table-modern-dark tbody tr {
+    background: #181c24;
+    border-bottom: 1px solid #23293a;
+    transition: background 0.2s;
+}
+.table-modern-dark tbody tr:hover {
+    background: #22304a !important;
+}
+.table-modern-dark td, .table-modern-dark th {
+    padding: 0.55rem 0.7rem;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+.table-modern-dark a {
+    color: #6ec1ff;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+.table-modern-dark a:hover {
+    color: #90caf9;
+    text-decoration: underline;
+}
+.table-modern-dark .badge.bg-secondary {
+    background: #2c3a4d !important;
+    color: #b0bec5;
+    font-weight: 500;
+    font-size: 0.92em;
+    border-radius: 6px;
+    padding: 0.35em 0.8em;
+}
+.table-modern-dark .btn-group .btn {
+    border-radius: 5px !important;
+    border: none;
+    margin-right: 0.15rem;
+    font-size: 1em;
+    padding: 0.35em 0.7em;
+    box-shadow: none;
+    transition: background 0.2s, color 0.2s;
+}
+.table-modern-dark .btn-primary {
+    background: #223a5e;
+    color: #fff;
+}
+.table-modern-dark .btn-primary:hover {
+    background: #2d4d7a;
+}
+.table-modern-dark .btn-warning {
+    background: #4e4e2e;
+    color: #ffe082;
+}
+.table-modern-dark .btn-warning:hover {
+    background: #6d6d3b;
+    color: #fffde7;
+}
+.table-modern-dark .btn-danger {
+    background: #7b2222;
+    color: #fff;
+}
+.table-modern-dark .btn-danger:hover {
+    background: #a93232;
+}
+.table-modern-dark th, .table-modern-dark td {
+    border: none !important;
+}
+.table-modern-dark th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+.action-bar {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+</style>
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="text-white">Lead Drafts</h2>
+            <p class="text-muted">View and manage all your lead drafts</p>
+        </div>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card bg-dark text-white">
+                <form id="searchForm" class="row g-3" style="background: #181c24; display: none;">
+                    <div class="col-md-3">
+                        <label for="searchType" class="form-label">Search Type</label>
+                        <select class="form-select bg-dark text-white" id="searchType">
+                            <option value="all">All Drafts</option>
+                            <option value="search">Search Drafts</option>
+                            <option value="recent">Recent Searches</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 search-field" id="industryField">
+                        <label for="industry" class="form-label">Industry</label>
+                        <input type="text" class="form-control bg-dark text-white" id="industry" name="industry">
+                    </div>
+                    <div class="col-md-3 search-field" id="locationField">
+                        <label for="location" class="form-label">Location</label>
+                        <input type="text" class="form-control bg-dark text-white" id="location" name="location">
+                    </div>
+                    <div class="col-md-2 search-field" id="limitField">
+                        <label for="limit" class="form-label">Limit</label>
+                        <input type="number" class="form-control bg-dark text-white" id="limit" name="limit" value="5" min="1" max="50">
+                    </div>
+                    <div class="col-md-1 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div class="row">
+        <div class="col">
+            <div class="d-flex justify-content-end mb-2 action-bar">
+                <!-- <button id="viewSelectedBtn" class="btn btn-primary" disabled><i class="bi bi-eye"></i> View</button>
+                <button id="editSelectedBtn" class="btn btn-warning" disabled><i class="bi bi-pencil"></i> Edit</button> -->
+                <button id="deleteSelectedBtn" class="btn btn-danger" disabled><i class="bi bi-trash"></i> Delete</button>
+                <button id="exportCsvBtn" class="btn btn-success ms-2"><i class="bi bi-download"></i> Export CSV</button>
+            </div>
+            <div id="searchResults" class="table-responsive" style="overflow-x:auto;">
+                <!-- Results will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Draft Modal -->
+<div class="modal fade" id="viewDraftModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark text-white">
+            <div class="modal-header">
+                <h5 class="modal-title">Draft Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <pre id="draftData" class="bg-dark text-white" style="white-space: pre-wrap;"></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Draft Modal -->
+<div class="modal fade" id="editDraftModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark text-white">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Draft</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editDraftForm">
+                    <input type="hidden" id="editDraftId">
+                    <div class="mb-3">
+                        <label for="editCompany" class="form-label">Company</label>
+                        <input type="text" class="form-control" id="editCompany" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editOwnerEmail" class="form-label">Owner Email</label>
+                        <input type="email" class="form-control" id="editOwnerEmail">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editIndustry" class="form-label">Industry</label>
+                        <input type="text" class="form-control" id="editIndustry">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editLocation" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="editLocation">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editStatus" class="form-label">Status</label>
+                        <input type="text" class="form-control" id="editStatus">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editChangeSummary" class="form-label">Change Summary</label>
+                        <input type="text" class="form-control" id="editChangeSummary">
+                    </div>
+                    <button type="submit" class="btn btn-success">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let lastDisplayedDrafts = [];
+let selectedDraftIds = [];
+
+function getSelectedDrafts() {
+    return lastDisplayedDrafts.filter(d => selectedDraftIds.includes(d.draft_id));
+}
+
+function convertDraftsToCSV(drafts) {
+    if (!drafts || drafts.length === 0) return '';
+    const columns = [
+        'Company', 'Email', 'Industry', 'Status', 'City', 'State', 'Business Type', 'Target Market', 'Revenue', 'Employees', 'Founded Year', 'Credit Rating', 'Owner Linkedin', 'Company Phone', 'Street', 'Website', 'Source', 'Created At', 'Updated At'
+    ];
+    let csv = columns.join(',') + '\n';
+    drafts.forEach(draft => {
+        const d = draft.draft_data;
+        const row = [
+            d.company, d.owner_email, d.industry, d.status, d.city, d.state, d.business_type, d.target_market, d.revenue, d.employees, d.founded_year, d.credit_rating, d.owner_linkedin, d.company_phone, d.street, d.website, d.source,
+            draft.created_at, draft.updated_at
+        ];
+        csv += row.map(val => {
+            if (val === undefined || val === null) return '';
+            const s = String(val).replace(/"/g, '""');
+            return s.includes(',') ? '"' + s + '"' : s;
+        }).join(',') + '\n';
+    });
+    return csv;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const searchForm = document.getElementById('searchForm');
+    const searchType = document.getElementById('searchType');
+    const searchResults = document.getElementById('searchResults');
+    const searchFields = document.querySelectorAll('.search-field');
+
+    // Function to toggle search fields based on search type
+    function updateSearchFields() {
+        const type = searchType.value;
+        searchFields.forEach(field => field.style.display = 'none');
+        
+        if (type === 'search') {
+            document.getElementById('industryField').style.display = 'block';
+            document.getElementById('locationField').style.display = 'block';
+        } else if (type === 'recent') {
+            document.getElementById('limitField').style.display = 'block';
+        }
+    }
+
+    // Initial update of search fields
+    updateSearchFields();
+
+    // Update fields when search type changes
+    searchType.addEventListener('change', updateSearchFields);
+
+    // Function to display search results
+    function displayResults(data) {
+        searchResults.innerHTML = '';
+        let draftsToExport = [];
+        
+        if (!data || (data.sessions && data.sessions.length === 0) || (Array.isArray(data) && data.length === 0)) {
+            searchResults.innerHTML = `
+                <div class="alert alert-info">
+                    No drafts found. Try different search criteria.
+                </div>
+            `;
+            return;
+        }
+
+        const tableHeader = `
+            <thead>
+                <tr class="align-middle">
+                    <th><input type="checkbox" id="selectAllDrafts"></th>
+                    <th>Actions</th>
+                    <th>Company</th>
+                    <th>Email</th>
+                    <th>Industry</th>
+                    <th>Status</th>
+                    <th>City</th>
+                    <th>State</th>
+                    <th>Business Type</th>
+                    <th>Target Market</th>
+                    <th>Revenue</th>
+                    <th>Employees</th>
+                    <th>Founded Year</th>
+                    <th>Credit Rating</th>
+                    <th>Owner Linkedin</th>
+                    <th>Company Phone</th>
+                    <th>Street</th>
+                    <th>Website</th>
+                    <th>Source</th>
+                    <th>Created At</th>
+                    <th>Updated At</th>
+                </tr>
+            </thead>
+        `;
+        function rowHtml(draft) {
+            return `
+                <tr class="align-middle" data-draft-id="${draft.draft_id}">
+                    <td><input type="checkbox" class="select-draft" data-draft-id="${draft.draft_id}"></td>
+                    <td>
+                        <button class="btn btn-primary btn-sm view-draft" data-draft-id="${draft.draft_id}"><i class="bi bi-eye"></i> View</button>
+                    </td>
+                    <td>${draft.draft_data.company || '-'}</td>
+                    <td>${draft.draft_data.owner_email || '-'}</td>
+                    <td>${draft.draft_data.industry || '-'}</td>
+                    <td><span class="badge bg-secondary">${draft.draft_data.status || '-'}</span></td>
+                    <td>${draft.draft_data.city || '-'}</td>
+                    <td>${draft.draft_data.state || '-'}</td>
+                    <td>${draft.draft_data.business_type ? `<span title="${draft.draft_data.business_type}">${draft.draft_data.business_type.length > 20 ? draft.draft_data.business_type.slice(0, 20) + '…' : draft.draft_data.business_type}</span>` : '-'}</td>
+                    <td>${draft.draft_data.target_market || '-'}</td>
+                    <td>${draft.draft_data.revenue || '-'}</td>
+                    <td>${draft.draft_data.employees || '-'}</td>
+                    <td>${draft.draft_data.founded_year || '-'}</td>
+                    <td>${draft.draft_data.credit_rating || '-'}</td>
+                    <td>${draft.draft_data.owner_linkedin ? `<a href="${draft.draft_data.owner_linkedin}" target="_blank">Link</a>` : '-'}</td>
+                    <td>${draft.draft_data.company_phone || '-'}</td>
+                    <td>${draft.draft_data.street || '-'}</td>
+                    <td>${draft.draft_data.website ? `<a href="${draft.draft_data.website}" target="_blank">${draft.draft_data.website.length > 20 ? draft.draft_data.website.slice(0, 20) + '…' : draft.draft_data.website}</a>` : '-'}</td>
+                    <td>${draft.draft_data.source || '-'}</td>
+                    <td>${new Date(draft.created_at).toLocaleString()}</td>
+                    <td>${new Date(draft.updated_at).toLocaleString()}</td>
+                </tr>
+            `;
+        }
+        if (searchType.value === 'all') {
+            draftsToExport = data;
+            const table = document.createElement('div');
+            table.className = 'card bg-dark text-white shadow';
+            table.innerHTML = `
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-modern-dark mb-0" style="min-width: 1200px;">
+                            ${tableHeader}
+                            <tbody>
+                                ${data.map(rowHtml).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            searchResults.appendChild(table);
+        } else {
+            draftsToExport = [];
+            data.sessions.forEach(session => {
+                session.drafts.forEach(draft => draftsToExport.push(draft));
+            });
+            data.sessions.forEach(session => {
+                const sessionCard = document.createElement('div');
+                sessionCard.className = 'card bg-dark text-white mb-4 shadow';
+                sessionCard.innerHTML = `
+                    <div class="card-header d-flex justify-content-between align-items-center" style="background: #181c24;">
+                        <div>
+                            <h5 class="mb-0">Search Session: ${session.search_session_id}</h5>
+                            <small class="text-muted">
+                                Industry: ${session.search_criteria.industry || 'Any'} |
+                                Location: ${session.search_criteria.location || 'Any'} |
+                                Date: ${new Date(session.created_at).toLocaleString()}
+                            </small>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-modern-dark mb-0" style="min-width: 1200px;">
+                                ${tableHeader}
+                                <tbody>
+                                    ${session.drafts.map(rowHtml).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+                searchResults.appendChild(sessionCard);
+            });
+        }
+        lastDisplayedDrafts = draftsToExport;
+        // Checkbox logic
+        selectedDraftIds = [];
+        setTimeout(() => {
+            const selectAll = document.getElementById('selectAllDrafts');
+            const checkboxes = document.querySelectorAll('.select-draft');
+            selectAll && selectAll.addEventListener('change', function() {
+                checkboxes.forEach(cb => {
+                    cb.checked = selectAll.checked;
+                    if (selectAll.checked && !selectedDraftIds.includes(cb.dataset.draftId)) {
+                        selectedDraftIds.push(cb.dataset.draftId);
+                    } else if (!selectAll.checked) {
+                        selectedDraftIds = [];
+                    }
+                });
+                updateActionButtons();
+            });
+            checkboxes.forEach(cb => {
+                cb.addEventListener('change', function() {
+                    if (cb.checked) {
+                        if (!selectedDraftIds.includes(cb.dataset.draftId)) selectedDraftIds.push(cb.dataset.draftId);
+                    } else {
+                        selectedDraftIds = selectedDraftIds.filter(id => id !== cb.dataset.draftId);
+                    }
+                    // Update select all state
+                    if (selectAll) {
+                        selectAll.checked = checkboxes.length && Array.from(checkboxes).every(c => c.checked);
+                    }
+                    updateActionButtons();
+                });
+            });
+        }, 100);
+
+        // Add event listeners for view buttons
+        document.querySelectorAll('.view-draft').forEach(button => {
+            button.addEventListener('click', function() {
+                const draftId = this.dataset.draftId;
+                fetch(`/api/leads/drafts/${draftId}`, {
+                    credentials: 'include'
+                })
+                .then(response => response.json())
+                .then(draft => {
+                    document.getElementById('draftData').textContent = 
+                        JSON.stringify(draft.draft_data, null, 2);
+                    new bootstrap.Modal(document.getElementById('viewDraftModal')).show();
+                });
+            });
+        });
+
+        // Add event listeners for edit buttons
+        document.querySelectorAll('.edit-draft').forEach(button => {
+            button.addEventListener('click', function() {
+                const draftId = this.dataset.draftId;
+                fetch(`/api/leads/drafts/${draftId}`, {
+                    credentials: 'include'
+                })
+                .then(response => response.json())
+                .then(draft => {
+                    // Populate form fields
+                    document.getElementById('editDraftId').value = draft.draft_id;
+                    document.getElementById('editCompany').value = draft.draft_data.company || '';
+                    document.getElementById('editOwnerEmail').value = draft.draft_data.owner_email || '';
+                    document.getElementById('editIndustry').value = draft.draft_data.industry || '';
+                    document.getElementById('editLocation').value = draft.draft_data.city || '';
+                    document.getElementById('editStatus').value = draft.draft_data.status || '';
+                    document.getElementById('editChangeSummary').value = draft.change_summary || '';
+                    new bootstrap.Modal(document.getElementById('editDraftModal')).show();
+                });
+            });
+        });
+
+        // Add event listeners for delete buttons
+        document.querySelectorAll('.delete-draft').forEach(button => {
+            button.addEventListener('click', function() {
+                if (confirm('Are you sure you want to delete this draft?')) {
+                    const draftId = this.dataset.draftId;
+                    fetch(`/api/leads/drafts/${draftId}`, {
+                        method: 'DELETE',
+                        credentials: 'include'
+                    })
+                    .then(response => response.json())
+                    .then(() => {
+                        this.closest('tr').remove();
+                    });
+                }
+            });
+        });
+    }
+
+    // Handle form submission
+    searchForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const type = searchType.value;
+        let url = '/api/leads/drafts';
+        let params = new URLSearchParams();
+
+        if (type === 'search') {
+            url = '/api/leads/search-drafts';
+            const industry = document.getElementById('industry').value;
+            const location = document.getElementById('location').value;
+            if (!industry && !location) {
+                alert('Please enter at least one search criteria (industry or location)');
+                return;
+            }
+            if (industry) params.append('industry', industry);
+            if (location) params.append('location', location);
+        } else if (type === 'recent') {
+            url = '/api/leads/recent-searches';
+            const limit = document.getElementById('limit').value;
+            params.append('limit', limit);
+        }
+
+        fetch(`${url}?${params}`, {
+            credentials: 'include'
+        })
+        .then(response => response.json())
+        .then(data => {
+            displayResults(data);
+        })
+        .catch(error => {
+            searchResults.innerHTML = `
+                <div class="alert alert-danger">
+                    An error occurred while fetching results.
+                </div>
+            `;
+        });
+    });
+
+    // Handle edit draft form submission
+    document.getElementById('editDraftForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const draftId = document.getElementById('editDraftId').value;
+        const company = document.getElementById('editCompany').value;
+        const owner_email = document.getElementById('editOwnerEmail').value;
+        const industry = document.getElementById('editIndustry').value;
+        const city = document.getElementById('editLocation').value;
+        const status = document.getElementById('editStatus').value;
+        const change_summary = document.getElementById('editChangeSummary').value;
+
+        // Fetch the current draft data to preserve other fields
+        fetch(`/api/leads/drafts/${draftId}`, { credentials: 'include' })
+        .then(response => response.json())
+        .then(draft => {
+            const draft_data = draft.draft_data;
+            draft_data.company = company;
+            draft_data.owner_email = owner_email;
+            draft_data.industry = industry;
+            draft_data.city = city;
+            draft_data.status = status;
+            fetch(`/api/leads/drafts/${draftId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    draft_data: draft_data,
+                    change_summary: change_summary
+                })
+            })
+            .then(response => response.json())
+            .then(() => {
+                // Close modal and refresh drafts
+                bootstrap.Modal.getInstance(document.getElementById('editDraftModal')).hide();
+                // Reload all drafts
+                fetch('/api/leads/drafts', { credentials: 'include' })
+                .then(response => response.json())
+                .then(data => {
+                    displayResults(data);
+                });
+            });
+        });
+    });
+
+    // Load all drafts on page load
+    fetch('/api/leads/drafts', {
+        credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(data => {
+        displayResults(data);
+    });
+
+    const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+    const exportCsvBtn = document.getElementById('exportCsvBtn');
+
+    exportCsvBtn.addEventListener('click', function() {
+        const draftsToExport = getSelectedDrafts();
+        if (!draftsToExport.length) {
+            alert('No drafts selected!');
+            return;
+        }
+        const csv = convertDraftsToCSV(draftsToExport);
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'lead_drafts.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    });
+
+    deleteSelectedBtn.addEventListener('click', function() {
+        if (!selectedDraftIds.length) return;
+        if (!confirm('Are you sure you want to delete the selected draft(s)?')) return;
+        selectedDraftIds.forEach(draftId => {
+            fetch(`/api/leads/drafts/${draftId}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            })
+            .then(response => response.json())
+            .then(() => {
+                // Remove row from table
+                document.querySelector(`tr[data-draft-id="${draftId}"]`)?.remove();
+            });
+        });
+        selectedDraftIds = [];
+        updateActionButtons();
+    });
+
+    function updateActionButtons() {
+        deleteSelectedBtn.disabled = selectedDraftIds.length === 0;
+    }
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,949 @@
+{% extends "base.html" %}
+
+{% block title %}Team Overview - {{ workspace.name }}{% endblock %}
+
+{% block additional_styles %}
+{{ super() }}
+<style>
+    /* Alert Styles */
+    .alert {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        animation: slideIn 0.3s ease-out;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .alert-error {
+        background-color: #ef4444;
+    }
+
+    .alert-success {
+        background-color: #22c55e;
+    }
+
+    .alert i {
+        font-size: 1.25rem;
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    @keyframes fadeOut {
+        from {
+            opacity: 1;
+        }
+        to {
+            opacity: 0;
+        }
+    }
+    .team-overview-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+    
+    /* Navigation Tabs */
+    .nav-tabs {
+        display: flex;
+        background: var(--card-bg);
+        border-radius: 8px;
+        padding: 0.5rem;
+        margin-bottom: 2rem;
+        border: 1px solid var(--border-color);
+    }
+    
+    .nav-tab {
+        flex: 1;
+        padding: 0.75rem 1rem;
+        text-align: center;
+        color: var(--text-muted);
+        text-decoration: none;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    
+    .nav-tab.active {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .nav-tab:hover:not(.active) {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-color);
+    }
+    
+    /* Overview Cards */
+    .overview-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .overview-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .overview-card-content h3 {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        margin: 0 0 0.5rem 0;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .overview-card-content .value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: var(--text-color);
+        margin: 0 0 0.5rem 0;
+    }
+
+    .progress-container {
+        width: 100%;
+        height: 6px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+        position: relative;
+        margin-top: 8px;
+    }
+
+    .progress-bar {
+        height: 100%;
+        background: #2ecc71;
+        border-radius: 3px;
+        transition: width 0.3s ease;
+        width: 0%;
+    }
+
+    .progress-text {
+        position: absolute;
+        right: 0;
+        top: -18px;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+    
+    .overview-card-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+    
+    .icon-projects {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .icon-members {
+        background: var(--success-color);
+        color: white;
+    }
+    
+    .icon-credits {
+        background: #fbbf24;
+        color: white;
+    }
+    
+    /* Credit Distribution Section */
+    .credit-distribution {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .section-header {
+        margin-bottom: 1.5rem;
+    }
+    
+    .section-header h2 {
+        color: var(--text-color);
+        margin: 0 0 0.5rem 0;
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+    
+    .section-header p {
+        color: var(--text-muted);
+        margin: 0;
+        font-size: 0.875rem;
+    }
+    
+    .member-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .member-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+    }
+    
+    .member-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .member-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+    
+    .member-details h4 {
+        color: var(--text-color);
+        margin: 0 0 0.25rem 0;
+        font-size: 1rem;
+        font-weight: bold;
+    }
+    
+    .member-details p {
+        color: var(--text-muted);
+        margin: 0;
+        font-size: 0.875rem;
+    }
+    
+    .member-right {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .member-credits {
+        color: var(--text-color);
+        font-weight: 500;
+    }
+    
+    .role-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+    }
+    
+    .role-admin {
+        background: #ef4444;
+        color: white;
+    }
+    
+    .role-manager {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .role-member {
+        background: var(--text-muted);
+        color: var(--background-color);
+    }
+    
+    /* Recent Activity Section */
+    .recent-activity {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 2rem;
+    }
+    
+    .activity-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+    
+    .activity-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 0.875rem;
+    }
+    
+    .activity-content {
+        flex: 1;
+    }
+    
+    .activity-text {
+        color: var(--text-color);
+        margin: 0;
+        font-size: 0.875rem;
+    }
+    
+    .activity-time {
+        color: var(--text-muted);
+        font-size: 0.75rem;
+    }
+    
+    /* Project Activities Styles */
+    .project-activity-item {
+        background: var(--bg-color);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: all 0.2s ease;
+    }
+    
+    .project-activity-item:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    
+    .project-activity-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.75rem;
+    }
+    
+    .project-activity-title {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .project-activity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1rem;
+    }
+    
+    .project-activity-info h4 {
+        margin: 0 0 0.25rem 0;
+        color: var(--text-color);
+        font-size: 1rem;
+        font-weight: 600;
+    }
+    
+    .project-activity-type {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        text-transform: capitalize;
+    }
+    
+    .project-activity-meta {
+        text-align: right;
+        color: var(--text-muted);
+        font-size: 0.8rem;
+    }
+    
+    .project-activity-description {
+        margin: 0 0 0.75rem 0;
+        color: var(--text-color);
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+    
+    .project-activity-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+    
+    .project-activity-participants {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .project-activity-tags {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+    
+    .project-activity-tag {
+        background: var(--primary-color);
+        color: white;
+        padding: 0.125rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.7rem;
+    }
+    
+    /* Activity Type Colors */
+    .activity-meeting { background: #3498db; }
+    .activity-call { background: #2ecc71; }
+    .activity-email { background: #e74c3c; }
+    .activity-task_update { background: #f39c12; }
+    .activity-milestone { background: #9b59b6; }
+    .activity-note { background: #34495e; }
+    .activity-other { background: #95a5a6; }
+    
+    /* Back Button Styles */
+    .header-section {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .btn-back {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .btn-back:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-color);
+    }
+    
+    .page-title {
+        color: var(--text-color);
+        margin: 0;
+        font-size: 2rem;
+        font-weight: bold;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .overview-cards {
+            grid-template-columns: 1fr;
+        }
+        
+        .member-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        
+        .member-right {
+            width: 100%;
+            justify-content: space-between;
+        }
+        
+        .header-section {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="team-overview-container">
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+        <a href="#" class="nav-tab active">Overview</a>
+        <a href="/workspace/team/{{ team_id }}/projects" class="nav-tab">Projects</a>
+        <a href="/workspace/team/{{ team_id }}/members" class="nav-tab">Team Management</a>
+        <a href="/workspace/team/{{ team_id }}/settings" class="nav-tab">Settings</a>
+    </div>
+
+    <!-- Team Overview Header -->
+    <div class="header-section">
+        <button class="btn-back" onclick="goBack()">
+            <i class="bi bi-arrow-left"></i>
+            Back to Workspaces
+        </button>
+        <h1 class="page-title">Team Overview</h1>
+    </div>
+
+    <!-- Overview Cards -->
+    <div class="overview-cards">
+        <div class="overview-card">
+            <div class="overview-card-content">
+                <h3>Total Projects</h3>
+                <p class="value" id="totalProjects">0</p>
+            </div>
+            <div class="overview-card-icon icon-projects">
+                <i class="bi bi-grid-3x3"></i>
+            </div>
+        </div>
+        
+        <div class="overview-card">
+            <div class="overview-card-content">
+                <h3>Team Members</h3>
+                <p class="value" id="totalMembers">0</p>
+            </div>
+            <div class="overview-card-icon icon-members">
+                <i class="bi bi-people-fill"></i>
+            </div>
+        </div>
+        
+        <div class="overview-card">
+            <div class="overview-card-content">
+                <h3>Usage Credits</h3>
+                <p class="value" id="totalCredits">0</p>
+            </div>
+            <div class="overview-card-icon icon-credits">
+                <i class="bi bi-currency-dollar"></i>
+            </div>
+        </div>
+
+        <div class="overview-card">
+            <div class="overview-card-content">
+                <h3>Remaining Credits</h3>
+                <p class="value" id="remainingCredits">0</p>
+                <div class="progress-container">
+                    <div class="progress-bar" id="creditProgressBar"></div>
+                    <span class="progress-text" id="creditProgressText">0 / 0</span>
+                </div>
+            </div>
+            <div class="overview-card-icon icon-credits" style="background: #2ecc71;">
+                <i class="bi bi-wallet"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Credit Distribution Section -->
+    <div class="credit-distribution">
+        <div class="section-header">
+            <h2>Credit Distribution</h2>
+            <p>Current credit allocation across team members.</p>
+        </div>
+        
+        <div class="member-list" id="memberList">
+            <!-- Members will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Project Activities Section -->
+    <div class="recent-activity">
+        <div class="section-header">
+            <h2>
+                <i class="fas fa-clipboard-list"></i>
+                Project Activities
+            </h2>
+            <p>Recent project activities and progress updates across all projects.</p>
+        </div>
+        
+        <div id="projectActivitiesList">
+            <!-- Project activities will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Recent Activity Section -->
+    <div class="recent-activity">
+        <div class="section-header">
+            <h2>Recent Activity</h2>
+            <p>Latest team activities and updates.</p>
+        </div>
+        
+        <div id="activityList">
+            <!-- Activities will be loaded here -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    // Alert function
+    function showAlert(message, type = 'error') {
+        // Remove existing alert if any
+        const existingAlert = document.querySelector('.alert');
+        if (existingAlert) {
+            existingAlert.remove();
+        }
+
+        // Create new alert
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type}`;
+        
+        // Add icon based on type
+        const icon = document.createElement('i');
+        icon.className = type === 'error' ? 'bi bi-exclamation-circle' : 'bi bi-check-circle';
+        alert.appendChild(icon);
+
+        // Add message
+        const text = document.createElement('span');
+        text.textContent = message;
+        alert.appendChild(text);
+
+        // Add to document
+        document.body.appendChild(alert);
+
+        // Remove after 5 seconds
+        setTimeout(() => {
+            alert.style.animation = 'fadeOut 0.3s ease-out';
+            setTimeout(() => alert.remove(), 300);
+        }, 5000);
+    }
+let currentTeamId = '{{ team_id }}';
+let currentTeam = null;
+
+// --- Load Team Overview Data ---
+async function loadTeamOverview() {
+    try {
+        // Load team details
+        const teamRes = await fetch(`/api/teams/${currentTeamId}`, { credentials: 'include' });
+        if (teamRes.ok) {
+            currentTeam = await teamRes.json();
+        }
+        
+        // Load members
+        const membersRes = await fetch(`/api/teams/${currentTeamId}/members`, { credentials: 'include' });
+        if (membersRes.ok) {
+            const membersData = await membersRes.json();
+            const members = membersData.members || membersData || [];
+            await renderOverviewCards(members);
+            renderMemberList(members);
+        }
+        
+        // Load projects count
+        const projectsRes = await fetch(`/api/teams/${currentTeamId}/projects`, { credentials: 'include' });
+        if (projectsRes.ok) {
+            const projectsData = await projectsRes.json();
+            const projects = projectsData.projects || projectsData || [];
+            document.getElementById('totalProjects').textContent = projects.length;
+        }
+        
+        // Load project activities
+        await loadProjectActivities();
+        
+        // Load recent activity
+        const activityRes = await fetch(`/api/teams/${currentTeamId}/activity`, { credentials: 'include' });
+        if (activityRes.ok) {
+            const activityData = await activityRes.json();
+            const activities = activityData.activities || activityData || [];
+            renderActivityList(activities);
+        }
+        
+    } catch (error) {
+    }
+}
+
+// --- Render Overview Cards ---
+async function renderOverviewCards(members) {
+    const totalMembers = members.length;
+    document.getElementById('totalMembers').textContent = totalMembers;
+    
+    try {
+        // Get team credits info
+        const creditsRes = await fetch(`/api/teams/${currentTeamId}/credits`, { credentials: 'include' });
+        if (creditsRes.ok) {
+            const creditsData = await creditsRes.json();
+            const totalCredits = creditsData.total_credits || 0;
+            const usedCredits = creditsData.used_credits || 0;
+            const remainingCredits = creditsData.remaining_credits || 0;
+            
+            // Update Usage Credits
+            document.getElementById('totalCredits').textContent = usedCredits.toLocaleString();
+            
+            // Update Remaining Credits
+            document.getElementById('remainingCredits').textContent = remainingCredits.toLocaleString();
+            
+            // Update progress bar
+            const progressPercentage = totalCredits > 0 ? ((remainingCredits / totalCredits) * 100) : 0;
+            const progressBar = document.getElementById('creditProgressBar');
+            const progressText = document.getElementById('creditProgressText');
+            
+            progressBar.style.width = `${progressPercentage}%`;
+            progressText.textContent = `${remainingCredits.toLocaleString()} / ${totalCredits.toLocaleString()}`;
+            
+            // Set progress bar color based on percentage
+            if (progressPercentage <= 20) {
+                progressBar.style.background = '#e74c3c'; // Red for low credits
+            } else if (progressPercentage <= 50) {
+                progressBar.style.background = '#f39c12'; // Orange for medium credits
+            } else {
+                progressBar.style.background = '#2ecc71'; // Green for healthy credits
+            }
+        } else {
+            const errorData = await creditsRes.json();
+            showAlert(errorData.error || "Failed to get team credits", 'error');
+            
+            // Reset displays to 0
+            document.getElementById('totalCredits').textContent = '0';
+            document.getElementById('remainingCredits').textContent = '0';
+            document.getElementById('creditProgressBar').style.width = '0%';
+            document.getElementById('creditProgressText').textContent = '0 / 0';
+        }
+    } catch (error) {
+        console.error('Error fetching team credits:', error);
+        showAlert("Failed to get team credits", 'error');
+        
+        // Reset displays to 0
+        document.getElementById('totalCredits').textContent = '0';
+        document.getElementById('remainingCredits').textContent = '0';
+        document.getElementById('creditProgressBar').style.width = '0%';
+        document.getElementById('creditProgressText').textContent = '0 / 0';
+    }
+    }
+
+// --- Render Member List ---
+async function renderMemberList(members) {
+    const memberList = document.getElementById('memberList');
+    
+    if (!members || !members.length) {
+        memberList.innerHTML = '<p style="color: var(--text-muted); text-align: center;">No members found.</p>';
+        return;
+    }
+    
+    // Get credits for each member
+    const memberCreditsPromises = members.map(async member => {
+        try {
+            const response = await fetch(`/api/teams/${currentTeamId}/members/${member.id}/credits`, { credentials: 'include' });
+            if (response.ok) {
+                const data = await response.json();
+                return {
+                    ...member,
+                    credits: data.credits || 0
+                };
+            }
+            return member;
+        } catch (error) {
+            console.error(`Error fetching credits for member ${member.id}:`, error);
+            return member;
+        }
+    });
+    
+    // Wait for all credit fetches to complete
+    const membersWithCredits = await Promise.all(memberCreditsPromises);
+    
+    memberList.innerHTML = membersWithCredits.map(member => `
+        <div class="member-item">
+            <div class="member-info">
+                <div class="member-avatar">${member.name ? member.name.charAt(0).toUpperCase() : 'U'}</div>
+                <div class="member-details">
+                    <h4>${member.name || 'Unknown'}</h4>
+                    <p>${member.email}</p>
+                </div>
+            </div>
+            <div class="member-right">
+                <span class="member-credits">${member.credits || 0} credits</span>
+                <span class="role-badge role-${member.role}">${member.role}</span>
+            </div>
+        </div>
+    `).join('');
+}
+
+// --- Load Project Activities ---
+async function loadProjectActivities() {
+    try {
+        const response = await fetch(`/api/workspace/${currentTeamId}/activity`, {
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            renderProjectActivitiesList([]);
+            return;
+        }
+        
+        const data = await response.json();
+        // Filter for task and lead related activities for "project activities"
+        const projectActivities = (data.activities || []).filter(activity => 
+            activity.action && (
+                activity.action.includes('task') ||
+                activity.action.includes('lead') ||
+                activity.action.includes('project')
+            )
+        );
+        renderProjectActivitiesList(projectActivities);
+        
+    } catch (error) {
+        renderProjectActivitiesList([]);
+    }
+}
+
+// --- Render Project Activities List ---
+function renderProjectActivitiesList(activities) {
+    const projectActivitiesList = document.getElementById('projectActivitiesList');
+    
+    if (!activities || !activities.length) {
+        projectActivitiesList.innerHTML = '<p style="color: var(--text-muted); text-align: center;">No project activities found.</p>';
+        return;
+    }
+    
+    const activitiesHtml = activities.slice(0, 6).map(activity => {
+        const activityDate = activity.created_at ? new Date(activity.created_at).toLocaleDateString() : 'No date';
+        const activityTime = activity.created_at ? new Date(activity.created_at).toLocaleTimeString() : '';
+        const userName = activity.user_data ? activity.user_data.username : 'Unknown';
+        
+        // Map workspace activity actions to user-friendly titles and descriptions
+        let title = activity.action || 'Activity';
+        let description = '';
+        let activityType = 'other';
+        
+        switch(activity.action) {
+            case 'lead_created_for_task':
+                title = 'Lead Added to Task';
+                description = activity.changes && activity.changes.lead_company ? 
+                    `Added lead from ${activity.changes.lead_company}` : 'Added a new lead';
+                activityType = 'lead';
+                break;
+            case 'task_created':
+                title = 'Task Created';
+                description = activity.changes && activity.changes.task_title ? 
+                    `Created task: ${activity.changes.task_title}` : 'Created a new task';
+                activityType = 'task';
+                break;
+            case 'project_created':
+                title = 'Project Created';
+                description = activity.changes && activity.changes.project_name ? 
+                    `Created project: ${activity.changes.project_name}` : 'Created a new project';
+                activityType = 'project';
+                break;
+            case 'task_updated':
+                title = 'Task Updated';
+                description = 'Updated task details';
+                activityType = 'task';
+                break;
+            default:
+                title = activity.action ? activity.action.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Activity';
+                description = 'Workspace activity';
+                break;
+        }
+        
+        const activityTypeIcon = {
+            'lead': 'fas fa-user-plus',
+            'task': 'fas fa-tasks',
+            'project': 'fas fa-folder-plus',
+            'meeting': 'fas fa-users',
+            'call': 'fas fa-phone',
+            'email': 'fas fa-envelope',
+            'other': 'fas fa-circle'
+        };
+        
+        return `
+            <div class="project-activity-item">
+                <div class="project-activity-header">
+                    <div class="project-activity-title">
+                        <div class="project-activity-icon activity-${activityType}">
+                            <i class="${activityTypeIcon[activityType] || 'fas fa-circle'}"></i>
+                        </div>
+                        <div class="project-activity-info">
+                            <h4>${title}</h4>
+                            <p class="project-activity-type">
+                                ${activityType.replace('_', ' ')} ${activityTime ? `• ${activityTime}` : ''}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="project-activity-meta">
+                        <p>${activityDate}</p>
+                        <p>by ${userName}</p>
+                    </div>
+                </div>
+                
+                <p class="project-activity-description">${description}</p>
+                
+                <div class="project-activity-footer">
+                    <div class="project-activity-tags">
+                        <span class="project-activity-tag">${activity.entity_type || 'activity'}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    projectActivitiesList.innerHTML = activitiesHtml;
+}
+
+// --- Render Activity List ---
+function renderActivityList(activities) {
+    const activityList = document.getElementById('activityList');
+    
+    if (!activities || !activities.length) {
+        activityList.innerHTML = '<p style="color: var(--text-muted); text-align: center;">No recent activity.</p>';
+        return;
+    }
+    
+    activityList.innerHTML = activities.slice(0, 5).map(activity => `
+        <div class="activity-item">
+            <div class="activity-icon">
+                <i class="bi bi-${getActivityIcon(activity.action)}"></i>
+            </div>
+            <div class="activity-content">
+                <p class="activity-text">${activity.description || activity.action}</p>
+                <p class="activity-time">${new Date(activity.created_at).toLocaleDateString()}</p>
+            </div>
+        </div>
+    `).join('');
+}
+
+// --- Get Activity Icon ---
+function getActivityIcon(action) {
+    const iconMap = {
+        'member_added': 'person-plus',
+        'member_removed': 'person-x',
+        'project_created': 'folder-plus',
+        'task_created': 'check-square',
+        'credits_assigned': 'currency-dollar',
+        'default': 'circle'
+    };
+    return iconMap[action] || iconMap.default;
+}
+
+// --- Back Button Function ---
+window.goBack = function() {
+    window.location.href = '/workspace/';
+};
+
+// --- Initialize ---
+document.addEventListener('DOMContentLoaded', function() {
+    loadTeamOverview();
+});
+</script>
+{% endblock %} 

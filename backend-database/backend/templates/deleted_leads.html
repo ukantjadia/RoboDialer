@@ -1,0 +1,369 @@
+{% extends "base.html" %}
+
+{% block title %}Deleted Leads{% endblock %}
+
+{% block additional_styles %}
+{{ super() }}
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+
+<style>
+    .container {
+        padding: 20px;
+        max-width: 100%;
+    }
+    .page-header {
+        background: var(--primary-color);
+        padding: 20px 24px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .page-header h1 {
+        margin: 0;
+        color: white;
+        font-size: 24px;
+        font-weight: 500;
+    }
+    .header-actions {
+        display: flex;
+        gap: 12px;
+    }
+    .btn-restore {
+        background: rgba(0, 0, 0, 0.2);
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    .btn-restore:hover:not(:disabled) {
+        background: rgba(0, 0, 0, 0.3);
+        transform: translateY(-1px);
+    }
+    .btn-restore:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    .btn-back {
+        background: rgba(0, 0, 0, 0.2);
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    .btn-back:hover {
+        background: rgba(0, 0, 0, 0.3);
+        color: white;
+    }
+    .table-container {
+        background: var(--card-bg);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .table {
+        width: 100%;
+        margin-bottom: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    .table th {
+        background: var(--background-color);
+        color: var(--text-muted);
+        font-weight: 500;
+        font-size: 14px;
+        padding: 16px 24px;
+        border: none;
+        text-align: left;
+    }
+    .table td {
+        padding: 16px 24px;
+        border: none;
+        border-bottom: 1px solid var(--border-color);
+        background: var(--card-bg);
+        color: var(--text-color);
+        font-size: 14px;
+        line-height: 1.5;
+    }
+    .table tr:last-child td {
+        border-bottom: none;
+    }
+    .table tr:hover td {
+        background: rgba(255, 255, 255, 0.02);
+    }
+    .checkbox-column {
+        width: 40px;
+        text-align: center;
+    }
+    .form-check-input {
+        cursor: pointer;
+        width: 18px;
+        height: 18px;
+        margin: 0;
+        background-color: var(--card-bg);
+        border: 2px solid var(--border-color);
+        border-radius: 4px;
+    }
+    .form-check-input:checked {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    .form-check-input:hover {
+        border-color: var(--primary-color);
+    }
+    .lead-id {
+        font-family: monospace;
+        color: var(--text-color);
+        font-size: 14px;
+    }
+    .company-name {
+        color: var(--text-color);
+        font-weight: 500;
+    }
+    .contact-name {
+        color: var(--text-color);
+    }
+    .email {
+        color: var(--text-color);
+    }
+    .deleted-date {
+        color: var(--text-muted);
+        font-size: 14px;
+    }
+    .actions {
+        display: flex;
+        gap: 8px;
+    }
+    tr:hover .actions {
+        opacity: 1;
+    }
+    .btn-action {
+        padding: 6px 16px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    .btn-action.restore {
+        background: linear-gradient(90deg, #14b8a6 0%, #3b82f6 100%);
+        color: white;
+        border: none;
+    }
+    .btn-action.delete {
+        background: linear-gradient(90deg, #ef4444 0%, #f87171 100%);
+        color: white;
+        border: none;
+    }
+    .btn-action:hover {
+        filter: brightness(1.1);
+    }
+    .empty-state {
+        text-align: center;
+        padding: 48px;
+        color: var(--text-muted);
+    }
+    .empty-state h4 {
+        margin-bottom: 8px;
+        color: var(--text-color);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Deleted Leads</h1>
+        <div class="header-actions">
+            <button id="restoreSelectedBtn" class="btn-restore" disabled>
+                Restore Selected
+            </button>
+            <a href="{{ url_for('lead.view_leads') }}" class="btn-back">
+                Back to Leads
+            </a>
+        </div>
+    </div>
+    
+    {% if leads %}
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th class="checkbox-column">
+                        <input type="checkbox" id="selectAll" class="form-check-input">
+                    </th>
+                    <th>Lead ID</th>
+                    <th>Company</th>
+                    <th>Contact Name</th>
+                    <th>Email</th>
+                    <th>Deleted Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lead in leads %}
+                <tr>
+                    <td class="checkbox-column">
+                        <input type="checkbox" class="form-check-input lead-checkbox" 
+                               value="{{ lead.lead_id }}">
+                    </td>
+                    <td>
+                        <span class="lead-id">{{ lead.lead_id }}</span>
+                    </td>
+                    <td>
+                        <span class="company-name">{{ lead.company }}</span>
+                    </td>
+                    <td>
+                        <span class="contact-name">{{ lead.owner_first_name }} {{ lead.owner_last_name }}</span>
+                    </td>
+                    <td>
+                        <span class="email">{{ lead.owner_email }}</span>
+                    </td>
+                    <td>
+                        <span class="deleted-date">
+                            {{ lead.deleted_at.strftime('%Y-%m-%d %H:%M') if lead.deleted_at }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="actions">
+                            <button class="btn-action restore" onclick="restoreLead('{{ lead.lead_id }}')">
+                                Restore
+                            </button>
+                            <button class="btn-action delete" onclick="permanentDeleteLead('{{ lead.lead_id }}')">
+                                Delete
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <h4>No Deleted Leads</h4>
+        <p>There are no deleted leads to display.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAll = document.getElementById('selectAll');
+    const leadCheckboxes = document.querySelectorAll('.lead-checkbox');
+    const restoreSelectedBtn = document.getElementById('restoreSelectedBtn');
+    
+    // Handle select all checkbox
+    selectAll.addEventListener('change', function() {
+        leadCheckboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+        updateRestoreButton();
+    });
+    
+    // Handle individual checkboxes
+    leadCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            updateRestoreButton();
+            // Update select all checkbox
+            selectAll.checked = Array.from(leadCheckboxes)
+                .every(cb => cb.checked);
+        });
+    });
+    
+    // Update restore button state
+    function updateRestoreButton() {
+        const selectedCount = Array.from(leadCheckboxes)
+            .filter(cb => cb.checked).length;
+        restoreSelectedBtn.disabled = selectedCount === 0;
+        restoreSelectedBtn.textContent = selectedCount === 0 ? 
+            'Restore Selected' : 
+            `Restore Selected (${selectedCount})`;
+    }
+    
+    // Handle restore selected button
+    restoreSelectedBtn.addEventListener('click', function() {
+        const selectedIds = Array.from(leadCheckboxes)
+            .filter(cb => cb.checked)
+            .map(cb => cb.value);
+            
+        if (selectedIds.length > 0) {
+            restoreMultipleLeads(selectedIds);
+        }
+    });
+});
+
+function restoreLead(leadId) {
+    if (confirm('Are you sure you want to restore this lead?')) {
+        fetch(`/leads/${leadId}/restore`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => {        
+            alert('An error occurred while restoring the lead');
+        });
+    }
+}
+
+function restoreMultipleLeads(leadIds) {
+    if (confirm(`Are you sure you want to restore ${leadIds.length} leads?`)) {
+        fetch('/leads/restore-multiple', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ lead_ids: leadIds })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            alert('An error occurred while restoring the leads');
+        });
+    }
+}
+
+function permanentDeleteLead(leadId) {
+    if (confirm('Are you sure you want to permanently delete this lead? This action cannot be undone!')) {
+        fetch(`/leads/${leadId}/permanent-delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            alert('An error occurred while permanently deleting the lead');
+        });
+    }
+}
+</script>
+{% endblock %} 

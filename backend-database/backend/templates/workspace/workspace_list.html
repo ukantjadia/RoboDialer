@@ -1,0 +1,813 @@
+{% extends "base.html" %}
+
+{% block title %}My Workspaces{% endblock %}
+
+{% block additional_styles %}
+{{ super() }}
+<style>
+    .workspace-list-container {
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        background: var(--card-bg);
+    }
+    
+    .workspace-header {
+        background: var(--card-bg);
+        border-bottom: 1px solid var(--border-color);
+        padding: 2rem;
+        margin-bottom: 0;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        backdrop-filter: blur(10px);
+    }
+    
+    .workspace-header h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-color);
+        margin: 0 0 0.5rem 0;
+    }
+    
+    .workspace-header p {
+        color: var(--text-muted);
+        margin: 0;
+        font-size: 1.1rem;
+    }
+    
+    .workspace-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 0;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .workspace-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 0;
+        padding: 2.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+        min-height: 300px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    
+    .workspace-card:hover {
+        background: var(--bg-color);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        border-color: var(--primary-color);
+    }
+    
+    .workspace-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    }
+    
+    .workspace-card::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(var(--primary-color-rgb), 0.05), rgba(var(--secondary-color-rgb), 0.05));
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .workspace-card:hover::after {
+        opacity: 1;
+    }
+    
+    .workspace-title {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--text-color);
+        margin-bottom: 0.75rem;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .workspace-description {
+        color: var(--text-muted);
+        margin-bottom: 2rem;
+        line-height: 1.6;
+        font-size: 1rem;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .workspace-meta {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        font-weight: 500;
+        padding: 0.5rem 1rem;
+        background: var(--bg-color);
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        transition: all 0.2s ease;
+    }
+    
+    .meta-item:hover {
+        background: var(--primary-color);
+        color: white;
+        transform: translateY(-1px);
+    }
+    
+    .meta-item i {
+        font-size: 1.1rem;
+        color: var(--primary-color);
+    }
+    
+    .meta-item:hover i {
+        color: white;
+    }
+    
+    .workspace-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .btn-workspace {
+        padding: 0.75rem 1.25rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+        border: 2px solid transparent;
+    }
+    
+    .btn-primary {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+    }
+    
+    .btn-primary:hover {
+        background: var(--secondary-color);
+        color: white;
+        border-color: var(--secondary-color);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.3);
+    }
+    
+    .btn-outline {
+        background: transparent;
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    .btn-outline:hover {
+        background: var(--primary-color);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.3);
+    }
+    
+    .btn-secondary {
+        background: var(--secondary-color);
+        color: white;
+        border-color: var(--secondary-color);
+    }
+    
+    .btn-secondary:hover {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(var(--secondary-color-rgb), 0.3);
+    }
+    
+    .btn-warning {
+        background: #ffc107;
+        color: #212529;
+        border-color: #ffc107;
+    }
+    
+    .btn-warning:hover {
+        background: #e0a800;
+        color: #212529;
+        border-color: #e0a800;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 6rem 2rem;
+        color: var(--text-muted);
+        background: var(--card-bg);
+        border: 2px dashed var(--border-color);
+        border-radius: 12px;
+        margin: 2rem;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        color: var(--secondary-color);
+    }
+    
+    .empty-state h3 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-color);
+        margin-bottom: 1rem;
+    }
+    
+    .empty-state p {
+        font-size: 1.1rem;
+        line-height: 1.6;
+        margin-bottom: 2rem;
+    }
+    
+    .create-workspace-btn {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        border: none;
+        padding: 0.3rem 1rem;
+        border-radius: 6px;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        margin-top: 0.5rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(var(--primary-color-rgb), 0.2);
+        font-size: 0.9rem;
+    }
+    
+    .create-workspace-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 16px rgba(var(--primary-color-rgb), 0.4);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .btn-request-join {
+        background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+        color: white;
+        border: none;
+        padding: 0.3rem 1rem;
+        border-radius: 6px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        margin-top: 0.5rem;
+        margin-left: 0.5rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(var(--secondary-color-rgb), 0.2);
+        font-size: 0.9rem;
+        cursor: pointer;
+    }
+    
+    .btn-request-join:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 16px rgba(var(--secondary-color-rgb), 0.4);
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    }
+    
+    .workspace-actions-empty {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    
+    .notification-content {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .notification-content i {
+        font-size: 2rem;
+        opacity: 0.9;
+    }
+    
+    .notification-text strong {
+        display: block;
+        font-size: 1.1rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .notification-text p {
+        margin: 0;
+        opacity: 0.9;
+        font-size: 0.9rem;
+    }
+    
+    .btn-view-requests {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+    
+    .btn-view-requests:hover {
+        background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.5);
+    }
+
+    .panel-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--background-color);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    
+    .panel-header h3 {
+        margin: 0;
+        color: var(--text-color);
+        font-size: 1.25rem;
+    }
+    
+    .btn-close-panel {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 0.25rem;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-close-panel:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-color);
+    }
+    
+    .panel-content {
+        padding: 1rem;
+    }
+    
+    .workspace-requests-group {
+        margin-bottom: 2rem;
+    }
+    
+    .workspace-group-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: var(--background-color);
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        border-left: 4px solid var(--primary-color);
+    }
+    
+    .workspace-group-header h4 {
+        margin: 0;
+        color: var(--text-color);
+        font-size: 1.1rem;
+    }
+    
+    .request-count {
+        background: var(--primary-color);
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .request-item {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        transition: all 0.2s ease;
+    }
+    
+    .request-item:hover {
+        border-color: var(--primary-color);
+        transform: translateY(-1px);
+    }
+    
+    .request-user {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+    
+    .user-info {
+        flex: 1;
+    }
+    
+    .user-name {
+        font-weight: 500;
+        color: var(--text-color);
+        margin-bottom: 0.25rem;
+    }
+    
+    .user-email {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+    
+    .request-details {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 0.75rem;
+        font-size: 0.85rem;
+    }
+    
+    .requested-role {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-weight: 500;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+    }
+    
+    .request-date {
+        color: var(--text-muted);
+    }
+    
+    .request-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .btn-approve-quick {
+        background: var(--success-color);
+        color: white;
+        border: none;
+        padding: 0.4rem 0.8rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-approve-quick:hover {
+        background: #28a745;
+        transform: translateY(-1px);
+    }
+    
+    .btn-reject-quick {
+        background: var(--danger-color);
+        color: white;
+        border: none;
+        padding: 0.4rem 0.8rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-reject-quick:hover {
+        background: #dc3545;
+        transform: translateY(-1px);
+    }
+    
+    .btn-view-detail {
+        background: var(--border-color);
+        color: var(--text-color);
+        border: none;
+        padding: 0.4rem 0.8rem;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 0.8rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-view-detail:hover {
+        background: var(--text-muted);
+        color: white;
+        text-decoration: none;
+    }
+    
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .create-new-section {
+        text-align: center;
+        padding: 2rem;
+        background: var(--card-bg);
+        border-top: 1px solid var(--border-color);
+    }
+    
+    /* Request to Join Team Section */
+    .request-join-section {
+        margin-top: 2rem;
+        padding: 1.5rem;
+        background: linear-gradient(135deg, rgba(74, 144, 226, 0.1), rgba(80, 227, 194, 0.1));
+        border: 1px solid rgba(74, 144, 226, 0.2);
+        border-radius: 12px;
+        text-align: center;
+    }
+    
+    .btn-request-join-main {
+        background: linear-gradient(135deg, #4A90E2, #50E3C2);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+        font-size: 1rem;
+    }
+    
+    .btn-request-join-main:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
+        opacity: 0.9;
+    }
+    
+    .request-join-help {
+        margin: 0.75rem 0 0 0;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .workspace-header {
+            padding: 1.5rem;
+        }
+        
+        .workspace-header h1 {
+            font-size: 1.5rem;
+        }
+        
+        .workspace-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .workspace-card {
+            padding: 1.5rem;
+            min-height: 250px;
+        }
+        
+        .workspace-title {
+            font-size: 1.4rem;
+        }
+        
+        .workspace-meta {
+            gap: 1rem;
+        }
+        
+        .meta-item {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="workspace-list-container">
+    <div class="workspace-header">
+        <h1>My Workspaces</h1>
+        <p>Manage your teams and projects across different workspaces</p>
+    </div>
+
+    {% if workspaces %}
+        <div class="workspace-grid">
+            {% for workspace in workspaces %}
+            <div class="workspace-card" onclick="window.location.href='/workspace/team/{{ workspace.workspace_id }}'" data-workspace-id="{{ workspace.workspace_id }}" data-user-role="{{ workspace.user_role }}">
+                <div>
+                    <div class="workspace-title">{{ workspace.name }}</div>
+                    <div class="workspace-description">{{ workspace.description or 'No description available' }}</div>
+                    
+                                    <div class="workspace-meta">
+                    <div class="meta-item">
+                        <i class="bi bi-people"></i>
+                        <span>{{ workspace.member_count or 0 }} members</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="bi bi-folder"></i>
+                        <span>{{ workspace.project_count or 0 }} projects</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="bi bi-check2-square"></i>
+                        <span>{{ workspace.active_project_count or 0 }} active</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="bi bi-person-badge"></i>
+                        <span>{{ workspace.user_role or 'member' }}</span>
+                    </div>
+                </div>
+                </div>
+
+                <div class="workspace-actions">
+                    <a href="/workspace/team/{{ workspace.workspace_id }}" class="btn-workspace btn-primary" onclick="event.stopPropagation();">
+                        <i class="bi bi-grid-3x3"></i>
+                        Teams
+                    </a>
+                    <a href="/workspace/team/{{ workspace.workspace_id }}/projects" class="btn-workspace btn-outline" onclick="event.stopPropagation();">
+                        <i class="bi bi-folder"></i>
+                        Projects
+                    </a>
+                    <a href="/workspace/team/{{ workspace.workspace_id }}/activity" class="btn-workspace btn-secondary" onclick="event.stopPropagation();">
+                        <i class="bi bi-activity"></i>
+                        Activity
+                    </a>
+                    {% if workspace.user_role in ['admin', 'manager'] %}
+                    <a href="/workspace/{{ workspace.workspace_id }}/submissions" class="btn-workspace btn-warning" onclick="event.stopPropagation();">
+                        <i class="bi bi-bell"></i>
+                        Submissions
+                        <span class="submission-badge" id="submission-badge-{{ workspace.workspace_id }}" style="display: none; background: #dc3545; color: white; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold; margin-left: 0.25rem;">0</span>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="create-new-section">
+            {% if current_user.tier.lower() in ['platinum', 'enterprise'] %}
+                <div class="alert alert-info text-center">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Workspace Limit:</strong> You can only create one workspace. You already have an active workspace.
+                </div>
+            {% else %}
+                <div class="alert alert-warning text-center">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>Upgrade Required:</strong> Workspace creation requires Platinum or Enterprise tier. 
+                    <a href="/subscription" class="alert-link">Upgrade Now</a>
+                </div>
+            {% endif %}
+            
+            <!-- Request to Join Team Button -->
+            <div class="request-join-section">
+                <button type="button" class="btn-request-join-main" onclick="openRequestJoinModal()">
+                    <i class="bi bi-person-plus"></i>
+                    Request to Join Team
+                </button>
+                <p class="request-join-help">Looking for another workspace? Send a request to join an existing team.</p>
+            </div>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="bi bi-grid-3x3-gap"></i>
+            <h3>No Workspaces Found</h3>
+            <p>You don't have any workspaces yet. Create your first workspace or request to join an existing team.</p>
+            <div class="workspace-actions-empty">
+                {% if current_user.tier.lower() in ['platinum', 'enterprise'] %}
+                    <a href="/workspace/create" class="create-workspace-btn">
+                        <i class="bi bi-plus-circle"></i>
+                        Create Workspace
+                    </a>
+                {% else %}
+                    <div class="alert alert-warning text-center" style="margin-bottom: 1rem;">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Upgrade Required:</strong> Workspace creation requires Platinum or Enterprise tier. 
+                        <a href="/subscription" class="alert-link">Upgrade Now</a>
+                    </div>
+                {% endif %}
+                <button type="button" class="btn-request-join" onclick="openRequestJoinModal()">
+                    <i class="bi bi-person-plus"></i>
+                    Request to Join Team
+                </button>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Include the Request Join Modal -->
+{% include 'workspace/request_join_modal.html' %}
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+// Add any additional JavaScript functionality here if needed
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize any workspace-specific functionality
+    
+    // Add click tracking for analytics
+    document.querySelectorAll('.workspace-card').forEach(function(card) {
+        card.addEventListener('click', function() {
+        });
+    });
+    
+    // Load submission counts for admin/manager workspaces
+    loadSubmissionCounts();
+});
+
+async function loadSubmissionCounts() {
+    // Get workspace data from server-side rendered data
+    const workspaceElements = document.querySelectorAll('.workspace-card');
+    
+    for (const element of workspaceElements) {
+        const workspaceId = element.getAttribute('data-workspace-id');
+        const userRole = element.getAttribute('data-user-role');
+        
+        if (userRole && ['admin', 'manager'].includes(userRole)) {
+            try {
+                const response = await fetch(`/api/task-submission/workspace/${workspaceId}/pending`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const pendingCount = data.count || 0;
+                    
+                    const badge = document.getElementById(`submission-badge-${workspaceId}`);
+                    if (badge && pendingCount > 0) {
+                        badge.textContent = pendingCount;
+                        badge.style.display = 'flex';
+                    }
+                }
+            } catch (error) {
+                // Silently fail, don't show error for submission count
+            }
+        }
+    }
+}
+</script>
+{% endblock %} 

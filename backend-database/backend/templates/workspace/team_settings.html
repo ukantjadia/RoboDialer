@@ -1,0 +1,565 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - {{ workspace.name }}{% endblock %}
+
+{% block additional_styles %}
+{{ super() }}
+<style>
+    .settings-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+    
+    /* Navigation Tabs */
+    .nav-tabs {
+        display: flex;
+        background: var(--card-bg);
+        border-radius: 8px;
+        padding: 0.5rem;
+        margin-bottom: 2rem;
+        border: 1px solid var(--border-color);
+    }
+    
+    .nav-tab {
+        flex: 1;
+        padding: 0.75rem 1rem;
+        text-align: center;
+        color: var(--text-muted);
+        text-decoration: none;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    
+    .nav-tab.active {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .nav-tab:hover:not(.active) {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-color);
+    }
+    
+    /* Settings Content */
+    .settings-content {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 2rem;
+    }
+    
+    .settings-section {
+        margin-bottom: 2rem;
+    }
+    
+    .settings-section:last-child {
+        margin-bottom: 0;
+    }
+    
+    .settings-title {
+        color: var(--text-color);
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+    
+    .settings-description {
+        color: var(--text-muted);
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--text-color);
+        font-weight: 500;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--background-color);
+        color: var(--text-color);
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-color);
+    }
+    
+    .btn-save {
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-save:hover {
+        opacity: 0.9;
+    }
+    
+    .btn-danger {
+        background: var(--danger-color);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-danger:hover {
+        opacity: 0.9;
+    }
+    
+    .btn-warning {
+        background: #f0ad4e;
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-warning:hover {
+        background: #ec971f;
+        opacity: 0.9;
+    }
+    
+    .danger-zone {
+        border: 1px solid var(--danger-color);
+        border-radius: 8px;
+        padding: 1.5rem;
+        background: rgba(220, 38, 38, 0.1);
+    }
+    
+    .danger-zone-title {
+        color: var(--danger-color);
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    
+    .danger-zone-description {
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+    }
+    
+    /* Back Button Styles */
+    .header-section {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .btn-back {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .btn-back:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-color);
+    }
+    
+    .page-title {
+        color: var(--text-color);
+        margin: 0;
+        font-size: 2rem;
+        font-weight: bold;
+    }
+    
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal-content {
+        background: var(--card-bg);
+        margin: auto;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        animation: slideIn 0.3s ease-out;
+    }
+    
+    .modal-header {
+        padding: 1.5rem 2rem 1rem 2rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .modal-header h3 {
+        margin: 0;
+        color: var(--text-color);
+        font-size: 1.5rem;
+    }
+    
+    .btn-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 0.25rem;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-close:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-color);
+    }
+    
+    .modal-body {
+        padding: 2rem;
+        text-align: center;
+    }
+    
+    .warning-icon {
+        margin-bottom: 1rem;
+    }
+    
+    .modal-body h4 {
+        color: var(--text-color);
+        margin-bottom: 1rem;
+        font-size: 1.25rem;
+    }
+    
+    .modal-body p {
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+        line-height: 1.5;
+    }
+    
+    .warning-list {
+        text-align: left;
+        margin: 1rem 0;
+        padding-left: 1.5rem;
+        color: var(--text-muted);
+    }
+    
+    .warning-list li {
+        margin-bottom: 0.5rem;
+        line-height: 1.4;
+    }
+    
+    .modal-footer {
+        padding: 1rem 2rem 2rem 2rem;
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+    }
+    
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-secondary {
+        background: var(--border-color);
+        color: var(--text-color);
+    }
+    
+    .btn-secondary:hover {
+        background: var(--text-muted);
+        color: white;
+    }
+    
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="settings-container">
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+        <a href="/workspace/team/{{ team_id }}" class="nav-tab">Overview</a>
+        <a href="/workspace/team/{{ team_id }}/projects" class="nav-tab">Projects</a>
+        <a href="/workspace/team/{{ team_id }}/members" class="nav-tab">Team Management</a>
+        <a href="#" class="nav-tab active">Settings</a>
+    </div>
+
+    <!-- Settings Content -->
+    <div class="settings-content">
+        <div class="header-section">
+            <button class="btn-back" onclick="goBack()">
+                <i class="bi bi-arrow-left"></i>
+                Back to Workspaces
+            </button>
+            <h1 class="page-title">Team Settings</h1>
+        </div>
+        
+        <!-- General Settings -->
+        <div class="settings-section">
+            <h2 class="settings-title">General Settings</h2>
+            <p class="settings-description">Update your team's basic information and preferences.</p>
+            
+            <form id="generalSettingsForm">
+                <div class="form-group">
+                    <label class="form-label">Team Name</label>
+                    <input type="text" class="form-control" id="teamName" value="{{ workspace.name }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" id="teamDescription" rows="3">{{ workspace.description or '' }}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <input type="text" class="form-control" id="teamCategory" value="{{ workspace.industry or '' }}">
+                </div>
+                
+                <button type="submit" class="btn-save">Save Changes</button>
+            </form>
+        </div>
+        
+        <!-- Danger Zone -->
+        <div class="settings-section">
+            <div class="danger-zone">
+                <h2 class="danger-zone-title">Danger Zone</h2>
+                <p class="danger-zone-description">These actions cannot be undone. Please be careful.</p>
+                
+                {% if user_role == 'admin' %}
+                <!-- Delete Team for Admins only -->
+                <div class="form-group">
+                    <label class="form-label">Delete Team</label>
+                    <p class="settings-description">Permanently delete this team and all its data. This action cannot be undone.</p>
+                    <button type="button" class="btn-danger" onclick="deleteTeam()">Delete Team</button>
+                </div>
+                {% else %}
+                <!-- Leave Team for Members and Managers -->
+                <div class="form-group">
+                    <label class="form-label">Leave Team</label>
+                    <p class="settings-description">Leave this team. You will lose access to all team resources and data.</p>
+                    <button type="button" class="btn-warning" onclick="openLeaveTeamModal()">Leave Team</button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Leave Team Confirmation Modal -->
+<div id="leaveTeamModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Leave Team</h3>
+            <button type="button" class="btn-close" onclick="closeLeaveTeamModal()">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+            <div class="warning-icon">
+                <i class="bi bi-exclamation-triangle" style="color: #f0ad4e; font-size: 3rem;"></i>
+            </div>
+            <h4>Are you sure you want to leave this team?</h4>
+            <p>Once you leave this team, you will:</p>
+            <ul class="warning-list">
+                <li>Lose access to all team projects and data</li>
+                <li>No longer receive team notifications</li>
+                <li>Need to request to join again if you want to return</li>
+                <li>Lose access to team resources and files</li>
+            </ul>
+            <p><strong>This action cannot be undone.</strong></p>
+        </div>
+        
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeLeaveTeamModal()">Cancel</button>
+            <button type="button" class="btn-warning" onclick="confirmLeaveTeam()">
+                <i class="bi bi-box-arrow-right"></i>
+                Yes, Leave Team
+            </button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+let currentTeamId = '{{ team_id }}';
+
+// --- Alert Helper ---
+function showAlert(msg, type = 'success') {
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type}`;
+    alert.style.position = 'fixed';
+    alert.style.top = '20px';
+    alert.style.right = '20px';
+    alert.style.zIndex = 2000;
+    alert.innerText = msg;
+    document.body.appendChild(alert);
+    setTimeout(() => alert.remove(), 2500);
+}
+
+// --- General Settings Form ---
+document.getElementById('generalSettingsForm').onsubmit = async function(e) {
+    e.preventDefault();
+    
+    const name = document.getElementById('teamName').value.trim();
+    const description = document.getElementById('teamDescription').value.trim();
+    const category = document.getElementById('teamCategory').value.trim();
+    
+    try {
+        const res = await fetch(`/api/teams/${currentTeamId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ name, description, category })
+        });
+        
+        if (!res.ok) throw new Error('Failed to update team settings');
+        
+        showAlert('Team settings updated successfully!');
+    } catch (e) {
+        showAlert('Failed to update team settings', 'danger');
+    }
+};
+
+// --- Leave Team Modal ---
+function openLeaveTeamModal() {
+    document.getElementById('leaveTeamModal').style.display = 'flex';
+}
+
+function closeLeaveTeamModal() {
+    document.getElementById('leaveTeamModal').style.display = 'none';
+}
+
+function confirmLeaveTeam() {
+    leaveTeamAction();
+    closeLeaveTeamModal();
+}
+
+async function leaveTeamAction() {
+    try {
+        const leaveBtn = document.querySelector('button[onclick="confirmLeaveTeam()"]');
+        const originalText = leaveBtn.innerHTML;
+        leaveBtn.disabled = true;
+        leaveBtn.innerHTML = '<i class="bi bi-spinner" style="animation: spin 1s linear infinite;"></i> Leaving...';
+        
+        const res = await fetch(`/api/workspace/${currentTeamId}/members/me/leave`, {
+            method: 'POST',
+            credentials: 'include'
+        });
+        
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.error || 'Failed to leave team');
+        }
+        
+        showAlert('You have left the team successfully!');
+        setTimeout(() => {
+            window.location.href = '/workspace/';
+        }, 1500);
+    } catch (e) {
+        showAlert(e.message || 'Failed to leave team', 'danger');
+        // Re-enable button
+        const leaveBtn = document.querySelector('button[onclick="confirmLeaveTeam()"]');
+        if (leaveBtn) {
+            leaveBtn.disabled = false;
+            leaveBtn.innerHTML = '<i class="bi bi-box-arrow-right"></i> Yes, Leave Team';
+        }
+    }
+}
+
+// --- Delete Team ---
+function deleteTeam() {
+    if (confirm('Are you sure you want to delete this team? This action cannot be undone and will permanently delete all team data.')) {
+        deleteTeamAction();
+    }
+}
+
+async function deleteTeamAction() {
+    try {
+        const res = await fetch(`/api/teams/${currentTeamId}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+        
+        if (!res.ok) throw new Error('Failed to delete team');
+        
+        showAlert('Team deleted successfully!');
+        setTimeout(() => {
+            window.location.href = '/workspace/';
+        }, 1500);
+    } catch (e) {
+        showAlert('Failed to delete team', 'danger');
+    }
+}
+
+// --- Back Button Function ---
+window.goBack = function() {
+    window.location.href = '/workspace/';
+};
+
+// --- Modal Event Listeners ---
+// Close modal when clicking outside
+window.addEventListener('click', function(event) {
+    const modal = document.getElementById('leaveTeamModal');
+    if (event.target === modal) {
+        closeLeaveTeamModal();
+    }
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeLeaveTeamModal();
+    }
+});
+</script>
+{% endblock %} 

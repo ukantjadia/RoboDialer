@@ -1,0 +1,431 @@
+{% extends "base.html" %}
+
+{% block title %}Team Activity - {{ workspace.name }}{% endblock %}
+
+{% block additional_styles %}
+{{ super() }}
+<style>
+    .team-activity-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+    .team-header {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    .activity-section {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    .activity-item {
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+    .activity-item:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    .activity-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+    .activity-type {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: var(--text-color);
+        margin-bottom: 0.5rem;
+    }
+    .activity-description {
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+    }
+    .activity-meta {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        align-items: center;
+        font-size: 0.9rem;
+    }
+    .activity-badge {
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-transform: uppercase;
+    }
+    .activity-created {
+        background: var(--primary-color);
+        color: white;
+    }
+    .activity-updated {
+        background: var(--info-color);
+        color: white;
+    }
+    .activity-deleted {
+        background: var(--danger-color);
+        color: white;
+    }
+    .activity-invited {
+        background: var(--success-color);
+        color: white;
+    }
+    .activity-removed {
+        background: var(--warning-color);
+        color: white;
+    }
+    .activity-credits {
+        background: var(--secondary-color);
+        color: white;
+    }
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-muted);
+    }
+    .user-avatar {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+    .activity-details {
+        background: var(--background-color);
+        border-radius: 6px;
+        padding: 1rem;
+        margin-top: 1rem;
+        font-family: monospace;
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        overflow-x: auto;
+    }
+    .back-btn {
+        background: var(--secondary-color);
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .filters {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+    .filter-select {
+        padding: 0.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: var(--background-color);
+        color: var(--text-color);
+    }
+    .date-range {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+    .date-input {
+        padding: 0.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: var(--background-color);
+        color: var(--text-color);
+    }
+    .stats-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    .stat-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1.5rem;
+        text-align: center;
+    }
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+    }
+    .stat-label {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="team-activity-container">
+    <div class="team-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <a href="/workspace/" class="back-btn">
+                    <i class="bi bi-arrow-left"></i> Back to Workspaces
+                </a>
+                <h1 id="teamName">Team Activity</h1>
+                <p class="text-muted" id="teamDescription">Audit trail and activity logs</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="stats-cards">
+        <div class="stat-card">
+            <div class="stat-number" id="totalActivities">0</div>
+            <div class="stat-label">Total Activities</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="todayActivities">0</div>
+            <div class="stat-label">Today's Activities</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="activeUsers">0</div>
+            <div class="stat-label">Active Users</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="recentChanges">0</div>
+            <div class="stat-label">Recent Changes</div>
+        </div>
+    </div>
+
+    <div class="activity-section">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3>Activity Log</h3>
+            <div class="filters">
+                <select class="filter-select" id="activityTypeFilter" onchange="filterActivities()">
+                    <option value="">All Activities</option>
+                    <option value="created">Created</option>
+                    <option value="updated">Updated</option>
+                    <option value="deleted">Deleted</option>
+                    <option value="invited">Invited</option>
+                    <option value="removed">Removed</option>
+                    <option value="credits">Credits</option>
+                </select>
+                <select class="filter-select" id="userFilter" onchange="filterActivities()">
+                    <option value="">All Users</option>
+                </select>
+                <div class="date-range">
+                    <input type="date" class="date-input" id="startDate" onchange="filterActivities()">
+                    <span>to</span>
+                    <input type="date" class="date-input" id="endDate" onchange="filterActivities()">
+                </div>
+            </div>
+        </div>
+        <div id="activitiesList">
+            <!-- Activities will be loaded here -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+let currentTeamId = '{{ team_id }}';
+let currentTeam = null;
+let allActivities = [];
+let teamMembers = [];
+
+// --- Alert Helper ---
+function showAlert(msg, type = 'success') {
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type}`;
+    alert.style.position = 'fixed';
+    alert.style.top = '20px';
+    alert.style.right = '20px';
+    alert.style.zIndex = 2000;
+    alert.innerText = msg;
+    document.body.appendChild(alert);
+    setTimeout(() => alert.remove(), 2500);
+}
+
+// --- Load Team Details ---
+async function loadTeamDetails() {
+    try {
+        const res = await fetch(`/api/teams/${currentTeamId}`, { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to fetch team details');
+        currentTeam = await res.json();
+                    document.getElementById('teamName').textContent = currentWorkspace.name;
+            document.getElementById('teamDescription').textContent = currentWorkspace.description || 'Audit trail and activity logs';
+    } catch (e) {
+        showAlert('Could not load team details', 'danger');
+    }
+}
+
+// --- Load Team Members ---
+async function loadTeamMembers() {
+    try {
+        const res = await fetch(`/api/teams/${currentTeamId}/members`, { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to fetch team members');
+        const data = await res.json();
+        teamMembers = Array.isArray(data) ? data : [];
+        
+        // Populate user filter
+        const userFilter = document.getElementById('userFilter');
+        userFilter.innerHTML = '<option value="">All Users</option>';
+        teamMembers.forEach(member => {
+            const option = document.createElement('option');
+            option.value = member.id;
+            option.textContent = member.name;
+            userFilter.appendChild(option);
+        });
+    } catch (e) {
+        teamMembers = [];
+        showAlert('Could not load team members', 'danger');
+    }
+}
+
+// --- Filter Functions ---
+function filterActivities() {
+    const activityTypeFilter = document.getElementById('activityTypeFilter').value;
+    const userFilter = document.getElementById('userFilter').value;
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    
+    const filteredActivities = allActivities.filter(activity => {
+        const typeMatch = !activityTypeFilter || activity.activity_type === activityTypeFilter;
+        const userMatch = !userFilter || activity.user_id === userFilter;
+        
+        let dateMatch = true;
+        if (startDate || endDate) {
+            const activityDate = new Date(activity.created_at);
+            if (startDate) {
+                const start = new Date(startDate);
+                dateMatch = dateMatch && activityDate >= start;
+            }
+            if (endDate) {
+                const end = new Date(endDate);
+                end.setHours(23, 59, 59); // End of day
+                dateMatch = dateMatch && activityDate <= end;
+            }
+        }
+        
+        return typeMatch && userMatch && dateMatch;
+    });
+    
+    renderActivities(filteredActivities);
+    updateStats(filteredActivities);
+}
+
+// --- Update Statistics ---
+function updateStats(activities) {
+    const totalActivities = activities.length;
+    const today = new Date().toISOString().split('T')[0];
+    const todayActivities = activities.filter(a => 
+        a.created_at.startsWith(today)
+    ).length;
+    
+    const uniqueUsers = new Set(activities.map(a => a.user_id)).size;
+    const recentChanges = activities.filter(a => {
+        const activityDate = new Date(a.created_at);
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        return activityDate >= oneWeekAgo;
+    }).length;
+    
+    document.getElementById('totalActivities').textContent = totalActivities;
+    document.getElementById('todayActivities').textContent = todayActivities;
+    document.getElementById('activeUsers').textContent = uniqueUsers;
+    document.getElementById('recentChanges').textContent = recentChanges;
+}
+
+// --- Fetch & Render Activities ---
+async function fetchActivities() {
+    try {
+        const res = await fetch(`/api/teams/${currentTeamId}/activity`, { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to fetch activities');
+        const data = await res.json();
+        allActivities = Array.isArray(data) ? data : [];
+        renderActivities(allActivities);
+        updateStats(allActivities);
+    } catch (e) {
+        allActivities = [];
+        renderActivities([]);
+        showAlert('Could not load activities', 'danger');
+    }
+}
+function renderActivities(activities) {
+    const activitiesList = document.getElementById('activitiesList');
+    if (!activitiesList) return;
+    if (!activities.length) {
+        activitiesList.innerHTML = '<p class="text-muted">No activities found.</p>';
+        return;
+    }
+    activitiesList.innerHTML = activities.map(activity => {
+        const user = teamMembers.find(m => m.id === activity.user_id);
+        const activityDate = new Date(activity.created_at);
+        
+        return `
+            <div class="activity-item">
+                <div class="activity-header">
+                    <div>
+                        <div class="activity-type">${activity.activity_type || 'Unknown'}</div>
+                        <div class="activity-description">${activity.description || ''}</div>
+                    </div>
+                    <span class="activity-badge activity-${activity.activity_type || 'created'}">${activity.activity_type || 'created'}</span>
+                </div>
+                <div class="activity-meta">
+                    <div class="user-info">
+                        <div class="user-avatar">${user ? user.name.charAt(0).toUpperCase() : 'U'}</div>
+                        <span>${user ? user.name : 'Unknown User'}</span>
+                    </div>
+                    <span class="text-muted">${activityDate.toLocaleString()}</span>
+                    ${activity.resource_type ? `<span class="text-muted">Resource: ${activity.resource_type}</span>` : ''}
+                    ${activity.resource_id ? `<span class="text-muted">ID: ${activity.resource_id}</span>` : ''}
+                </div>
+                ${activity.details ? `
+                    <div class="activity-details">
+                        <strong>Details:</strong><br>
+                        <pre>${JSON.stringify(activity.details, null, 2)}</pre>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }).join('');
+}
+
+// --- Set Default Date Range ---
+function setDefaultDateRange() {
+    const today = new Date();
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    
+    document.getElementById('endDate').value = today.toISOString().split('T')[0];
+    document.getElementById('startDate').value = oneWeekAgo.toISOString().split('T')[0];
+}
+
+// --- Initial Load ---
+document.addEventListener('DOMContentLoaded', async function() {
+    await loadTeamDetails();
+    await loadTeamMembers();
+    await fetchActivities();
+    setDefaultDateRange();
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,1049 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block additional_styles %}
+{{ super() }}
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root {
+    --background-color: #181f2a;
+    --text-color: #f8f9fa;
+    --border-color: #232b3b;
+    --card-bg: #232b3a;
+    --card-border: #232b3b;
+    --primary-color: #3a817b;
+    --secondary-color: #64748b;
+    --success-color: #22c55e;
+    --danger-color: #ef4444;
+    --warning-color: #f59e0b;
+    --info-color: #3b82f6;
+    --shadow: 0 4px 24px rgba(0,0,0,0.07);
+}
+
+body, .container-fluid, .main-content {
+    background-color: var(--background-color) !important;
+    color: var(--text-color);
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+}
+
+.card, .modal-content, .table, .form-control, .form-select {
+    background-color: var(--card-bg) !important;
+    color: var(--text-color) !important;
+    border-color: var(--card-border) !important;
+    border-radius: 16px !important;
+    box-shadow: var(--shadow);
+}
+
+.card-header, .modal-header, .modal-footer {
+    background-color: var(--card-bg) !important;
+    border-color: var(--card-border) !important;
+    border-radius: 16px 16px 0 0 !important;
+}
+
+.btn {
+    border-radius: 10px !important;
+    transition: all 0.2s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Stats Cards */
+.stats-card {
+    background: linear-gradient(135deg, var(--card-bg) 0%, rgba(58, 129, 123, 0.1) 100%);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.stats-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), var(--info-color));
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+}
+
+.stats-card .icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.stats-card .value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(45deg, var(--text-color), var(--primary-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.stats-card .label {
+    color: var(--secondary-color);
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stats-card .change {
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
+}
+
+.stats-card .change.positive {
+    color: var(--success-color);
+}
+
+.stats-card .change.negative {
+    color: var(--danger-color);
+}
+
+/* Chart Cards */
+.chart-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.chart-card:hover {
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+}
+
+.chart-card .card-header {
+    background: none;
+    border: none;
+    padding: 0 0 1rem 0;
+    margin-bottom: 1rem;
+    flex-shrink: 0;
+}
+
+.chart-card .card-content {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 400px;
+    max-height: 400px;
+    padding-right: 0.5rem;
+}
+
+.chart-card .card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0;
+}
+
+.chart-card .card-subtitle {
+    color: var(--secondary-color);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+/* Chart Container Styles */
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.chart-container canvas {
+    max-height: 300px !important;
+    max-width: 100% !important;
+}
+
+/* Smaller chart for user growth */
+.chart-container-small {
+    position: relative;
+    height: 250px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.chart-container-small canvas {
+    max-height: 250px !important;
+    max-width: 100% !important;
+}
+
+/* Revenue Breakdown */
+.revenue-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 0.5rem 0;
+}
+
+.industry-item {
+    background: rgba(58, 129, 123, 0.1);
+    border: 1px solid rgba(58, 129, 123, 0.2);
+    border-radius: 12px;
+    padding: 1rem;
+}
+
+.industry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.industry-name {
+    font-weight: 600;
+    color: var(--text-color);
+    font-size: 1.1rem;
+}
+
+.industry-revenue {
+    font-weight: 700;
+    color: #22c55e;
+    font-size: 1.1rem;
+}
+
+.industry-stats {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    color: var(--secondary-color);
+}
+
+.industry-stat {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.industry-stat i {
+    font-size: 0.8rem;
+}
+
+.progress-bar-container {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    margin-top: 0.75rem;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--info-color));
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+/* Loading States */
+.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid var(--primary-color);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .stats-card .value {
+        font-size: 2rem;
+    }
+    
+    .revenue-breakdown {
+        grid-template-columns: 1fr;
+    }
+    
+    .company-item {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .company-logo {
+        margin-right: 0;
+        margin-bottom: 1rem;
+    }
+    
+    .chart-container {
+        height: 250px;
+    }
+    
+    .chart-container-small {
+        height: 200px;
+    }
+    
+    .chart-container canvas {
+        max-height: 250px !important;
+    }
+    
+    .chart-container-small canvas {
+        max-height: 200px !important;
+    }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--background-color);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-color);
+}
+
+/* Add these styles to your existing CSS */
+.sub-info {
+    display: flex;
+    justify-content: space-between;
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
+    color: var(--secondary-color);
+}
+
+.sub-info span {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.sub-info i {
+    font-size: 0.8rem;
+}
+
+.premium-count {
+    color: #f59e0b;
+}
+
+.active-count {
+    color: #22c55e;
+}
+
+.avg-revenue {
+    color: #3b82f6;
+}
+
+.prev-month {
+    color: #64748b;
+}
+
+/* Custom Scrollbar for card content */
+.card-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.card-content::-webkit-scrollbar-track {
+    background: rgba(58, 129, 123, 0.1);
+    border-radius: 4px;
+}
+
+.card-content::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 4px;
+    border: 2px solid var(--card-bg);
+}
+
+.card-content::-webkit-scrollbar-thumb:hover {
+    background: #2a615c;
+}
+
+/* Firefox scrollbar */
+.card-content {
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-color) rgba(58, 129, 123, 0.1);
+}
+
+/* Company List */
+.company-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 0.5rem 0;
+}
+
+.company-item {
+    display: flex;
+    align-items: center;
+    padding: 1.25rem;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    background: rgba(58, 129, 123, 0.1);
+    gap: 1rem;
+}
+
+.company-item:hover {
+    transform: translateX(5px);
+    border-color: var(--primary-color);
+    background: rgba(58, 129, 123, 0.15);
+    box-shadow: 0 4px 12px rgba(58, 129, 123, 0.15);
+}
+
+.company-logo {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--primary-color), var(--info-color));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: white;
+    font-size: 1.2rem;
+}
+
+.company-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.company-name {
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+    line-height: 1.2;
+}
+
+.company-details {
+    font-size: 0.85rem;
+    color: var(--secondary-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.company-details i {
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
+
+.revenue-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-align: center;
+    min-width: 100px;
+    background: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+.company-item:hover .revenue-badge {
+    background: rgba(34, 197, 94, 0.25);
+    border-color: rgba(34, 197, 94, 0.4);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-light">Admin Dashboard</h1>
+            <p class="text-muted">Overview of your business metrics and performance</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary" id="refreshBtn">
+                <i class="fas fa-sync-alt"></i> Refresh Data
+            </button>
+            <button class="btn btn-outline-secondary" id="exportBtn">
+                <i class="fas fa-download"></i> Export Report
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Cards Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="stats-card">
+                <div class="icon bg-primary bg-opacity-25 text-primary">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="value" id="totalUsers">0</div>
+                <div class="label">Total Users</div>
+                <div class="sub-info">
+                    <span class="premium-count"><i class="fas fa-crown"></i> <span id="premiumUsers">0</span> Premium</span>
+                </div>
+                <div class="change positive" id="userGrowth">
+                    <i class="fas fa-arrow-up"></i> <span id="userGrowthValue">0%</span> this month
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stats-card">
+                <div class="icon bg-success bg-opacity-25 text-success">
+                    <i class="fas fa-database"></i>
+                </div>
+                <div class="value" id="totalLeads">0</div>
+                <div class="label">Total Leads</div>
+                <div class="sub-info">
+                    <span class="active-count"><i class="fas fa-check-circle"></i> <span id="activeLeads">0</span> Active</span>
+                </div>
+                <div class="change positive">
+                    <i class="fas fa-arrow-up"></i> Growing
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 col-md-12">
+            <div class="stats-card">
+                <div class="icon bg-warning bg-opacity-25 text-warning">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div class="value" id="totalRevenue">$0</div>
+                <div class="label">Total Leads Revenue</div>
+                <div class="sub-info">
+                    <span class="avg-revenue"><i class="fas fa-chart-line"></i> Avg: <span id="avgRevenue">$0</span> per lead</span>
+                    <span class="prev-month"><i class="fas fa-calendar"></i> Last Month: <span id="prevMonthRevenue">$0</span></span>
+                </div>
+                <div class="change" id="revenueGrowth">
+                    <i class="fas fa-arrow-up"></i> <span id="revenueGrowthValue">0%</span> vs last month
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row g-4 mb-4">
+        <!-- Revenue Chart -->
+        <div class="col-lg-8">
+            <div class="chart-card">
+                <div class="card-header">
+                    <h5 class="card-title">Leads Revenue Trend</h5>
+                    <p class="card-subtitle">Monthly revenue and average revenue per lead</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- User Growth Chart -->
+        <div class="col-lg-4">
+            <div class="chart-card">
+                <div class="card-header">
+                    <h5 class="card-title">User Acquisition</h5>
+                    <p class="card-subtitle">New users and conversion to premium</p>
+                </div>
+                <div class="chart-container-small">
+                    <canvas id="userGrowthChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue Breakdown and Top Companies -->
+    <div class="row g-4">
+        <!-- Revenue Breakdown -->
+        <div class="col-lg-6">
+            <div class="chart-card">
+                <div class="card-header">
+                    <h5 class="card-title">Revenue by Industry</h5>
+                    <p class="card-subtitle">Total leads revenue by industry</p>
+                </div>
+                <div class="card-content">
+                    <div class="revenue-breakdown" id="revenueBreakdown">
+                        <!-- Revenue breakdown items will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Top Companies -->
+        <div class="col-lg-6">
+            <div class="chart-card">
+                <div class="card-header">
+                    <h5 class="card-title">Top Companies by Revenue</h5>
+                    <p class="card-subtitle">Highest revenue companies in our database</p>
+                </div>
+                <div class="card-content">
+                    <div class="company-list" id="topCompanies">
+                        <!-- Company items will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let revenueChart = null;
+    let userGrowthChart = null;
+    
+    // Initialize dashboard
+    loadDashboardData();
+    
+    // Event listeners
+    document.getElementById('refreshBtn').addEventListener('click', loadDashboardData);
+    document.getElementById('exportBtn').addEventListener('click', exportDashboardReport);
+    
+    async function loadDashboardData() {
+        try {
+            // Show loading state
+            document.getElementById('refreshBtn').classList.add('loading');
+            
+            // Load all dashboard data
+            await Promise.all([
+                loadStats(),
+                loadRevenueChart(),
+                loadUserGrowthChart(),
+                loadTopCompanies()
+            ]);
+            
+        } catch (error) {
+            showToast('Failed to load dashboard data', 'error');
+        } finally {
+            document.getElementById('refreshBtn').classList.remove('loading');
+        }
+    }
+    
+    async function loadStats() {
+        try {
+            const response = await fetch('/api/admin/dashboard/stats', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch stats');
+            }
+            
+            const data = await response.json();
+            
+            // Update stats cards
+            document.getElementById('totalUsers').textContent = data.total_users.toLocaleString();
+            document.getElementById('premiumUsers').textContent = data.premium_users.toLocaleString();
+            document.getElementById('totalLeads').textContent = data.total_leads.toLocaleString();
+            document.getElementById('activeLeads').textContent = data.active_leads.toLocaleString();
+            document.getElementById('totalRevenue').textContent = data.revenue.total;
+            document.getElementById('avgRevenue').textContent = data.revenue.average_per_lead;
+            document.getElementById('prevMonthRevenue').textContent = data.revenue.previous_month;
+            
+            // Update growth indicators
+            document.getElementById('userGrowthValue').textContent = `${data.monthly_growth.user_growth}%`;
+            document.getElementById('revenueGrowthValue').textContent = `${data.revenue.growth_percentage}%`;
+            
+            // Update revenue growth indicator color
+            const revenueGrowth = document.getElementById('revenueGrowth');
+            if (data.revenue.growth_percentage > 0) {
+                revenueGrowth.className = 'change positive';
+                revenueGrowth.querySelector('i').className = 'fas fa-arrow-up';
+            } else if (data.revenue.growth_percentage < 0) {
+                revenueGrowth.className = 'change negative';
+                revenueGrowth.querySelector('i').className = 'fas fa-arrow-down';
+            } else {
+                revenueGrowth.className = 'change';
+                revenueGrowth.querySelector('i').className = 'fas fa-minus';
+            }
+            
+            // Update revenue breakdown
+            updateRevenueBreakdown(data.revenue.breakdown);
+            
+        } catch (error) {
+            throw error;
+        }
+    }
+    
+    async function loadRevenueChart() {
+        try {
+            const response = await fetch('/api/admin/dashboard/revenue-chart', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch revenue chart data');
+            }
+            
+            const data = await response.json();
+            
+            // Destroy existing chart if it exists
+            if (revenueChart) {
+                revenueChart.destroy();
+            }
+            
+            // Create revenue chart
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            revenueChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.revenue_data.map(item => item.date),
+                    datasets: [
+                        {
+                            label: 'Total Revenue',
+                            data: data.revenue_data.map(item => item.revenue),
+                            borderColor: '#3a817b',
+                            backgroundColor: 'rgba(58, 129, 123, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Average Revenue per Lead',
+                            data: data.revenue_data.map(item => item.avg_revenue),
+                            borderColor: '#f59e0b',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            fill: false,
+                            tension: 0.4,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                color: '#64748b',
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.dataset.label || '';
+                                    const value = context.dataset.yAxisID === 'y' ? 
+                                        data.revenue_data[context.dataIndex].revenue_formatted :
+                                        data.revenue_data[context.dataIndex].avg_revenue_formatted;
+                                    return `${label}: ${value}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#64748b'
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#64748b',
+                                callback: function(value) {
+                                    return format_revenue(value);
+                                }
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: {
+                                drawOnChartArea: false
+                            },
+                            ticks: {
+                                color: '#64748b',
+                                callback: function(value) {
+                                    return format_revenue(value);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+        } catch (error) {
+            throw error;
+        }
+    }
+    
+    async function loadUserGrowthChart() {
+        try {
+            const response = await fetch('/api/admin/dashboard/user-growth', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch user growth data');
+            }
+            
+            const data = await response.json();
+            
+            // Destroy existing chart if it exists
+            if (userGrowthChart) {
+                userGrowthChart.destroy();
+            }
+            
+            // Create user growth chart
+            const ctx = document.getElementById('userGrowthChart').getContext('2d');
+            userGrowthChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.growth_data.map(item => item.date),
+                    datasets: [
+                        {
+                            label: 'New Users',
+                            data: data.growth_data.map(item => item.new_users),
+                            backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                            borderColor: '#3b82f6',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Premium Users',
+                            data: data.growth_data.map(item => item.new_premium_users),
+                            backgroundColor: 'rgba(34, 197, 94, 0.8)',
+                            borderColor: '#22c55e',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                color: '#64748b',
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#64748b',
+                                maxRotation: 45
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#64748b'
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            });
+            
+        } catch (error) {
+            throw error;
+        }
+    }
+    
+    async function loadTopCompanies() {
+        try {
+            const response = await fetch('/api/admin/dashboard/top-companies', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch top companies');
+            }
+            
+            const data = await response.json();
+            
+            // Update companies list
+            updateCompanyList(data.top_companies);
+            
+        } catch (error) {
+            throw error;
+        }
+    }
+    
+    function updateRevenueBreakdown(breakdown) {
+        const container = document.getElementById('revenueBreakdown');
+        container.innerHTML = '';
+        
+        if (!breakdown) return;
+        
+            // Convert breakdown object to array for sorting
+    const industries = Object.entries(breakdown).map(([industry, data]) => ({
+        industry,
+        ...data
+    }));
+    
+    // Ensure sorting by revenue in descending order
+    industries.sort((a, b) => b.revenue - a.revenue);
+    
+    industries.forEach(data => {
+            const item = document.createElement('div');
+            item.className = 'industry-item';
+            item.innerHTML = `
+                <div class="industry-header">
+                    <div class="industry-name">${data.industry}</div>
+                    <div class="industry-revenue">${data.revenue_formatted}</div>
+                </div>
+                <div class="industry-stats">
+                    <div class="industry-stat">
+                        <i class="fas fa-building"></i>
+                        ${data.count} companies
+                    </div>
+                    <div class="industry-stat">
+                        <i class="fas fa-chart-line"></i>
+                        Avg: ${data.avg_revenue_formatted}
+                    </div>
+                    <div class="industry-stat">
+                        <i class="fas fa-percentage"></i>
+                        ${data.percentage.toFixed(1)}% of total
+                    </div>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" style="width: ${data.percentage}%"></div>
+                </div>
+            `;
+            container.appendChild(item);
+        });
+    }
+    
+    function updateCompanyList(companies) {
+        const container = document.getElementById('topCompanies');
+        container.innerHTML = '';
+        
+        companies.forEach(company => {
+            const item = document.createElement('div');
+            item.className = 'company-item';
+            
+            const companyInitial = company.name.charAt(0).toUpperCase();
+            const location = company.location.replace(/\s*,\s*/g, ' • ');
+            
+            item.innerHTML = `
+                <div class="company-logo">
+                    ${companyInitial}
+                </div>
+                <div class="company-info">
+                    <div class="company-name">${company.name}</div>
+                    <div class="company-details">
+                        <span><i class="fas fa-industry"></i> ${company.industry}</span>
+                        <span><i class="fas fa-map-marker-alt"></i> ${location}</span>
+                    </div>
+                </div>
+                <div class="revenue-badge">
+                    ${company.revenue}
+                </div>
+            `;
+            container.appendChild(item);
+        });
+    }
+    
+    function exportDashboardReport() {
+        // Implementation for exporting dashboard report
+        showToast('Export feature coming soon!', 'info');
+    }
+    
+    function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center text-white bg-${type} border-0 position-fixed bottom-0 end-0 m-3`;
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+        document.body.appendChild(toast);
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+        toast.addEventListener('hidden.bs.toast', () => toast.remove());
+    }
+
+    // Helper function to format revenue
+    function format_revenue(value) {
+        if (value >= 1000000000000) {
+            return '$' + (value / 1000000000000).toFixed(1) + 'T';
+        } else if (value >= 1000000000) {
+            return '$' + (value / 1000000000).toFixed(1) + 'B';
+        } else if (value >= 1000000) {
+            return '$' + (value / 1000000).toFixed(1) + 'M';
+        } else {
+            return '$' + value.toLocaleString();
+        }
+    }
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block title %}Create New User - LeadGen{% endblock %}
+
+{% block additional_styles %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/leads.css') }}">
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+<style>
+    body {
+        background: var(--background-color) !important;
+        color: var(--text-color) !important;
+        background-image: none !important;
+    }
+    .auth-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--background-color) !important;
+        padding: 20px;
+    }
+    .auth-card {
+        background: var(--card-bg) !important;
+        color: var(--text-color) !important;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 400px;
+        padding: 30px; /* Slightly reduced padding */
+    }
+    .auth-header {
+        text-align: center;
+        margin-bottom: 25px; /* Slightly reduced margin */
+    }
+    .auth-title {
+        font-size: 24px;
+        font-weight: 600;
+        color: var(--primary-color) !important;
+        margin-bottom: 8px; /* Adjusted margin */
+        /* Remove potential underline/border */
+        border-bottom: none !important;
+        text-decoration: none !important;
+    }
+    .auth-subtitle {
+        color: var(--text-muted) !important;
+        font-size: 14px;
+    }
+    .form-group {
+        margin-bottom: 18px; /* Adjusted margin */
+    }
+    .form-label {
+        display: block;
+        margin-bottom: 6px; /* Adjusted margin */
+        color: var(--text-color) !important;
+        font-weight: 500;
+        font-size: 14px;
+    }
+    .form-control {
+        background: var(--card-bg) !important;
+        color: var(--text-color) !important;
+        border: 1.5px solid var(--border-color) !important;
+        width: 100%;
+        padding: 10px 12px; /* Adjusted padding */
+        border-radius: 8px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-color) !important;
+        box-shadow: 0 0 0 2px rgba(37,99,235,0.15) !important;
+        background: var(--card-bg) !important;
+        color: var(--text-color) !important;
+    }
+    .password-field {
+        position: relative;
+    }
+    .password-toggle {
+        position: absolute;
+        right: 10px; /* Adjusted position */
+        top: 50%;
+        transform: translateY(-50%);
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        color: var(--text-muted) !important;
+        padding: 3px; /* Adjusted padding */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px; /* Slightly reduced icon size */
+        transition: color 0.2s ease;
+    }
+    .password-toggle:hover {
+        color: var(--primary-color) !important;
+    }
+    .password-toggle:focus {
+        outline: none;
+    }
+    .btn-auth, .btn-primary, .btn-login {
+        background: linear-gradient(90deg, var(--accent-color) 0%, var(--primary-color) 100%) !important;
+        color: #fff !important;
+        border: none !important;
+        width: 100%;
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .btn-auth:hover, .btn-primary:hover, .btn-login:hover {
+        background: linear-gradient(90deg, var(--primary-color) 0%, var(--accent-color) 100%) !important;
+        color: #fff !important;
+        transform: translateY(-2px);
+    }
+    .auth-footer {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 14px;
+        color: var(--text-muted) !important;
+    }
+    .auth-footer a {
+        color: var(--primary-color) !important;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    .auth-footer a:hover {
+        text-decoration: underline;
+    }
+    .flash-messages {
+        margin-bottom: 20px;
+    }
+    .alert {
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        font-size: 14px;
+    }
+    .alert-danger {
+        background: var(--danger-color) !important;
+        color: #fff !important;
+        border: none !important;
+    }
+    .alert-success {
+        background: var(--success-color) !important;
+        color: #fff !important;
+        border: none !important;
+    }
+    /* Style for GDPR checkbox */
+    .gdpr-checkbox {
+        display: flex; /* Use flexbox */
+        align-items: center; /* Vertically align items */
+    }
+    .gdpr-checkbox .form-check-label {
+        font-size: 12px;
+        color: var(--text-muted);
+        cursor: pointer;
+        flex-grow: 1; /* Allow label to take up available space */
+    }
+    .gdpr-checkbox .form-check-input {
+        margin-right: 8px; /* Increased margin for spacing */
+        cursor: pointer;
+        flex-shrink: 0; /* Prevent checkbox from shrinking */
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1 class="auth-title">Create New User</h1>
+            <p class="auth-subtitle">Add a new user to LeadGen</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('auth.signup') }}">
+            <div class="form-group">
+                <label class="form-label" for="username">Username</label>
+                <input type="text" class="form-control" id="username" name="username" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="email">Email</label>
+                <input type="email" class="form-control" id="email" name="email" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="company">Company</label>
+                <input type="text" class="form-control" id="company" name="company">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password">Password</label>
+                <div class="password-field">
+                    <input type="password" class="form-control" id="password" name="password" required>
+                    <button type="button" class="password-toggle">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="confirm_password">Confirm Password</label>
+                <div class="password-field">
+                    <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                    <button type="button" class="password-toggle">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            {# GDPR Acceptance Checkbox #}
+            <div class="form-group gdpr-checkbox">
+                <input type="checkbox" class="form-check-input" id="gdpr_accept" name="gdpr_accept" required>
+                <label class="form-check-label" for="gdpr_accept">
+                    I accept the <a href="#">terms and conditions</a> and have read the <a href="#">privacy policies</a>.
+                </label>
+            </div>
+
+            <button type="submit" class="btn-auth">Sign Up</button>
+        </form>
+
+        <div class="auth-footer">
+            Already have an account? <a href="{{ url_for('auth.login') }}">Sign In</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const passwordFields = document.querySelectorAll('.password-field');
+
+        passwordFields.forEach(field => {
+            const passwordInput = field.querySelector('input[type="password"]');
+            const toggleButton = field.querySelector('.password-toggle');
+            const toggleIcon = toggleButton.querySelector('i');
+
+            toggleButton.addEventListener('click', function() {
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    toggleIcon.classList.remove('bi-eye');
+                    toggleIcon.classList.add('bi-eye-slash');
+                } else {
+                    passwordInput.type = 'password';
+                    toggleIcon.classList.remove('bi-eye-slash');
+                    toggleIcon.classList.add('bi-eye');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

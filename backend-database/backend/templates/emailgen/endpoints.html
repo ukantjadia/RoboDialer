@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8'>
+    <title>API & UI Endpoints</title>
+    <link rel='stylesheet' href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class='card'>
+        <h1>Available Endpoints</h1>
+        <ul>
+            <li><strong>GET</strong> <code>/</code> <em>(main_routes.py)</em></li>
+            <li><strong>POST</strong> <code>/api/generate-email</code> <em>(input_form_routes.py)</em></li>
+            <li><strong>GET</strong> <code>/docs</code> <em>(main_routes.py)</em></li>
+            <li><strong>GET</strong> <code>/email-generator</code> <em>(input_form_routes.py)</em></li>
+            <li><strong>GET</strong> <code>/endpoints</code> <em>(main_routes.py)</em></li>
+        </ul>
+        <p>For more details, see the <a href='/docs'>documentation</a>.</p>
+    </div>
+</body>
+</html>

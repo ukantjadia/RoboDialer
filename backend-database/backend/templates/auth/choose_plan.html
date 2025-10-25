@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block title %}Choose Your Plan - LeadGen{% endblock %}
+
+{% block additional_styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/leads.css') }}">
+<style>
+    body {
+        background: var(--background-color) !important;
+        color: var(--text-color) !important;
+        background-image: none !important;
+    }
+    .container {
+        background: var(--background-color) !important;
+    }
+    .card {
+        background: var(--card-bg) !important;
+        color: var(--text-color) !important;
+        border: 1px solid var(--border-color) !important;
+        box-shadow: var(--card-shadow) !important;
+    }
+    .card-title {
+        color: var(--primary-color) !important;
+        font-weight: 600;
+    }
+    .price-text {
+        color: var(--text-muted) !important;
+        font-size: 1.2em;
+        margin-bottom: 1em;
+    }
+    .features-list p {
+        color: var(--text-color) !important;
+        margin-bottom: 0.5em;
+        font-size: 0.9em;
+    }
+    .features-list strong {
+        color: var(--accent-color) !important;
+    }
+    .btn-outline-primary {
+        color: var(--primary-color) !important;
+        border-color: var(--primary-color) !important;
+    }
+    .btn-outline-primary:hover {
+        background-color: var(--primary-color) !important;
+        color: var(--background-color) !important;
+    }
+    .btn-primary {
+        background: linear-gradient(90deg, var(--accent-color) 0%, var(--primary-color) 100%) !important;
+        color: #fff !important;
+        border: none !important;
+    }
+    .btn-primary:hover {
+         background: linear-gradient(90deg, var(--primary-color) 0%, var(--accent-color) 100%) !important;
+         color: #fff !important;
+    }
+    .btn-secondary {
+        background: var(--text-muted) !important;
+        color: var(--background-color) !important;
+        border: none !important;
+    }
+     .btn-secondary:hover {
+        background: var(--border-color) !important;
+        color: var(--text-color) !important;
+    }
+    .card-header {
+        background: var(--primary-color) !important;
+        color: #fff !important;
+        border-bottom: 1px solid var(--border-color) !important;
+    }
+    .text-muted {
+        color: var(--text-muted) !important;
+    }
+     /* Style for Flask flash messages */
+    .flash-messages {
+        margin-top: 0; /* Reduced margin top */
+        margin-bottom: 0; /* Removed bottom margin */
+        padding: 0; /* Removed padding */
+    }
+    /* Style for the success message div */
+    .success-message {
+        background-color: var(--card-bg) !important; /* Or adjust based on desired success color */
+        color: var(--success-color) !important;
+        border: 1px solid var(--success-color) !important;
+        padding: 12px; /* Keep some padding inside */
+        border-radius: 8px;
+        margin-bottom: 0; /* Removed bottom margin */
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        width: 100%; /* Full width */
+        margin-left: 0; /* Align left */
+        margin-right: 0; /* Align left */
+        text-align: left; /* Align text left */
+    }
+    .success-message svg {
+        min-width: 18px; /* Prevent shrinking */
+        margin-right: 8px; /* Ensure space between icon and text */
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+
+    {# Flask Flash Messages #}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    {# Apply styling similar to leads.html #}
+                    <div class="success-message animate__animated animate__fadeInDown">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="text-center mb-4">
+        <h2>Upgrade Your Plan</h2>
+        <p class="text-muted">Welcome to LeadGen! Choose a plan to unlock more leads and features, or continue with the Free plan.</p>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+        <!-- Free Tier -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Free</h5>
+                    <h6 class="price-text">$0/month</h6>
+                    <div class="features-list">
+                        <p class="mb-1"><strong>1,200</strong> Credits/Year</p>
+                        <p class="mb-1">$0 Cost/Credit</p>
+                        <p class="mb-1">Phase 1 Scraper</p>
+                        <p class="mb-1">(No enrichment, no contact details)</p>
+                    </div>
+                    <button class="btn btn-secondary w-100 mt-3" onclick="selectPlan('free')">Continue with Free</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bronze Tier -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Bronze</h5>
+                    <h6 class="price-text">$19/month</h6>
+                    <div class="features-list">
+                         <p class="mb-1"><strong>12,000</strong> Credits/Year</p>
+                        <p class="mb-1">$0.0166 Cost/Credit</p>
+                        <p class="mb-1">Basic Filters</p>
+                        <p class="mb-1">CSV Export</p>
+                    </div>
+                    <button class="btn btn-outline-primary w-100 mt-3" onclick="selectPlan('bronze')">Choose Bronze</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Silver Tier -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Silver</h5>
+                    <h6 class="price-text">$49/month</h6>
+                    <div class="features-list">
+                        <p class="mb-1"><strong>60,000</strong> Credits/Year</p>
+                        <p class="mb-1">$0.0083 Cost/Credit</p>
+                        <p class="mb-1">Phone Numbers</p>
+                        <p class="mb-1">Advanced Features</p>
+                    </div>
+                    <button class="btn btn-outline-primary w-100 mt-3" onclick="selectPlan('silver')">Choose Silver</button>
+                </div>
+            </div>
+        </div>
+
+         <!-- Gold Tier -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm border-primary">
+                 <div class="card-header bg-primary text-white text-center py-2">
+                    Recommended
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Gold</h5>
+                    <h6 class="price-text">$99/month</h6>
+                    <div class="features-list">
+                         <p class="mb-1"><strong>150,000</strong> Credits/Year</p>
+                        <p class="mb-1">$0.0066 Cost/Credit</p>
+                        <p class="mb-1">Email Writing AI</p>
+                        <p class="mb-1">Priority</p>
+                    </div>
+                    <button class="btn btn-primary w-100 mt-3" onclick="selectPlan('gold')">Choose Gold</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Platinum Tier -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Platinum</h5>
+                    <h6 class="price-text">$199/month</h6>
+                    <div class="features-list">
+                         <p class="mb-1"><strong>400,000</strong> Credits/Year</p>
+                        <p class="mb-1">$0.005 Cost/Credit</p>
+                        <p class="mb-1">Custom workflows</p>
+                        <p class="mb-1">Priority support</p>
+                    </div>
+                    <button class="btn btn-outline-primary w-100 mt-3" onclick="selectPlan('platinum')">Choose Platinum</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enterprise Tier -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Enterprise</h5>
+                    <h6 class="price-text">Custom Pricing</h6>
+                    <div class="features-list">
+                        <p class="mb-1">Custom Credits/Year</p>
+                        <p class="mb-1">Custom Cost/Credit</p>
+                        <p class="mb-1">Custom Features</p>
+                    </div>
+                    {# For enterprise, maybe a contact button instead of select plan #}
+                    <a href="https://www.saasquatchleads.com/" class="btn btn-outline-primary w-100 mt-3">Contact Us</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="text-center mt-4">
+        <a href="https://www.saasquatchleads.com/" class="btn btn-secondary">Continue to Dashboard (Free Plan)</a>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://js.stripe.com/v3/"></script>
+<script src="{{ url_for('static', filename='js/subscription_modal.js') }}"></script>
+<script>
+    // Hide flash messages after 5 seconds (5000 ms)
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            document.querySelectorAll('.success-message').forEach(function(msg) {
+                msg.style.transition = 'opacity 0.5s';
+                msg.style.opacity = 0;
+                setTimeout(function() {
+                    msg.style.display = 'none';
+                }, 500); // Wait for fade out
+            });
+        }, 5000); // 5 seconds
+    });
+</script>
+{% endblock %}

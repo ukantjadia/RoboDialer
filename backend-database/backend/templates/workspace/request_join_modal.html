@@ -1,0 +1,465 @@
+<!-- Request to Join Team Modal -->
+<div id="requestJoinModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Request to Join Team</h3>
+            <button type="button" class="btn-close" onclick="closeRequestJoinModal()">&times;</button>
+        </div>
+        
+        <div class="modal-body">
+            <p class="modal-description">Send a request to join an existing team.</p>
+            
+            <!-- Workspace Owner Email -->
+            <div class="form-group">
+                <label for="ownerEmail" class="form-label">Workspace Owner Email</label>
+                <input type="email" id="ownerEmail" class="form-control" placeholder="Enter the email of the workspace owner" required>
+                <small class="form-text">Email of the workspace owner or admin who will review your request</small>
+            </div>
+            
+            <!-- Requested Role -->
+            <div class="form-group">
+                <label for="requestedRole" class="form-label">Requested Role</label>
+                <select id="requestedRole" class="form-control" required>
+                    <option value="member">Member</option>
+                    <option value="manager">Manager</option>
+                </select>
+                <small class="form-text">Select the role you're requesting</small>
+            </div>
+            
+            <!-- Message -->
+            <div class="form-group">
+                <label for="requestMessage" class="form-label">Message (Optional)</label>
+                <textarea id="requestMessage" class="form-control" rows="3" placeholder="Tell the team why you want to join and what you can contribute..."></textarea>
+                <small class="form-text">Briefly explain why you want to join this team</small>
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeRequestJoinModal()">Cancel</button>
+            <button type="button" class="btn btn-primary" onclick="sendJoinRequest()">Send Request</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.modal {
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: var(--card-bg);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+.modal-header {
+    padding: 24px 24px 16px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: var(--text-color);
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.btn-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-color);
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.modal-description {
+    color: var(--text-muted);
+    margin-bottom: 24px;
+    font-size: 0.95rem;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-color);
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--background-color);
+    color: var(--text-color);
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(58, 129, 123, 0.1);
+}
+
+.form-control:disabled,
+.form-control[readonly] {
+    background: var(--card-bg);
+    color: var(--text-muted);
+    cursor: not-allowed;
+}
+
+.form-text {
+    display: block;
+    margin-top: 6px;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+.modal-footer {
+    padding: 16px 24px 24px;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-secondary {
+    background: var(--border-color);
+    color: var(--text-color);
+}
+
+.btn-secondary:hover {
+    background: var(--text-muted);
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--secondary-color);
+    transform: translateY(-1px);
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Team info display */
+.team-info {
+    background: var(--background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.team-info h4 {
+    margin: 0 0 8px 0;
+    color: var(--primary-color);
+    font-size: 1.1rem;
+}
+
+.team-info p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.team-stats {
+    display: flex;
+    gap: 16px;
+    margin-top: 12px;
+}
+
+.team-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.team-stat-value {
+    font-weight: 600;
+    color: var(--text-color);
+    font-size: 1.1rem;
+}
+
+.team-stat-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+/* Loading state */
+.loading {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-muted);
+}
+
+.loading::after {
+    content: "";
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border-color);
+    border-radius: 50%;
+    border-top-color: var(--primary-color);
+    animation: spin 1s ease-in-out infinite;
+    margin-left: 10px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        margin: 20px;
+    }
+    
+    .modal-header,
+    .modal-body,
+    .modal-footer {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+    
+    .team-stats {
+        justify-content: space-around;
+    }
+}
+</style>
+
+<script>
+// Function to open the request join modal
+function openRequestJoinModal() {
+    document.getElementById('requestJoinModal').style.display = 'flex';
+    resetModal();
+}
+
+// Function to close the request join modal
+function closeRequestJoinModal() {
+    document.getElementById('requestJoinModal').style.display = 'none';
+    resetModal();
+}
+
+// Function to reset modal form
+function resetModal() {
+    document.getElementById('ownerEmail').value = '';
+    document.getElementById('requestedRole').value = 'member';
+    document.getElementById('requestMessage').value = '';
+}
+
+// Function to send join request
+async function sendJoinRequest() {
+    try {
+        const ownerEmail = document.getElementById('ownerEmail').value;
+        const requestedRole = document.getElementById('requestedRole').value;
+        const message = document.getElementById('requestMessage').value;
+        
+        // Validate required fields
+        if (!ownerEmail) {
+            showAlert('Workspace owner email is required', 'danger');
+            return;
+        }
+        
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(ownerEmail)) {
+            showAlert('Please enter a valid email address', 'danger');
+            return;
+        }
+        
+        // Disable send button
+        const sendBtn = document.querySelector('button[onclick="sendJoinRequest()"]');
+        const originalText = sendBtn.textContent;
+        sendBtn.disabled = true;
+        sendBtn.textContent = 'Sending...';
+        
+        const response = await fetch('/api/workspace-join-requests/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                owner_email: ownerEmail,
+                requested_role: requestedRole,
+                message: message
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            showAlert('Join request sent successfully!', 'success');
+            closeRequestJoinModal();
+            
+            // Refresh workspaces list if we're on the workspace page
+            if (typeof fetchWorkspaces === 'function') {
+                fetchWorkspaces();
+            }
+        } else {
+            throw new Error(result.error || 'Failed to send join request');
+        }
+        
+    } catch (error) {
+        showAlert(error.message || 'Failed to send join request', 'danger');
+    } finally {
+        // Re-enable send button
+        const sendBtn = document.querySelector('button[onclick="sendJoinRequest()"]');
+        if (sendBtn) {
+            sendBtn.disabled = false;
+            sendBtn.textContent = originalText || 'Send Request';
+        }
+    }
+}
+
+// Function to show alert messages
+function showAlert(message, type = 'success') {
+    // Remove any existing alerts
+    const existingAlert = document.querySelector('.alert-message');
+    if (existingAlert) {
+        existingAlert.remove();
+    }
+    
+    const alert = document.createElement('div');
+    alert.className = `alert-message alert-${type}`;
+    alert.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 3000;
+        padding: 12px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        animation: slideInRight 0.3s ease-out;
+        max-width: 300px;
+    `;
+    
+    if (type === 'success') {
+        alert.style.background = 'var(--success-color)';
+    } else if (type === 'danger') {
+        alert.style.background = 'var(--danger-color)';
+    } else {
+        alert.style.background = 'var(--primary-color)';
+    }
+    
+    alert.textContent = message;
+    document.body.appendChild(alert);
+    
+    // Auto remove after 4 seconds
+    setTimeout(() => {
+        if (alert.parentNode) {
+            alert.style.animation = 'slideOutRight 0.3s ease-out';
+            setTimeout(() => alert.remove(), 300);
+        }
+    }, 4000);
+}
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideInRight {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes slideOutRight {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
+
+// Close modal when clicking outside
+document.addEventListener('click', function(event) {
+    const modal = document.getElementById('requestJoinModal');
+    if (event.target === modal) {
+        closeRequestJoinModal();
+    }
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        const modal = document.getElementById('requestJoinModal');
+        if (modal.style.display === 'flex') {
+            closeRequestJoinModal();
+        }
+    }
+});
+</script> 

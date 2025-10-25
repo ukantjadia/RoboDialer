@@ -1,0 +1,576 @@
+# Map the request Origin to a CORS-approved value
+
+map $http_origin $cors_origin {
+
+    default "";
+
+    ~^https://(www\.)?saasquatchleads\.com$ $http_origin;
+
+    ~^https://app\.saasquatchleads\.com$ $http_origin;
+
+    ~^https://sandboxdev\.saasquatchleads\.com$ $http_origin;
+
+    ~^https://main\.d2fzqm2i2qb7f3\.amplifyapp\.com$ $http_origin;
+
+    ~^http://localhost:3000$ $http_origin;
+
+    ~^https://sandbox-api\.saasquatchleads\.com$ $http_origin;
+
+}
+
+
+# Redirect HTTP to HTTPS
+
+server {
+
+    listen 80;
+
+    server_name sandbox-api.saasquatchleads.com data.capraeleadseekers.site;
+
+    return 301 https://$host$request_uri;
+
+}
+
+
+# Main HTTPS reverse proxy server
+
+server {
+
+    listen 443 ssl;
+
+    server_name sandbox-api.saasquatchleads.com data.capraeleadseekers.site;
+
+
+    # SSL Configuration
+
+    ssl_certificate /etc/letsencrypt/live/sandbox-api.saasquatchleads.com/fullchain.pem;
+
+    ssl_certificate_key /etc/letsencrypt/live/sandbox-api.saasquatchleads.com/privkey.pem;
+
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+
+    # Timeouts & Buffering
+
+    proxy_connect_timeout 2800s;
+
+    proxy_read_timeout 2800s;
+
+    proxy_send_timeout 2800s;
+
+    send_timeout 2800s;
+
+    client_body_timeout 2800s;
+
+    client_header_timeout 2800s;
+
+    proxy_buffering off;
+
+    proxy_request_buffering off;
+
+
+    # Shared Headers
+
+    add_header 'Vary' 'Origin' always;
+
+
+    # Hide Duplicated CORS Headers
+
+    proxy_hide_header 'Access-Control-Allow-Origin';
+
+    proxy_hide_header 'Access-Control-Allow-Credentials';
+
+    proxy_hide_header 'Access-Control-Allow-Methods';
+
+    proxy_hide_header 'Access-Control-Allow-Headers';
+
+
+    # ========== Endpoints ==========
+
+
+    # Root API (FastAPI backend)
+
+    location / {
+
+        if ($request_method = 'OPTIONS') {
+
+            add_header 'Access-Control-Allow-Origin' "$cors_origin";
+
+            add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS, PAT
+CH';
+
+            add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization, X-Reque
+sted-With';
+
+            add_header 'Access-Control-Allow-Credentials' 'true';
+
+            add_header 'Access-Control-Max-Age' 86400;
+
+            add_header 'Content-Type' 'text/plain; charset=utf-8';
+
+            add_header 'Content-Length' 0;
+
+            return 204;
+
+        }
+
+
+        add_header 'Access-Control-Allow-Origin' "$cors_origin" always;
+
+        add_header 'Access-Control-Allow-Credentials' 'true' always;
+
+
+        proxy_pass http://127.0.0.1:8000;
+
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+
+        proxy_set_header X-Real-IP $remote_addr;
+
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+    }
+
+
+    # Flask Enrichment Backend
+
+    location /enrich/ {
+
+        if ($request_method = 'OPTIONS') {
+
+            add_header 'Access-Control-Allow-Origin' "$cors_origin";
+
+            add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS, PAT
+CH';
+
+            add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization, X-Reque
+sted-With';
+
+            add_header 'Access-Control-Allow-Credentials' 'true';
+
+            add_header 'Access-Control-Max-Age' 86400;
+
+            add_header 'Content-Type' 'text/plain; charset=utf-8';
+
+            add_header 'Content-Length' 0;
+
+            return 204;
+
+        }
+
+
+        add_header 'Access-Control-Allow-Origin' "$cors_origin" always;
+
+        add_header 'Access-Control-Allow-Credentials' 'true' always;
+
+
+        proxy_pass http://127.0.0.1:5050;
+
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+
+        proxy_set_header X-Real-IP $remote_addr;
+
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+    }
+
+
+    # Scraper FastAPI
+
+    location /scraper/ {
+
+        if ($request_method = 'OPTIONS') {
+
+            add_header 'Access-Control-Allow-Origin' "$cors_origin";
+
+            add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS, PAT
+CH';
+
+            add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization, X-Reque
+sted-With';
+
+            add_header 'Access-Control-Allow-Credentials' 'true';
+
+            add_header 'Access-Control-Max-Age' 86400;
+
+            add_header 'Content-Type' 'text/plain; charset=utf-8';
+
+            add_header 'Content-Length' 0;
+
+            return 204;
+
+        }
+
+
+        add_header 'Access-Control-Allow-Origin' "$cors_origin" always;
+
+        add_header 'Access-Control-Allow-Credentials' 'true' always;
+
+
+        proxy_pass http://127.0.0.1:5000/api/;
+
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+
+        proxy_set_header X-Real-IP $remote_addr;
+
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+    }
+
+
+    # REST API
+
+    location /restapi/ {
+
+        if ($request_method = 'OPTIONS') {
+
+            add_header 'Access-Control-Allow-Origin' "$cors_origin";
+
+            add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS, PAT
+CH';
+
+            add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization, X-Reque
+sted-With';
+
+            add_header 'Access-Control-Allow-Credentials' 'true';
+
+            add_header 'Access-Control-Max-Age' 86400;
+
+            add_header 'Content-Type' 'text/plain; charset=utf-8';
+
+            add_header 'Content-Length' 0;
+
+            return 204;
+
+        }
+
+
+        add_header 'Access-Control-Allow-Origin' "$cors_origin" always;
+
+        add_header 'Access-Control-Allow-Credentials' 'true' always;
+
+
+        proxy_pass http://127.0.0.1:6000/;
+
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+
+        proxy_set_header X-Real-IP $remote_addr;
+
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+    }
+
+
+    # AI News API
+
+    location /ai-news/ {
+
+        if ($request_method = 'OPTIONS') {
+
+            add_header 'Access-Control-Allow-Origin' "$cors_origin";
+
+            add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS, PAT
+CH';
+
+            add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization, X-Reque
+sted-With';
+
+            add_header 'Access-Control-Allow-Credentials' 'true';
+
+            add_header 'Access-Control-Max-Age' 86400;
+
+            add_header 'Content-Type' 'text/plain; charset=utf-8';
+
+            add_header 'Content-Length' 0;
+
+            return 204;
+
+        }
+
+
+        add_header 'Access-Control-Allow-Origin' "$cors_origin" always;
+
+        add_header 'Access-Control-Allow-Credentials' 'true' always;
+
+
+        proxy_pass http://127.0.0.1:5100/ai-news/;
+
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+
+        proxy_set_header X-Real-IP $remote_addr;
+
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+    }
+
+
+    # AI Score API
+
+    location /ai-score/ {
+
+        if ($request_method = 'OPTIONS') {
+
+            add_header 'Access-Control-Allow-Origin' "$cors_origin" always;
+
+            add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS' always;
+
+            add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization' always;
+
+            add_header 'Access-Control-Allow-Credentials' 'true' always;
+
+            add_header 'Access-Control-Max-Age' 86400 always;
+
+            add_header 'Content-Type' 'text/plain; charset=utf-8' always;
+
+            add_header 'Content-Length' 0 always;
+
+            return 204;
+
+        }
+
+
+        proxy_pass http://127.0.0.1:5001/api/;
+
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+
+        proxy_set_header X-Real-IP $remote_addr;
+
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        
+
+        add_header 'Access-Control-Allow-Origin' "$cors_origin" always;
+
+        add_header 'Access-Control-Allow-Credentials' 'true' always;
+
+    }
+
+
+    # Phone/Email Validation API
+
+    location /api/validate_email {
+
+        if ($request_method = 'OPTIONS') {
+
+            add_header 'Access-Control-Allow-Origin' "$cors_origin";
+
+            add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+
+            add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization, X-Reque
+sted-With';
+
+            add_header 'Access-Control-Allow-Credentials' 'true';
+
+            add_header 'Access-Control-Max-Age' 86400;
+
+            add_header 'Content-Type' 'text/plain; charset=utf-8';
+
+            add_header 'Content-Length' 0;
+
+            return 204;
+
+        }
+
+
+        add_header 'Access-Control-Allow-Origin' "$cors_origin" always;
+
+        add_header 'Access-Control-Allow-Credentials' 'true' always;
+
+
+        proxy_pass http://127.0.0.1:5002/validate_email;
+
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+
+        proxy_set_header X-Real-IP $remote_addr;
+
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+    }
+
+
+    location /api/validate_phone {
+
+        if ($request_method = 'OPTIONS') {
+
+            add_header 'Access-Control-Allow-Origin' "$cors_origin";
+
+            add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+
+            add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization, X-Reque
+sted-With';
+
+            add_header 'Access-Control-Allow-Credentials' 'true';
+
+            add_header 'Access-Control-Max-Age' 86400;
+
+            add_header 'Content-Type' 'text/plain; charset=utf-8';
+
+            add_header 'Content-Length' 0;
+
+            return 204;
+
+        }
+
+
+        add_header 'Access-Control-Allow-Origin' "$cors_origin" always;
+
+        add_header 'Access-Control-Allow-Credentials' 'true' always;
+
+
+        proxy_pass http://127.0.0.1:5002/validate_phone;
+
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+
+        proxy_set_header X-Real-IP $remote_addr;
+
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+    }
+
+
+    # Company Insights API
+
+    location /insights/ {
+
+        if ($request_method = 'OPTIONS') {
+
+            add_header 'Access-Control-Allow-Origin' "$cors_origin";
+
+            add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS, PAT
+CH';
+
+            add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization, X-Reque
+sted-With';
+
+            add_header 'Access-Control-Allow-Credentials' 'true';
+
+            add_header 'Access-Control-Max-Age' 86400;
+
+            add_header 'Content-Type' 'text/plain; charset=utf-8';
+
+            add_header 'Content-Length' 0;
+
+            return 204;
+
+        }
+
+
+        add_header 'Access-Control-Allow-Origin' "$cors_origin" always;
+
+        add_header 'Access-Control-Allow-Credentials' 'true' always;
+
+
+        proxy_pass http://127.0.0.1:5003/;
+
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+
+        proxy_set_header X-Real-IP $remote_addr;
+
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+    }
+
+
+    # EmailG Endpoint
+
+    location /emailg/ {
+
+        if ($request_method = 'OPTIONS') {
+
+            add_header 'Access-Control-Allow-Origin' "$cors_origin";
+
+            add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS, PAT
+CH';
+
+            add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization, X-Reque
+sted-With';
+
+            add_header 'Access-Control-Allow-Credentials' 'true';
+
+            add_header 'Access-Control-Max-Age' 86400;
+
+            add_header 'Content-Type' 'text/plain; charset=utf-8';
+
+            add_header 'Content-Length' 0;
+
+            return 204;
+
+        }
+
+
+        add_header 'Access-Control-Allow-Origin' "$cors_origin" always;
+
+        add_header 'Access-Control-Allow-Credentials' 'true' always;
+
+
+        proxy_pass http://127.0.0.1:8001/;
+
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+
+        proxy_set_header X-Real-IP $remote_addr;
+
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+    }
+
+
+    # Health Check
+
+    location = /api/health {
+
+        proxy_pass http://127.0.0.1:8000/health;
+
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+
+        proxy_set_header X-Real-IP $remote_addr;
+
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+    }
+
+}

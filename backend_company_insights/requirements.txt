@@ -1,0 +1,43 @@
+# Core Flask dependencies
+Flask==2.3.3
+Flask-CORS==4.0.0
+Werkzeug==2.3.7
+
+# Web scraping and automation
+playwright==1.55.0
+beautifulsoup4==4.12.2
+requests==2.31.0
+selenium==4.15.2
+webdriver-manager==4.0.1
+vaderSentiment==3.3.2
+urllib3==2.5.0
+
+# Sentiment analysis
+
+# Environment and configuration
+python-dotenv==1.0.0
+
+# Additional utilities
+lxml==4.9.3
+html5lib==1.1
+
+# Async support
+aiohttp==3.9.1
+asyncio-mqtt==0.16.1
+
+# Data processing
+pandas==2.1.4
+numpy==1.24.3
+
+# HTTP client
+httpx==0.25.2
+
+# Logging and monitoring
+structlog==23.2.0
+
+# # Security
+# cryptography==41.0.8
+
+# Development and testing (optional)
+pytest==7.4.3
+pytest-asyncio==0.21.1

@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Create Workspace{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box">
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{{ url_for('workspace_web.workspace_list') }}">Workspaces</a></li>
+                        <li class="breadcrumb-item active">Create Workspace</li>
+                    </ol>
+                </div>
+                <h4 class="page-title">Create New Workspace</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Workspace Information</h4>
+                    <p class="text-muted mb-0">Create a new workspace for your team to collaborate on projects and tasks.</p>
+                    <div class="alert alert-info mt-3">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Subscription Required:</strong> Workspace creation is available for Platinum and Enterprise tier users only.
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="name" class="form-label">Workspace Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="name" name="name" required 
+                                           placeholder="Enter workspace name">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="domain" class="form-label">Domain</label>
+                                    <input type="text" class="form-control" id="domain" name="domain" 
+                                           placeholder="e.g., company.com">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="industry" class="form-label">Industry</label>
+                                    <select class="form-select" id="industry" name="industry">
+                                        <option value="">Select Industry</option>
+                                        <option value="technology">Technology</option>
+                                        <option value="healthcare">Healthcare</option>
+                                        <option value="finance">Finance</option>
+                                        <option value="education">Education</option>
+                                        <option value="retail">Retail</option>
+                                        <option value="manufacturing">Manufacturing</option>
+                                        <option value="consulting">Consulting</option>
+                                        <option value="marketing">Marketing</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="size" class="form-label">Team Size</label>
+                                    <select class="form-select" id="size" name="size">
+                                        <option value="small">Small (1-10 people)</option>
+                                        <option value="medium" selected>Medium (11-50 people)</option>
+                                        <option value="large">Large (51+ people)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="4" 
+                                      placeholder="Describe your workspace and its purpose..."></textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{{ url_for('workspace_web.workspace_list') }}" 
+                                       class="btn btn-secondary">Cancel</a>
+                                    <button type="submit" class="btn btn-primary">
+
+                                        Create Workspace
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation
+    const form = document.querySelector('form');
+    const nameInput = document.getElementById('name');
+    
+    form.addEventListener('submit', function(e) {
+        if (!nameInput.value.trim()) {
+            e.preventDefault();
+            alert('Please enter a workspace name');
+            nameInput.focus();
+            return false;
+        }
+    });
+    
+});
+</script>
+{% endblock %} 

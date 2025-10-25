@@ -1,0 +1,36 @@
+services:
+  backend:
+    image: ghcr.io/caprae-capital-partners/leadgenai-robodialer-backend:latest
+    ports:
+      - "8001:8001"
+    environment:
+      - PORT=8001
+      - DATABASE_URL=${DATABASE_URL}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+      - TWILIO_API_KEY_SID=${TWILIO_API_KEY_SID}
+      - TWILIO_API_SECRET=${TWILIO_API_SECRET}
+      - TWILIO_TWIML_APP_SID=${TWILIO_TWIML_APP_SID}
+      - TWILIO_CALLER_ID=${TWILIO_CALLER_ID}
+    restart: unless-stopped
+
+  frontend:
+    image: ghcr.io/caprae-capital-partners/leadgenai-robodialer-frontend:latest
+    ports:
+      - "9002:9002"
+    environment:
+      - NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL}
+      - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
+      - NEXT_PUBLIC_TWILIO_ACCOUNT_SID=${NEXT_PUBLIC_TWILIO_ACCOUNT_SID}
+      - NEXT_PUBLIC_TWILIO_AUTH_TOKEN=${NEXT_PUBLIC_TWILIO_AUTH_TOKEN}
+      - NEXT_PUBLIC_TWILIO_API_KEY_SID=${NEXT_PUBLIC_TWILIO_API_KEY_SID}
+      - NEXT_PUBLIC_TWILIO_API_SECRET=${NEXT_PUBLIC_TWILIO_API_SECRET}
+      - NEXT_PUBLIC_TWILIO_TWIML_APP_SID=${NEXT_PUBLIC_TWILIO_TWIML_APP_SID}
+      - NEXT_PUBLIC_TWILIO_CALLER_ID=${NEXT_PUBLIC_TWILIO_CALLER_ID}
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+networks:
+  default:
+    name: robodialer-network

@@ -1,0 +1,1950 @@
+{% extends "base.html" %}
+
+{% block title %}{{ task.title }} - Task Details{% endblock %}
+
+{% block additional_styles %}
+{{ super() }}
+<style>
+    .task-detail-container {
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        background: var(--card-bg);
+    }
+    
+    .task-header {
+        background: var(--card-bg);
+        border-bottom: 1px solid var(--border-color);
+        padding: 1.5rem 2rem;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        backdrop-filter: blur(10px);
+    }
+    
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .btn-back {
+        background: var(--primary-color);
+        border: none;
+        color: white;
+        cursor: pointer;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+    }
+    
+    .btn-back:hover {
+        background: var(--secondary-color);
+        color: white;
+        text-decoration: none;
+        transform: translateY(-1px);
+    }
+    
+    .task-title-section {
+        flex: 1;
+    }
+    
+    .task-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--text-color);
+        margin: 0 0 0.5rem 0;
+    }
+    
+    .task-meta-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+    
+    .task-id {
+        font-weight: 600;
+        color: var(--primary-color);
+        background: rgba(var(--primary-color-rgb), 0.1);
+        padding: 0.25rem 0.75rem;
+        border-radius: 6px;
+    }
+    
+    .task-status-badge {
+        padding: 0.375rem 1rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: white;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-todo { 
+        background: var(--primary-color); 
+        box-shadow: 0 2px 8px rgba(var(--primary-color-rgb), 0.3);
+    }
+    .status-in_progress { 
+        background: var(--secondary-color); 
+        box-shadow: 0 2px 8px rgba(var(--secondary-color-rgb), 0.3);
+    }
+    .status-review { 
+        background: #ffc107; 
+        color: #212529;
+        box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+    }
+    .status-completed { 
+        background: #28a745; 
+        box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+    }
+    
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .btn-star {
+        background: var(--card-bg);
+        border: 2px solid var(--border-color);
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 0.75rem;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        font-size: 1.1rem;
+    }
+    
+    .btn-star:hover {
+        color: #ffc107;
+        border-color: #ffc107;
+        transform: scale(1.05);
+    }
+    
+    .btn-star.active {
+        color: #ffc107;
+        border-color: #ffc107;
+        background: rgba(255, 193, 7, 0.1);
+    }
+    
+    .task-content {
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        gap: 0;
+        min-height: calc(100vh - 120px);
+    }
+    
+    .task-content-full {
+        display: block;
+        width: 100%;
+        min-height: calc(100vh - 120px);
+    }
+    
+    .task-main-content {
+        background: var(--card-bg);
+        border-right: 1px solid var(--border-color);
+        padding: 2rem;
+        overflow-y: auto;
+    }
+    
+    .task-main-content-full {
+        background: var(--card-bg);
+        padding: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+        overflow-y: auto;
+    }
+    
+    .task-sidebar {
+        background: var(--card-bg);
+        border-left: 1px solid var(--border-color);
+        padding: 2rem;
+        height: 100%;
+        position: sticky;
+        top: 120px;
+        overflow-y: auto;
+    }
+    
+    .content-section {
+        margin-bottom: 2.5rem;
+        background: var(--bg-color);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+    }
+    
+    .content-section:last-child {
+        margin-bottom: 0;
+    }
+    
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--text-color);
+        margin: 0 0 1.5rem 0;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .section-title::before {
+        content: '';
+        width: 4px;
+        height: 20px;
+        background: var(--primary-color);
+        border-radius: 2px;
+    }
+    
+    .task-description {
+        color: var(--text-color);
+        line-height: 1.7;
+        margin: 0;
+        font-size: 1rem;
+    }
+    
+    .attribute-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 0;
+        border-bottom: 1px solid var(--border-color);
+        transition: all 0.2s ease;
+    }
+    
+    .attribute-item:hover {
+        background: rgba(var(--primary-color-rgb), 0.05);
+        margin: 0 -1rem;
+        padding: 1rem;
+        border-radius: 8px;
+    }
+    
+    .attribute-item:last-child {
+        border-bottom: none;
+    }
+    
+    .attribute-label {
+        font-weight: 600;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+    
+    .attribute-value {
+        color: var(--text-color);
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+    
+    .assignee-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1rem;
+        font-weight: bold;
+        box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.3);
+    }
+    
+    .priority-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: white;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    
+    .priority-low { 
+        background: linear-gradient(135deg, #28a745, #20c997);
+        box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+    }
+    .priority-medium { 
+        background: linear-gradient(135deg, #ffc107, #fd7e14);
+        color: #212529;
+        box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+    }
+    .priority-high { 
+        background: linear-gradient(135deg, #dc3545, #e83e8c);
+        box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+    }
+    .priority-urgent { 
+        background: linear-gradient(135deg, #dc3545, #6f42c1);
+        box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+    }
+    
+    
+    .action-left, .action-right {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .btn-action {
+        background: var(--bg-color);
+        border: 1px solid var(--border-color);
+        color: var(--text-color);
+        cursor: pointer;
+        padding: 0.75rem 1.25rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-action:hover {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+        transform: translateY(-1px);
+    }
+    
+    .btn-follow {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.875rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.3);
+    }
+    
+    .btn-follow:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(var(--primary-color-rgb), 0.4);
+    }
+    
+    .attachment-count {
+        background: linear-gradient(135deg, #dc3545, #e83e8c);
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: bold;
+        margin-left: 0.25rem;
+        box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+    }
+    
+    .empty-state {
+        color: var(--text-muted);
+        font-style: italic;
+        text-align: center;
+        padding: 3rem 2rem;
+        background: var(--bg-color);
+        border: 2px dashed var(--border-color);
+        border-radius: 12px;
+        font-size: 1rem;
+    }
+    
+    .lead-card {
+        transition: all 0.2s ease;
+    }
+    
+    .lead-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .lead-status {
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .btn-add-lead {
+        transition: all 0.2s ease;
+    }
+    
+    .btn-add-lead:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(var(--success-color-rgb), 0.3);
+    }
+    
+    .modal {
+        animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes fadeInUp {
+        from { 
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Editable Fields */
+    .detail-compact {
+        display: flex;
+        flex-direction: column;
+        gap: 0.375rem;
+    }
+    
+    .detail-compact-inline {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .detail-label {
+        font-weight: 600;
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .editable-field {
+        color: var(--text-color);
+        font-weight: 500;
+        cursor: pointer;
+        padding: 0.375rem 0.5rem;
+        border-radius: 4px;
+        border: 1px solid transparent;
+        transition: all 0.2s;
+        min-height: 2rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .editable-field-inline {
+        color: var(--text-color);
+        font-weight: 500;
+        cursor: pointer;
+        padding: 0.25rem 0.375rem;
+        border-radius: 3px;
+        border: 1px solid transparent;
+        transition: all 0.2s;
+        min-height: 1.5rem;
+        display: flex;
+        align-items: center;
+        font-size: 0.8rem;
+    }
+    
+    .editable-field:hover, .editable-field-inline:hover {
+        background: rgba(var(--primary-color-rgb), 0.05);
+        border-color: var(--primary-color) !important;
+    }
+    
+    .editable-field.editing, .editable-field-inline.editing {
+        background: rgba(var(--primary-color-rgb), 0.1);
+        border-color: var(--primary-color) !important;
+    }
+    
+    .field-input {
+        width: 100%;
+        border: 1px solid var(--primary-color);
+        border-radius: 4px;
+        padding: 0.375rem;
+        font-size: 0.875rem;
+    }
+    
+    .field-input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.2);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+        .task-content {
+            grid-template-columns: 1fr;
+        }
+        
+        .task-sidebar {
+            border-left: none;
+            border-top: 1px solid var(--border-color);
+            position: static;
+        }
+        
+        /* Task Details responsive */
+        #taskDetailsContent div[style*="grid-template-columns: 1.5fr"] {
+            grid-template-columns: repeat(3, 1fr) auto !important;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .task-header {
+            padding: 1rem;
+        }
+        
+        .task-title {
+            font-size: 1.5rem;
+        }
+        
+        .task-main-content,
+        .task-sidebar {
+            padding: 1rem;
+        }
+        
+        .content-section {
+            padding: 1rem;
+        }
+        
+        /* Task Details mobile */
+        #taskDetailsContent div[style*="grid-template-columns"] {
+            grid-template-columns: 1fr !important;
+            gap: 0.75rem !important;
+        }
+        
+        .detail-compact {
+            gap: 0.25rem !important;
+        }
+        
+        .detail-label {
+            font-size: 0.7rem !important;
+        }
+        
+        .editable-field {
+            padding: 0.5rem !important;
+            min-height: 2.5rem !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="task-detail-container">
+    <!-- Task Header -->
+    <div class="task-header">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div class="header-left">
+                <a href="{{ url_for('workspace_web.team_projects', team_id=workspace.workspace_id if workspace else 'current') }}" class="btn-back">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Projects
+                </a>
+                <div class="task-title-section">
+                    <h1 class="task-title">{{ task.title }}</h1>
+                    <div class="task-meta-info">
+                        <span class="task-id">#{{ task.task_id[:8] }}</span>
+                        <span class="task-status-badge status-{{ task.status }}">{{ task.status.replace('_', ' ').title() }}</span>
+                        <span id="submission-status" style="display: none; background: #667eea; color: white; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.7rem; font-weight: 500;">
+                            <i class="fas fa-paper-plane"></i> Submitted
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn-star" id="taskStarBtn" onclick="toggleTaskStar()">
+                    <i class="far fa-star"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Task Details Section (Collapsible) -->
+    <div class="task-details-section" style="background: var(--card-bg); border-bottom: 1px solid var(--border-color); padding: 0;">
+        <div class="task-details-header" onclick="toggleTaskDetails()" style="padding: 1rem 2rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: var(--bg-color); border-bottom: 1px solid var(--border-color);">
+            <h3 style="margin: 0; color: var(--text-color); font-size: 1.1rem; font-weight: 600;">
+                <i class="fas fa-info-circle" style="margin-right: 0.5rem; color: var(--primary-color);"></i>
+                Task Details
+            </h3>
+            <i id="taskDetailsToggle" class="fas fa-chevron-down" style="color: var(--text-muted); transition: transform 0.3s ease;"></i>
+        </div>
+        <div id="taskDetailsContent" class="task-details-content" style="display: none; padding: 0.75rem 2rem; background: var(--card-bg);">
+            <!-- Ultra-compact single row layout -->
+            <div style="display: grid; grid-template-columns: 1.5fr 1fr 0.8fr 0.8fr 1fr 0.8fr auto; gap: 1rem; align-items: center; margin-bottom: 0;">
+                <!-- Single row: All details -->
+                <div class="detail-item">
+                    <div class="detail-compact-inline">
+                        <span class="detail-label">Project</span>
+                        <div class="editable-field-inline" onclick="editField(this, 'project')">
+                            <span class="field-value">{{ task.project_name or 'Current Project' }}</span>
+                            <input type="text" class="field-input" style="display: none;" value="{{ task.project_name or 'Current Project' }}">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-compact-inline">
+                        <span class="detail-label">Assignee</span>
+                        <div class="editable-field-inline" onclick="editField(this, 'assignee')">
+                            <div class="field-value">
+                                {% if task.assignee_data %}
+                                    <div style="display: flex; align-items: center; gap: 0.25rem;">
+                                        <div class="assignee-avatar-tiny" style="width: 16px; height: 16px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); display: flex; align-items: center; justify-content: center; color: white; font-size: 0.55rem; font-weight: bold;" title="{{ task.assignee_data.username }}">
+                                            {{ task.assignee_data.username[:2].upper() }}
+                                        </div>
+                                        <span style="font-size: 0.8rem;">{{ task.assignee_data.username }}</span>
+                                    </div>
+                                {% else %}
+                                    <span style="font-size: 0.8rem;">Unassigned</span>
+                                {% endif %}
+                            </div>
+                            <select class="field-input" style="display: none;">
+                                <option value="">Unassigned</option>
+                                <!-- Team members will be loaded dynamically -->
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-compact-inline">
+                        <span class="detail-label">Priority</span>
+                        <div class="editable-field-inline" onclick="editField(this, 'priority')">
+                            <span class="field-value priority-badge priority-{{ task.priority }}" style="padding: 0.15rem 0.5rem; border-radius: 8px; font-size: 0.6rem; font-weight: 600; color: white; text-transform: uppercase;">{{ task.priority.upper() }}</span>
+                            <select class="field-input" style="display: none;">
+                                <option value="low" {% if task.priority == 'low' %}selected{% endif %}>Low</option>
+                                <option value="medium" {% if task.priority == 'medium' %}selected{% endif %}>Medium</option>
+                                <option value="high" {% if task.priority == 'high' %}selected{% endif %}>High</option>
+                                <option value="urgent" {% if task.priority == 'urgent' %}selected{% endif %}>Urgent</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-compact-inline">
+                        <span class="detail-label">Status</span>
+                        <div class="editable-field-inline" onclick="editField(this, 'status')">
+                            <span class="field-value task-status-badge status-{{ task.status }}" style="padding: 0.15rem 0.5rem; border-radius: 8px; font-size: 0.6rem; font-weight: 600; color: white; text-transform: uppercase;">{{ task.status.replace('_', ' ').upper() }}</span>
+                            <select class="field-input" style="display: none;">
+                                <option value="todo" {% if task.status == 'todo' %}selected{% endif %}>To Do</option>
+                                <option value="in_progress" {% if task.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                                <option value="review" {% if task.status == 'review' %}selected{% endif %}>Review</option>
+                                <option value="completed" {% if task.status == 'completed' %}selected{% endif %}>Completed</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-compact-inline">
+                        <span class="detail-label">Due Date</span>
+                        <div class="editable-field-inline" onclick="editField(this, 'due_date')">
+                            <span class="field-value" style="font-size: 0.8rem;">
+                                {% if task.due_date %}
+                                    {{ task.due_date.split('T')[0] }}
+                                {% else %}
+                                    No due date
+                                {% endif %}
+                            </span>
+                            <input type="date" class="field-input" style="display: none;" value="{% if task.due_date %}{{ task.due_date.split('T')[0] }}{% endif %}">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-compact-inline">
+                        <span class="detail-label">Est. Hours</span>
+                        <div class="editable-field-inline" onclick="editField(this, 'estimated_hours')">
+                            <span class="field-value" style="font-size: 0.8rem;">{{ task.estimated_hours or 'Not set' }}</span>
+                            <input type="number" class="field-input" style="display: none;" value="{{ task.estimated_hours or '' }}" placeholder="Hours">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Save Changes Button -->
+                <div style="display: flex; align-items: center; justify-content: end;">
+                    <button id="saveChangesBtn" onclick="saveTaskChanges()" style="background: var(--success-color); color: white; border: none; padding: 0.35rem 0.75rem; border-radius: 5px; cursor: pointer; font-weight: 500; font-size: 0.75rem; display: none; white-space: nowrap;">
+                        <i class="fas fa-save" style="margin-right: 0.25rem;"></i>
+                        Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Task Content -->
+    <div class="task-content-full">
+        <!-- Main Content -->
+        <div class="task-main-content-full">
+            <div class="content-section">
+                <h2 class="section-title">Description</h2>
+                <p class="task-description">
+                    {{ task.description or 'No description provided' }}
+                </p>
+            </div>
+            
+            <div class="content-section">
+                <h2 class="section-title">
+                    <i class="fas fa-user-tie"></i>
+                    Leads
+                    <div style="margin-left: auto; display: flex; gap: 0.5rem;">
+                        <button class="btn-add-activity" onclick="openHistoryForwardModal()" style="background: var(--primary-color); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-history"></i>
+                            Forward History
+                    </button>
+                            {% if current_member and current_member.role == 'member' and (current_user.user_id|string == task.assigned_to|string or current_user.user_id|string == task.created_by|string) %}
+                            <button class="btn-submit-task" onclick="openSubmitTaskModal()" style="background: var(--success-color); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-paper-plane"></i>
+                                Submit Task
+                            </button>
+                            {% endif %}
+                    </div>
+                </h2>
+                <div id="task-leads-container">
+                    <p class="empty-state">No leads added yet</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- History Forward Modal -->
+<div id="historyForwardModal" class="modal" style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.75);">
+    <div class="modal-dialog" style="margin: 1% auto; max-width: 1200px; max-height: 95vh; overflow-y: auto; width: 90%;">
+        <div class="modal-content" style="padding: 0; border-radius: 18px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #ffffff; animation: fadeInUp 0.3s;">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding: 24px 32px 12px 32px;">
+                <h4 class="modal-title" style="font-weight: 700; font-size: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: 1px;">
+                    <i class="fas fa-file-alt" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;"></i>
+                    Forward Lead Draft to Task
+                </h4>
+                <button type="button" class="btn-close" onclick="closeHistoryForwardModal()" style="font-size: 2rem; background: none; border: none; color: var(--text-muted); cursor: pointer;">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 24px 32px 32px 32px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);">
+                <!-- Lead Drafts Section -->
+                <div style="margin-bottom: 2rem;">
+                    <h5 style="margin-bottom: 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: 600;">Select Lead Draft</h5>
+                    <p style="color: #8e9aaf; font-size: 0.875rem; margin-bottom: 1rem; font-weight: 500;">Choose a lead draft from your saved drafts to create a task</p>
+                        </div>
+                        
+                <!-- Lead Drafts Results -->
+                <div id="historyResults" style="max-height: 500px; overflow-y: auto; border: 1px solid #2d3748; border-radius: 8px; padding: 1rem; background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);">
+                    <div style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                        <p>Loading lead drafts...</p>
+                            </div>
+                        </div>
+                        
+
+                        
+                <div class="form-actions" style="display: flex; gap: 1rem; justify-content: end; margin-top: 2rem;">
+                    <button type="button" onclick="closeHistoryForwardModal()" style="background: linear-gradient(135deg, #6c757d 0%, #495057 100%); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 500; box-shadow: 0 2px 4px rgba(108, 117, 125, 0.3); transition: all 0.3s ease;">Cancel</button>
+                    <button type="button" id="forwardHistoryBtn" onclick="forwardHistoryToTask()" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 500; display: none; box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3); transition: all 0.3s ease;">Forward Lead Draft to Task</button>
+                        </div>
+                    </div>
+                        </div>
+                        </div>
+                    </div>
+                    
+<!-- Submit Task Modal -->
+<div id="submitTaskModal" class="modal" style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.75);">
+    <div class="modal-dialog" style="margin: 5% auto; max-width: 600px; max-height: 90vh; overflow-y: auto; width: 90%;">
+        <div class="modal-content" style="padding: 0; border-radius: 18px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #ffffff; animation: fadeInUp 0.3s;">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding: 24px 32px 12px 32px;">
+                <h4 class="modal-title" style="font-weight: 700; font-size: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: 1px;">
+                    <i class="fas fa-paper-plane" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;"></i>
+                    Submit Task for Review
+                </h4>
+                <button type="button" class="btn-close" onclick="closeSubmitTaskModal()" style="font-size: 2rem; background: none; border: none; color: var(--text-muted); cursor: pointer;">&times;</button>
+                            </div>
+            <div class="modal-body" style="padding: 24px 32px 32px 32px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);">
+                <div style="margin-bottom: 2rem;">
+                    <h5 style="margin-bottom: 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: 600;">Task Information</h5>
+                    <div style="background: #2d3748; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+                        <p style="margin: 0 0 0.5rem 0; color: #ffffff; font-weight: 600;">{{ task.title }}</p>
+                        <p style="margin: 0; color: #a0aec0; font-size: 0.875rem;">{{ task.description or 'No description' }}</p>
+                        <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+                            <span style="background: #667eea; color: white; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.7rem; font-weight: 500;">{{ task.status.replace('_', ' ').title() }}</span>
+                            <span style="background: #ff6b6b; color: white; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.7rem; font-weight: 500;">{{ task.priority.title() }}</span>
+                            </div>
+                            </div>
+                        </div>
+                        
+                <div style="margin-bottom: 2rem;">
+                    <h5 style="margin-bottom: 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: 600;">Submission Details</h5>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; color: #ffffff; font-weight: 500;">Submission Type</label>
+                        <select id="submissionType" style="width: 100%; padding: 0.75rem; border: 1px solid #4a5568; border-radius: 8px; background: #2d3748; color: #ffffff; font-size: 0.875rem;">
+                            <option value="completion">Task Completion</option>
+                            <option value="review">Need Review</option>
+                            <option value="approval">Need Approval</option>
+                            <option value="update">Task Update</option>
+                        </select>
+                        </div>
+                        
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; color: #ffffff; font-weight: 500;">Message (Optional)</label>
+                        <textarea id="submissionMessage" rows="4" placeholder="Add any additional notes or details about your submission..." style="width: 100%; padding: 0.75rem; border: 1px solid #4a5568; border-radius: 8px; background: #2d3748; color: #ffffff; font-size: 0.875rem; resize: vertical;"></textarea>
+                            </div>
+                        </div>
+                        
+                <div class="form-actions" style="display: flex; gap: 1rem; justify-content: end; margin-top: 2rem;">
+                    <button type="button" onclick="closeSubmitTaskModal()" style="background: linear-gradient(135deg, #6c757d 0%, #495057 100%); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 500; box-shadow: 0 2px 4px rgba(108, 117, 125, 0.3); transition: all 0.3s ease;">Cancel</button>
+                    <button type="button" id="submitTaskBtn" onclick="submitTask()" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 500; box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3); transition: all 0.3s ease;">Submit Task</button>
+                        </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lead Detail Modal -->
+<div id="leadDetailModal" class="modal" style="display: none; position: fixed; z-index: 1050; left: 0; top: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.45);">
+    <div class="modal-dialog" style="margin: 5% auto; max-width: 700px;">
+        <div class="modal-content" style="padding: 0; border-radius: 18px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); background: var(--card-bg); color: var(--text-color); animation: fadeInUp 0.3s;">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding: 24px 32px 12px 32px;">
+                <h4 class="modal-title" style="font-weight: 700; font-size: 1.5rem; color: var(--primary-color); letter-spacing: 1px;">
+                    <i class="fas fa-user"></i>
+                    Lead Details
+                </h4>
+                <button type="button" class="btn-close" onclick="closeLeadDetailModal()" style="font-size: 2rem; background: none; border: none; color: var(--text-muted); cursor: pointer;">&times;</button>
+            </div>
+            <div class="modal-body" id="leadDetailContent" style="padding: 24px 32px 32px 32px;">
+                <!-- Lead details will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Score Lead Modal -->
+<div id="scoreModal" class="modal" style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.75);">
+    <div class="modal-dialog" style="margin: 5% auto; max-width: 500px;">
+        <div class="modal-content" style="padding: 0; border-radius: 18px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); background: var(--card-bg); color: var(--text-color); animation: fadeInUp 0.3s;">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding: 24px 32px 12px 32px;">
+                <h4 class="modal-title" style="font-weight: 700; font-size: 1.5rem; color: var(--primary-color); letter-spacing: 1px;">
+                    <i class="fas fa-star"></i>
+                    Rate and add notes for <span id="scoreLeadName"></span>
+                </h4>
+                <button type="button" class="btn-close" onclick="closeScoreModal()" style="font-size: 2rem; background: none; border: none; color: var(--text-muted); cursor: pointer;">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 24px 32px 32px 32px;">
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Evaluate this lead and add any relevant notes.</p>
+                
+                <!-- Current Score -->
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label class="form-label" style="display: block; margin-bottom: 0.5rem; color: var(--text-color); font-weight: 500;">Current Score</label>
+                    <div id="currentScore" style="padding: 0.5rem 1rem; border-radius: 6px; background: var(--success-color); color: white; font-weight: 500; display: inline-block;">Good</div>
+                </div>
+                
+                <!-- Select Score -->
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label class="form-label" style="display: block; margin-bottom: 0.5rem; color: var(--text-color); font-weight: 500;">Select Score</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button type="button" class="score-btn" data-score="good" style="flex: 1; padding: 0.75rem; border: none; border-radius: 6px; background: var(--bg-color); color: var(--text-color); cursor: pointer; font-weight: 500; transition: all 0.2s ease;">Good</button>
+                        <button type="button" class="score-btn" data-score="medium" style="flex: 1; padding: 0.75rem; border: none; border-radius: 6px; background: var(--bg-color); color: var(--text-color); cursor: pointer; font-weight: 500; transition: all 0.2s ease;">Medium</button>
+                        <button type="button" class="score-btn" data-score="bad" style="flex: 1; padding: 0.75rem; border: none; border-radius: 6px; background: var(--bg-color); color: var(--text-color); cursor: pointer; font-weight: 500; transition: all 0.2s ease;">Bad</button>
+                    </div>
+                </div>
+                
+                <!-- Notes -->
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label class="form-label" style="display: block; margin-bottom: 0.5rem; color: var(--text-color); font-weight: 500;">Notes</label>
+                    <textarea id="scoreNotes" class="form-control" rows="4" placeholder="Add any notes about this lead..." style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-color); color: var(--text-color); resize: vertical;"></textarea>
+                </div>
+                
+                <div class="form-actions" style="display: flex; gap: 1rem; justify-content: end;">
+                    <button type="button" onclick="closeScoreModal()" style="background: var(--bg-color); color: var(--text-color); border: 1px solid var(--border-color); padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 500;">Cancel</button>
+                    <button type="button" onclick="saveScore()" style="background: var(--success-color); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 500;">Save Score</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+// Task actions
+function toggleTaskStar() {
+    const starBtn = document.getElementById('taskStarBtn');
+    starBtn.classList.toggle('active');
+    const icon = starBtn.querySelector('i');
+    if (starBtn.classList.contains('active')) {
+        icon.className = 'fas fa-star';
+    } else {
+        icon.className = 'far fa-star';
+    }
+}
+
+function toggleTaskDetails() {
+    const content = document.getElementById('taskDetailsContent');
+    const toggle = document.getElementById('taskDetailsToggle');
+    
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        toggle.style.transform = 'rotate(180deg)';
+        
+        // Save expanded state
+        localStorage.setItem('taskDetailsExpanded', 'true');
+    } else {
+        content.style.display = 'none';
+        toggle.style.transform = 'rotate(0deg)';
+        
+        // Save collapsed state
+        localStorage.setItem('taskDetailsExpanded', 'false');
+    }
+}
+
+// Lead draft forwarding functions
+let selectedDraftItem = null;
+
+function openHistoryForwardModal() {
+    const modal = document.getElementById('historyForwardModal');
+    if (modal) {
+        modal.style.display = 'block';
+        loadUserLeadDrafts();
+    }
+}
+
+function closeHistoryForwardModal() {
+    const modal = document.getElementById('historyForwardModal');
+    if (modal) {
+        modal.style.display = 'none';
+        selectedDraftItem = null;
+        document.getElementById('forwardHistoryBtn').style.display = 'none';
+    }
+}
+
+
+
+
+
+async function loadUserLeadDrafts() {
+    try {
+        const params = new URLSearchParams();
+        params.append('limit', '20');
+        
+        // Use the same API endpoint as view_drafts.html
+        const response = await fetch(`/api/leads/drafts?${params.toString()}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to load user lead drafts');
+        }
+        
+        const data = await response.json();
+        displayUserLeadDrafts(data);
+        
+    } catch (error) {
+        showAlert('Failed to load user lead drafts', 'danger');
+        document.getElementById('historyResults').innerHTML = `
+            <div style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 1rem; color: var(--danger-color);"></i>
+                <p>Failed to load user lead drafts</p>
+            </div>
+        `;
+    }
+}
+
+
+
+function displayUserLeadDrafts(draftsData) {
+    const container = document.getElementById('historyResults');
+    
+    if (!draftsData || draftsData.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                <p>No lead drafts available</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const draftsHtml = draftsData.map(draft => {
+        const draftData = draft.draft_data || {};
+        const contactName = `${draftData.owner_first_name || ''} ${draftData.owner_last_name || ''}`.trim();
+        const location = [draftData.city, draftData.state].filter(Boolean).join(', ');
+        
+        // Create title and description from draft data
+        const title = `Lead Draft: ${draftData.company || 'Unknown Company'}`;
+        const description = `Company: ${draftData.company || 'N/A'}, Contact: ${contactName || 'N/A'}, Email: ${draftData.owner_email || 'N/A'}`;
+        
+        return `
+            <div class="draft-item" onclick="selectDraftItem('${draft.draft_id}', '${title.replace(/'/g, "\\'")}', '${description.replace(/'/g, "\\'")}')" style="border: 1px solid #4a5568; border-radius: 12px; padding: 1.2rem; margin-bottom: 0.75rem; background: #2d3748; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: all 0.3s ease; cursor: pointer;" onmouseenter="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 25px rgba(0,0,0,0.4)'; this.style.background='#4a5568'" onmouseleave="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.3)'; this.style.background='#2d3748'">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div style="flex: 1;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            <span style="background: #667eea; color: white; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.7rem; font-weight: 500; text-transform: uppercase; box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);">Lead Draft</span>
+                            ${draft.is_favorite ? `<span style="color: #ffd700; font-size: 0.8rem; text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);"><i class="fas fa-star"></i></span>` : ''}
+                            <span style="color: #8e9aaf; font-size: 0.8rem; font-weight: 500;">${draft.created_at ? new Date(draft.created_at).toLocaleDateString() : 'No date'}</span>
+                    </div>
+                        <h6 style="margin: 0 0 0.5rem 0; color: #ffffff; font-weight: 600; font-size: 1rem;">${title}</h6>
+                        <p style="margin: 0; color: #a0aec0; font-size: 0.875rem; line-height: 1.4;">${description}</p>
+                        
+                        ${draft.notes ? `<div style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(255, 182, 193, 0.2); border-radius: 8px; border-left: 3px solid #ffb6c1;">
+                            <p style="margin: 0; color: #ffffff; font-size: 0.8rem; font-style: italic;">
+                                <strong style="color: #ffb6c1;">Notes:</strong> ${draft.notes}
+                            </p>
+                        </div>` : ''}
+                        
+                        ${draftData.industry ? `<div style="margin-top: 0.5rem;">
+                            <span style="background: #ff6b6b; color: white; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.7rem; font-weight: 500; box-shadow: 0 2px 4px rgba(255, 107, 107, 0.3);">${draftData.industry}</span>
+                        </div>` : ''}
+                        </div>
+                    <div style="margin-left: 1rem;">
+                        <i class="fas fa-chevron-right" style="color: #a0aec0;"></i>
+                        </div>
+                    </div>
+                </div>
+        `;
+    }).join('');
+    
+    container.innerHTML = draftsHtml;
+}
+
+function selectDraftItem(draftId, title, description) {
+    selectedDraftItem = {
+        id: draftId,
+        type: 'user_lead_draft',
+        title: title,
+        description: description
+    };
+    
+    // Show forward button
+    document.getElementById('forwardHistoryBtn').style.display = 'inline-block';
+}
+
+async function forwardHistoryToTask() {
+    if (!selectedDraftItem) {
+        showAlert('Please select a lead draft first', 'warning');
+        return;
+    }
+    
+    try {
+        const workspaceId = '{{ workspace.workspace_id if workspace else "" }}';
+        if (!workspaceId) {
+            showAlert('Workspace ID not found', 'danger');
+            return;
+        }
+        
+        const taskData = {
+            task_id: '{{ task.task_id }}',
+            draft_id: selectedDraftItem.id,
+            title: selectedDraftItem.title,
+            description: selectedDraftItem.description,
+            priority: 'medium',
+            status: 'todo',
+            due_date: null
+        };
+        
+        const response = await fetch(`/api/workspace/${workspaceId}/tasks/forward-user-lead-draft`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify(taskData)
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to forward lead draft to task');
+        }
+        
+        const result = await response.json();
+        showAlert('Lead draft forwarded to task successfully!', 'success');
+        closeHistoryForwardModal();
+        
+        // Reload the leads list to show the newly added lead
+        setTimeout(() => {
+        loadTaskLeads();
+        }, 500);
+        
+    } catch (error) {
+        showAlert(error.message, 'danger');
+    }
+}
+
+function closeLeadDetailModal() {
+    const modal = document.getElementById('leadDetailModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Use global showAlert function from base.html
+
+// Load task leads on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadTaskLeads();
+    loadProjectActivities();
+    checkTaskSubmissionStatus();
+    
+    // Restore task details expanded state
+    const isExpanded = localStorage.getItem('taskDetailsExpanded');
+    if (isExpanded === 'true') {
+        const content = document.getElementById('taskDetailsContent');
+        const toggle = document.getElementById('taskDetailsToggle');
+        if (content && toggle) {
+            content.style.display = 'block';
+            toggle.style.transform = 'rotate(180deg)';
+        }
+    }
+    
+    // Test modal functionality
+    
+    // Add keyboard shortcut for testing
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.key === 'h') {
+            openHistoryForwardModal();
+        }
+        if (e.ctrlKey && e.key === 's') {
+            openSubmitTaskModal();
+        }
+    });
+});
+
+async function loadTaskLeads() {
+    try {
+        const taskId = '{{ task.task_id }}';
+        
+        if (!taskId || taskId === 'undefined' || taskId === 'null') {
+            return;
+        }
+        
+        
+        const response = await fetch(`/api/task-lead/${taskId}/leads`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+        
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error('Failed to load task leads');
+        }
+        
+        const data = await response.json();
+        
+        // Handle case where task doesn't exist (returns empty list)
+        if (data.message && data.message.includes('Task not found')) {
+            renderTaskLeads([]);
+            return;
+        }
+        
+        renderTaskLeads(data.task_leads || []);
+        
+    } catch (error) {
+        // Don't show error alert for network issues, just log
+        renderTaskLeads([]);
+    }
+}
+
+function renderTaskLeads(taskLeads) {
+    const container = document.getElementById('task-leads-container');
+    if (!container) {
+        return;
+    }
+    
+    if (!taskLeads || taskLeads.length === 0) {
+        container.innerHTML = '<p class="empty-state">No leads added yet</p>';
+        return;
+    }
+    
+    const leadsHtml = taskLeads.map(taskLead => {
+        const lead = taskLead.lead;
+        const addedBy = taskLead.user ? taskLead.user.username : 'Unknown';
+        const addedDate = new Date(taskLead.added_at).toLocaleDateString();
+        
+        // Helper function for score color
+        const getScoreColor = (score) => {
+            switch(score) {
+                case 'good': return 'var(--success-color)';
+                case 'medium': return 'var(--warning-color)';
+                case 'bad': return 'var(--danger-color)';
+                default: return 'var(--text-muted)';
+            }
+        };
+        
+        return `
+            <div class="lead-card" style="background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 12px; padding: 1rem; margin-bottom: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                    <div>
+                        <h4 style="margin: 0 0 0.5rem 0; color: var(--text-color); font-size: 1.1rem;">
+                            ${lead.owner_first_name} ${lead.owner_last_name}
+                        </h4>
+                        <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem;">
+                            <strong>Company:</strong> ${lead.company}
+                        </p>
+                        <p style="margin: 0.25rem 0 0 0; color: var(--text-muted); font-size: 0.9rem;">
+                            <strong>Email:</strong> ${lead.owner_email || 'N/A'}
+                        </p>
+                        ${lead.owner_phone_number ? `<p style="margin: 0.25rem 0 0 0; color: var(--text-muted); font-size: 0.9rem;"><strong>Personal Phone:</strong> ${lead.owner_phone_number}</p>` : ''}
+                        ${lead.company_phone ? `<p style="margin: 0.25rem 0 0 0; color: var(--text-muted); font-size: 0.9rem;"><strong>Company Phone:</strong> ${lead.company_phone}</p>` : ''}
+                        ${lead.owner_title ? `<p style="margin: 0.25rem 0 0 0; color: var(--text-muted); font-size: 0.9rem;"><strong>Position:</strong> ${lead.owner_title}</p>` : ''}
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button onclick="viewLeadDetail('${lead.lead_id}')" style="background: none; border: none; color: var(--primary-color); cursor: pointer; padding: 0.25rem; border-radius: 4px;" title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button onclick="removeLeadFromTask('${lead.lead_id}')" style="background: none; border: none; color: var(--danger-color); cursor: pointer; padding: 0.25rem; border-radius: 4px;" title="Remove Lead">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button onclick="openScoreModal('${lead.lead_id}', '${lead.owner_first_name} ${lead.owner_last_name}', '${taskLead.score || ''}')" style="background: none; border: none; color: var(--warning-color); cursor: pointer; padding: 0.25rem; border-radius: 4px;" title="Rate Lead" id="score-btn-${lead.lead_id}">
+                            <i class="fas fa-star"></i>
+                        </button>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--text-muted);">
+                    <span>Added by ${addedBy} on ${addedDate}</span>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        ${taskLead.score ? `<span class="lead-score" style="padding: 0.25rem 0.5rem; border-radius: 4px; background: ${getScoreColor(taskLead.score)}; color: white; font-size: 0.75rem; font-weight: 500;">${taskLead.score.charAt(0).toUpperCase() + taskLead.score.slice(1)}</span>` : ''}
+                        <span class="lead-status" style="padding: 0.25rem 0.5rem; border-radius: 4px; background: var(--success-color); color: white; font-size: 0.75rem;">${taskLead.status}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    container.innerHTML = leadsHtml;
+}
+
+
+
+async function removeLeadFromTask(leadId) {
+    if (!confirm('Are you sure you want to remove this lead from the task?')) {
+        return;
+    }
+    
+    try {
+        const taskId = '{{ task.task_id }}';
+        const response = await fetch(`/api/task-lead/${taskId}/leads/${leadId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to remove lead from task');
+        }
+        
+        showAlert('Lead removed from task successfully!', 'success');
+        loadTaskLeads(); // Reload the leads list
+        
+    } catch (error) {
+        showAlert('Failed to remove lead from task', 'danger');
+    }
+}
+
+async function viewLeadDetail(leadId) {
+    try {
+        const response = await fetch(`/api/leads/${leadId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to load lead details');
+        }
+        
+        const lead = await response.json();
+        renderLeadDetail(lead);
+        const modal = document.getElementById('leadDetailModal');
+        if (modal) {
+            modal.style.display = 'block';
+        }
+        
+    } catch (error) {
+        showAlert('Failed to load lead details', 'danger');
+    }
+}
+
+function renderLeadDetail(lead) {
+    const content = document.getElementById('leadDetailContent');
+    if (!content) {
+        return;
+    }
+    
+    content.innerHTML = `
+        <div style="margin-bottom: 1.5rem;">
+            <h5 style="color: var(--text-color); margin-bottom: 1rem;">Contact Information</h5>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div>
+                    <strong>Name:</strong> ${lead.owner_first_name} ${lead.owner_last_name}
+                </div>
+                <div>
+                    <strong>Email:</strong> ${lead.owner_email || 'N/A'}
+                </div>
+                <div>
+                    <strong>Personal Phone:</strong> ${lead.owner_phone_number || 'N/A'}
+                </div>
+                <div>
+                    <strong>Company Phone:</strong> ${lead.company_phone || 'N/A'}
+                </div>
+                <div>
+                    <strong>Position:</strong> ${lead.owner_title || 'N/A'}
+                </div>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 1.5rem;">
+            <h5 style="color: var(--text-color); margin-bottom: 1rem;">Company Information</h5>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div>
+                    <strong>Company:</strong> ${lead.company}
+                </div>
+                <div>
+                    <strong>Website:</strong> ${lead.website || 'N/A'}
+                </div>
+                <div>
+                    <strong>Industry:</strong> ${lead.industry || 'N/A'}
+                </div>
+                <div>
+                    <strong>Location:</strong> ${lead.city || 'N/A'}, ${lead.state || 'N/A'}
+                </div>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 1.5rem;">
+            <h5 style="color: var(--text-color); margin-bottom: 1rem;">Additional Information</h5>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div>
+                    <strong>Source:</strong> ${lead.source}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Submit task functions
+function openSubmitTaskModal() {
+    const modal = document.getElementById('submitTaskModal');
+    if (modal) {
+        modal.style.display = 'block';
+        // Reset form
+        document.getElementById('submissionType').value = 'completion';
+        document.getElementById('submissionMessage').value = '';
+    }
+}
+
+function closeSubmitTaskModal() {
+    const modal = document.getElementById('submitTaskModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+async function submitTask() {
+    try {
+        const taskId = '{{ task.task_id }}';
+        const submissionType = document.getElementById('submissionType').value;
+        const message = document.getElementById('submissionMessage').value;
+        
+        const submitData = {
+            submission_type: submissionType,
+            message: message || null
+        };
+        
+        const response = await fetch(`/api/task-submission/tasks/${taskId}/submit`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify(submitData)
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to submit task');
+        }
+        
+        const result = await response.json();
+        showAlert('Task submitted successfully! Manager/admin will be notified.', 'success');
+        closeSubmitTaskModal();
+        
+        // Show submission status
+        showSubmissionStatus();
+        
+    } catch (error) {
+        showAlert(error.message, 'danger');
+    }
+}
+
+async function checkTaskSubmissionStatus() {
+    try {
+        const taskId = '{{ task.task_id }}';
+        const workspaceId = '{{ workspace.workspace_id if workspace else "" }}';
+        
+        if (!workspaceId) return;
+        
+        const response = await fetch(`/api/task-submission/workspace/${workspaceId}/pending`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            const taskSubmission = data.submissions.find(sub => sub.task_id === taskId);
+            
+            if (taskSubmission) {
+                showSubmissionStatus(taskSubmission.status);
+            }
+        }
+    } catch (error) {
+        // Silently fail, don't show error for status check
+    }
+}
+
+function showSubmissionStatus(status = 'pending') {
+    const statusElement = document.getElementById('submission-status');
+    if (statusElement) {
+        statusElement.style.display = 'inline-block';
+        
+        // Update status based on submission status
+        if (status === 'approved') {
+            statusElement.style.background = '#28a745';
+            statusElement.innerHTML = '<i class="fas fa-check"></i> Approved';
+        } else if (status === 'rejected') {
+            statusElement.style.background = '#dc3545';
+            statusElement.innerHTML = '<i class="fas fa-times"></i> Rejected';
+        } else if (status === 'under_review') {
+            statusElement.style.background = '#ffc107';
+            statusElement.style.color = '#212529';
+            statusElement.innerHTML = '<i class="fas fa-clock"></i> Under Review';
+        } else {
+            statusElement.style.background = '#667eea';
+            statusElement.innerHTML = '<i class="fas fa-paper-plane"></i> Submitted';
+        }
+    }
+}
+
+// Ensure all functions are available globally
+window.openHistoryForwardModal = openHistoryForwardModal;
+window.closeHistoryForwardModal = closeHistoryForwardModal;
+window.selectDraftItem = selectDraftItem;
+window.forwardHistoryToTask = forwardHistoryToTask;
+window.openSubmitTaskModal = openSubmitTaskModal;
+window.closeSubmitTaskModal = closeSubmitTaskModal;
+window.submitTask = submitTask;
+window.checkTaskSubmissionStatus = checkTaskSubmissionStatus;
+window.showSubmissionStatus = showSubmissionStatus;
+
+// Close modals when clicking outside
+window.onclick = function(event) {
+    const historyForwardModal = document.getElementById('historyForwardModal');
+    const leadDetailModal = document.getElementById('leadDetailModal');
+    const submitTaskModal = document.getElementById('submitTaskModal');
+    
+    if (event.target === historyForwardModal) {
+        closeHistoryForwardModal();
+    }
+    if (event.target === leadDetailModal) {
+        closeLeadDetailModal();
+    }
+    if (event.target === submitTaskModal) {
+        closeSubmitTaskModal();
+    }
+}
+
+// Placeholder functions for other task actions
+function sendMessage() {
+    showAlert('Send message functionality coming soon!', 'info');
+}
+
+function logNote() {
+    showAlert('Log note functionality coming soon!', 'info');
+}
+
+function viewActivities() {
+    showAlert('View activities functionality coming soon!', 'info');
+}
+
+function searchTask() {
+    showAlert('Search functionality coming soon!', 'info');
+}
+
+function followTask() {
+    showAlert('Follow task functionality coming soon!', 'info');
+}
+
+
+
+// Scoring functionality
+let currentScoringLeadId = null;
+
+function openScoreModal(leadId, leadName, currentScore) {
+    currentScoringLeadId = leadId;
+    document.getElementById('scoreLeadName').textContent = leadName;
+    
+    // Set current score display
+    const currentScoreElement = document.getElementById('currentScore');
+    if (currentScore && currentScore !== 'null' && currentScore !== '') {
+        currentScoreElement.textContent = currentScore.charAt(0).toUpperCase() + currentScore.slice(1);
+        currentScoreElement.style.background = getScoreColor(currentScore);
+    } else {
+        currentScoreElement.textContent = 'Not scored';
+        currentScoreElement.style.background = 'var(--text-muted)';
+    }
+    
+    // Reset score buttons
+    document.querySelectorAll('.score-btn').forEach(btn => {
+        btn.style.background = 'var(--bg-color)';
+        btn.style.color = 'var(--text-color)';
+    });
+    
+    // Highlight current score if exists
+    if (currentScore && currentScore !== 'null' && currentScore !== '') {
+        const currentBtn = document.querySelector(`[data-score="${currentScore}"]`);
+        if (currentBtn) {
+            const scoreColor = getScoreColor(currentScore);
+            currentBtn.style.background = scoreColor;
+            currentBtn.style.color = 'white';
+        }
+    }
+    
+    // Clear notes
+    document.getElementById('scoreNotes').value = '';
+    
+    // Show modal
+    const modal = document.getElementById('scoreModal');
+    if (modal) {
+        modal.style.display = 'block';
+    }
+    
+    // Add click handlers for score buttons
+    document.querySelectorAll('.score-btn').forEach(btn => {
+        btn.onclick = function() {
+            
+            // Reset all buttons
+            document.querySelectorAll('.score-btn').forEach(b => {
+                b.style.background = 'var(--bg-color)';
+                b.style.color = 'var(--text-color)';
+            });
+            
+            // Highlight selected button
+            const scoreColor = getScoreColor(this.dataset.score);
+            this.style.background = scoreColor;
+            this.style.color = 'white';
+        };
+    });
+}
+
+function closeScoreModal() {
+    const modal = document.getElementById('scoreModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    currentScoringLeadId = null;
+}
+
+function getScoreColor(score) {
+    switch(score) {
+        case 'good': return 'var(--success-color)';
+        case 'medium': return 'var(--warning-color)';
+        case 'bad': return 'var(--danger-color)';
+        default: return 'var(--text-muted)';
+    }
+}
+
+async function saveScore() {
+    if (!currentScoringLeadId) {
+        showAlert('No lead selected for scoring', 'danger');
+        return;
+    }
+    
+    // Get selected score
+    const selectedBtn = document.querySelector('.score-btn[style*="color: white"]');
+    if (!selectedBtn) {
+        showAlert('Please select a score', 'danger');
+        return;
+    }
+    
+    const score = selectedBtn.dataset.score;
+    const notes = document.getElementById('scoreNotes').value;
+    
+    try {
+        const taskId = '{{ task.task_id }}';
+        const response = await fetch(`/api/task-lead/${taskId}/leads/${currentScoringLeadId}/score`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                score: score,
+                score_notes: notes
+            })
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to save score');
+        }
+        
+        showAlert('Score saved successfully!', 'success');
+        closeScoreModal();
+        loadProjectActivities(); // Reload leads to show updated score
+        
+    } catch (error) {
+        showAlert(error.message, 'danger');
+    }
+}
+
+
+
+async function loadProjectActivities() {
+    try {
+        const taskId = '{{ task.task_id }}';
+        
+        const response = await fetch(`/api/task-lead/${taskId}/leads`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            renderProjectActivities([]);
+            return;
+        }
+        
+        const data = await response.json();
+        renderProjectActivities(data.task_leads || []);
+        
+    } catch (error) {
+        renderProjectActivities([]);
+    }
+}
+
+function renderProjectActivities(taskLeads) {
+    const container = document.getElementById('project-activities-container');
+    if (!container) {
+        return;
+    }
+    
+    if (!taskLeads || taskLeads.length === 0) {
+        container.innerHTML = '<p class="empty-state">No leads added yet</p>';
+        return;
+    }
+    
+    const leadsHtml = taskLeads.map(taskLead => {
+        const lead = taskLead.lead;
+        const addedDate = taskLead.added_at ? new Date(taskLead.added_at).toLocaleDateString() : 'No date';
+        const fullName = `${lead.owner_first_name || ''} ${lead.owner_last_name || ''}`.trim();
+        const location = [lead.city, lead.state].filter(Boolean).join(', ');
+        
+        return `
+            <div class="lead-card" style="background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="width: 50px; height: 50px; border-radius: 50%; background: var(--primary-color); display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2rem; font-weight: bold;">
+                            ${fullName ? fullName.charAt(0).toUpperCase() : 'L'}
+                        </div>
+                        <div>
+                            <h4 style="margin: 0 0 0.25rem 0; color: var(--text-color); font-size: 1.2rem; font-weight: 600;">${fullName || 'Unknown'}</h4>
+                            <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem;">
+                                <i class="fas fa-envelope" style="margin-right: 0.5rem;"></i>
+                                ${lead.owner_email || 'No email'}
+                            </p>
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <p style="margin: 0 0 0.5rem 0; color: var(--text-muted); font-size: 0.8rem;">Added: ${addedDate}</p>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button onclick="viewLeadDetail('${lead.lead_id}')" style="background: none; border: none; color: var(--primary-color); cursor: pointer; padding: 0.25rem; border-radius: 4px;" title="View Details">
+                                <i class="fas fa-eye" style="font-size: 0.875rem;"></i>
+                            </button>
+                                <button onclick="deleteActivity('${lead.lead_id}')" style="background: none; border: none; color: var(--danger-color); cursor: pointer; padding: 0.25rem; border-radius: 4px;" title="Remove Lead">
+                                 <i class="fas fa-trash" style="font-size: 0.875rem;"></i>
+                             </button>
+                            <button onclick="openScoreModal('${lead.lead_id}', '${lead.owner_first_name} ${lead.owner_last_name}', '${taskLead.score || ''}')" style="background: none; border: none; color: var(--warning-color); cursor: pointer; padding: 0.25rem; border-radius: 4px;" title="Rate Lead">
+                                <i class="fas fa-star" style="font-size: 0.875rem;"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div>
+                        <p style="margin: 0 0 0.5rem 0; color: var(--text-color); font-size: 0.9rem;">
+                            <strong><i class="fas fa-building" style="margin-right: 0.5rem; color: var(--primary-color);"></i>Company:</strong><br>
+                            <span style="color: var(--text-muted);">${lead.company || 'Not specified'}</span>
+                        </p>
+                        ${lead.owner_title ? `<p style="margin: 0 0 0.5rem 0; color: var(--text-color); font-size: 0.9rem;">
+                            <strong><i class="fas fa-briefcase" style="margin-right: 0.5rem; color: var(--primary-color);"></i>Position:</strong><br>
+                            <span style="color: var(--text-muted);">${lead.owner_title}</span>
+                        </p>` : ''}
+                    </div>
+                    <div>
+                        ${lead.owner_phone_number ? `<p style="margin: 0 0 0.5rem 0; color: var(--text-color); font-size: 0.9rem;">
+                            <strong><i class="fas fa-phone" style="margin-right: 0.5rem; color: var(--primary-color);"></i>Phone:</strong><br>
+                            <span style="color: var(--text-muted);">${lead.owner_phone_number}</span>
+                        </p>` : ''}
+                        ${location ? `<p style="margin: 0 0 0.5rem 0; color: var(--text-color); font-size: 0.9rem;">
+                            <strong><i class="fas fa-map-marker-alt" style="margin-right: 0.5rem; color: var(--primary-color);"></i>Location:</strong><br>
+                            <span style="color: var(--text-muted);">${location}</span>
+                        </p>` : ''}
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    ${lead.source ? `<div>
+                        <p style="margin: 0; color: var(--text-color); font-size: 0.9rem;">
+                            <strong><i class="fas fa-tag" style="margin-right: 0.5rem; color: var(--primary-color);"></i>Source:</strong><br>
+                            <span style="color: var(--text-muted);">${lead.source}</span>
+                        </p>
+                    </div>` : '<div></div>'}
+                    ${taskLead.notes ? `<div>
+                        <p style="margin: 0; color: var(--text-color); font-size: 0.9rem;">
+                            <strong><i class="fas fa-sticky-note" style="margin-right: 0.5rem; color: var(--primary-color);"></i>Notes:</strong><br>
+                            <span style="color: var(--text-muted);">${taskLead.notes}</span>
+                        </p>
+                    </div>` : '<div></div>'}
+                </div>
+                
+                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <span style="background: var(--success-color); color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.8rem; font-weight: 500;">
+                            Status: ${taskLead.status}
+                        </span>
+                        ${taskLead.score ? `<span style="padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.8rem; font-weight: 500; color: white; background: ${taskLead.score === 'good' ? 'var(--success-color)' : taskLead.score === 'medium' ? 'var(--warning-color)' : 'var(--danger-color)'};">Score: ${taskLead.score.charAt(0).toUpperCase() + taskLead.score.slice(1)}</span>` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    container.innerHTML = leadsHtml;
+}
+
+async function deleteActivity(leadId) {
+    if (!confirm('Are you sure you want to remove this lead from the task?')) {
+        return;
+    }
+    
+    try {
+        
+        const taskId = '{{ task.task_id }}';
+        const response = await fetch(`/api/task-lead/${taskId}/leads/${leadId}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to remove lead from task');
+        }
+        
+        showAlert('Lead removed from task successfully!', 'success');
+        loadProjectActivities(); // Reload leads
+        
+    } catch (error) {
+        showAlert('Failed to remove lead from task', 'danger');
+    }
+}
+
+// Inline editing functionality
+let pendingChanges = {};
+
+function editField(fieldElement, fieldName) {
+    // Prevent multiple edits
+    if (fieldElement.classList.contains('editing')) {
+        return;
+    }
+    
+    const valueElement = fieldElement.querySelector('.field-value');
+    const inputElement = fieldElement.querySelector('.field-input');
+    
+    if (!valueElement || !inputElement) {
+        return;
+    }
+    
+    // Load team members for assignee field
+    if (fieldName === 'assignee') {
+        loadTeamMembersForEdit(inputElement);
+    }
+    
+    // Switch to edit mode
+    fieldElement.classList.add('editing');
+    valueElement.style.display = 'none';
+    inputElement.style.display = 'block';
+    inputElement.focus();
+    
+    // Handle blur (save changes)
+    inputElement.onblur = function() {
+        saveFieldChange(fieldElement, fieldName, inputElement.value);
+    };
+    
+    // Handle Enter key
+    inputElement.onkeydown = function(e) {
+        if (e.key === 'Enter') {
+            inputElement.blur();
+        }
+        if (e.key === 'Escape') {
+            cancelFieldEdit(fieldElement);
+        }
+    };
+}
+
+function saveFieldChange(fieldElement, fieldName, newValue) {
+    const valueElement = fieldElement.querySelector('.field-value');
+    const inputElement = fieldElement.querySelector('.field-input');
+    
+    // Store the change
+    pendingChanges[fieldName] = newValue;
+    
+    // Update display value
+    updateDisplayValue(fieldElement, fieldName, newValue);
+    
+    // Switch back to view mode
+    fieldElement.classList.remove('editing');
+    valueElement.style.display = 'block';
+    inputElement.style.display = 'none';
+    
+    // Show save button
+    document.getElementById('saveChangesBtn').style.display = 'inline-block';
+}
+
+function cancelFieldEdit(fieldElement) {
+    const valueElement = fieldElement.querySelector('.field-value');
+    const inputElement = fieldElement.querySelector('.field-input');
+    
+    fieldElement.classList.remove('editing');
+    valueElement.style.display = 'block';
+    inputElement.style.display = 'none';
+}
+
+function updateDisplayValue(fieldElement, fieldName, newValue) {
+    const valueElement = fieldElement.querySelector('.field-value');
+    
+    switch(fieldName) {
+        case 'priority':
+            valueElement.className = `field-value priority-badge priority-${newValue}`;
+            valueElement.textContent = newValue.toUpperCase();
+            break;
+        case 'status':
+            valueElement.className = `field-value task-status-badge status-${newValue}`;
+            valueElement.textContent = newValue.replace('_', ' ').toUpperCase();
+            break;
+        case 'due_date':
+            valueElement.textContent = newValue || 'No due date';
+            break;
+        case 'estimated_hours':
+            valueElement.textContent = newValue || 'Not set';
+            break;
+        case 'assignee':
+            // Handle assignee display update
+            if (newValue) {
+                // Find selected option text
+                const select = fieldElement.querySelector('.field-input');
+                const selectedOption = select.querySelector(`option[value="${newValue}"]`);
+                valueElement.innerHTML = selectedOption ? selectedOption.textContent : newValue;
+            } else {
+                valueElement.innerHTML = 'Unassigned';
+            }
+            break;
+        default:
+            valueElement.textContent = newValue;
+    }
+}
+
+async function loadTeamMembersForEdit(selectElement) {
+    try {
+        const workspaceId = '{{ workspace.workspace_id if workspace else "" }}';
+        if (!workspaceId) return;
+        
+        const response = await fetch(`/api/workspace/${workspaceId}/members`, {
+            credentials: 'include'
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            const members = data.members || [];
+            
+            // Clear existing options except "Unassigned"
+            selectElement.innerHTML = '<option value="">Unassigned</option>';
+            
+            // Add team members
+            members.forEach(member => {
+                if (member.user_data) {
+                    const option = document.createElement('option');
+                    option.value = member.user_id;
+                    option.textContent = member.user_data.username;
+                    selectElement.appendChild(option);
+                }
+            });
+        }
+    } catch (error) {
+    }
+}
+
+async function saveTaskChanges() {
+    try {
+        const taskId = '{{ task.task_id }}';
+        
+        if (Object.keys(pendingChanges).length === 0) {
+            showAlert('No changes to save', 'info');
+            return;
+        }
+        
+        
+        const response = await fetch(`/api/workspace/tasks/${taskId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify(pendingChanges)
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to update task');
+        }
+        
+        showAlert('Task updated successfully!', 'success');
+        
+        // Clear pending changes
+        pendingChanges = {};
+        document.getElementById('saveChangesBtn').style.display = 'none';
+        
+        // Optionally reload the page to reflect all changes
+        setTimeout(() => {
+            window.location.reload();
+        }, 1000);
+        
+    } catch (error) {
+        showAlert(error.message, 'danger');
+    }
+}
+</script>
+{% endblock %} 

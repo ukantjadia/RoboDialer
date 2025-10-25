@@ -1,0 +1,59 @@
+# Development Environment Configuration
+
+# DeepSeek API
+deepseek:
+  api_key: ${DEEPSEEK_API_KEY}
+  base_url: ${DEEPSEEK_BASE_URL:https://api.deepseek.com}
+  model: ${DEEPSEEK_MODEL:deepseek-chat}
+  timeout: ${DEEPSEEK_TIMEOUT:30}
+  max_retries: ${DEEPSEEK_MAX_RETRIES:3}
+  enable_mock_fallback: ${ENABLE_MOCK_FALLBACK:true}
+
+# Data Management
+data:
+  csv_path: ${CSV_DATA_PATH:data/test3.csv}
+  enable_hot_reload: ${ENABLE_HOT_RELOAD:true}
+  validation_enabled: ${DATA_VALIDATION_ENABLED:true}
+
+# Web Scraping
+scraper:
+  timeout: ${SCRAPER_TIMEOUT:30}
+  max_retries: ${SCRAPER_MAX_RETRIES:3}
+  user_agent: "AgenticBackend/1.0 (Development)"
+  respect_robots_txt: true
+  delay_between_requests: 1.0
+
+# Haystack RAG System
+haystack:
+  document_store: ${HAYSTACK_DOCUMENT_STORE:inmemory}
+  embedding_model: ${HAYSTACK_EMBEDDING_MODEL:sentence-transformers/all-MiniLM-L6-v2}
+  top_k: ${HAYSTACK_TOP_K:5}
+  index_name: ${HAYSTACK_INDEX_NAME:company_knowledge_base}
+  
+  # Document Store Configurations
+  qdrant:
+    host: ${QDRANT_HOST:localhost}
+    port: ${QDRANT_PORT:6333}
+    collection_name: ${QDRANT_COLLECTION_NAME:company_documents}
+    vector_size: 384
+    distance: "Cosine"
+    
+  faiss:
+    index_path: ${FAISS_INDEX_PATH:./data/faiss_index}
+    index_type: "IndexFlatIP"
+    
+  inmemory:
+    embedding_dim: 384
+
+# LangGraph Configuration
+langgraph:
+  recursion_limit: ${LANGGRAPH_RECURSION_LIMIT:50}
+  checkpoint_enabled: ${LANGGRAPH_CHECKPOINT_ENABLED:true}
+  debug_mode: true
+
+# System Settings
+system:
+  log_level: ${LOG_LEVEL:INFO}
+  enable_metrics: ${ENABLE_METRICS:true}
+  max_concurrent_tools: ${MAX_CONCURRENT_TOOLS:3}
+  environment: ${ENVIRONMENT:development}

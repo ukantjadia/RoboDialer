@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% block title %}All Companies{% endblock %}
+{% block additional_styles %}
+<style>
+.company-list-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  margin-top: 2.5rem;
+}
+.company-card {
+  background: #232b3a;
+  border-radius: 20px;
+  box-shadow: 0 4px 24px #181f2a44;
+  padding: 2.2rem 2.2rem 1.2rem 2.2rem;
+  margin-bottom: 2rem;
+  max-width: 650px;
+  min-width: 320px;
+  flex: 1 1 600px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+}
+.company-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+.plan-badge {
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 0.2em 0.9em;
+  margin-left: 0.5em;
+  background: #334155;
+  color: #22d3ee;
+}
+.plan-badge.platinum { background: #22d3ee; color: #181f2a; }
+.plan-badge.gold { background: gold; color: #181f2a; }
+.plan-badge.silver { background: #a5b4fc; color: #181f2a; }
+.parent-badge { background: #4ad66d; color: #181f2a; margin-left: 0.5em; }
+.sub-badge { background: #64748b; color: #fff; margin-left: 0.5em; }
+.avatar {
+  background: #22d3ee;
+  color: #fff;
+  border-radius: 50%;
+  width: 32px; height: 32px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-weight: bold; margin-right: 0.5rem;
+  font-size: 1.1rem;
+}
+.user-badge { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem; }
+.role-badge { background: #a5b4fc; color: #232b3a; border-radius: 8px; font-size: 0.85em; padding: 0.1em 0.7em; margin-left: 0.3em; }
+.section { margin-bottom: 1.1rem; }
+.stats { font-size: 0.98rem; color: #a5b4fc; display: flex; gap: 2.5em; margin-top: 0.7em; }
+.card-footer { text-align: right; margin-top: 1.2em; }
+.btn-danger { background: #ef4444; border: none; border-radius: 8px; padding: 0.5em 1.2em; color: #fff; font-weight: 600; transition: background 0.2s; }
+.btn-danger:hover { background: #dc2626; }
+@media (max-width: 900px) {
+  .company-list-row { flex-direction: column; gap: 1.2rem; }
+  .company-card { max-width: 98vw; min-width: 0; }
+}
+</style>
+{% endblock %}
+{% block content %}
+<div class="container mt-5">
+  <h2 class="mb-4">All Companies <span class="badge bg-secondary">{{ companies|length }}</span></h2>
+  {% if companies|length == 0 %}
+    <div class="alert alert-info text-center mt-5">No companies found. Create a company to get started!</div>
+  {% else %}
+    <div class="company-list-row">
+      {% for c in companies %}
+      <div class="company-card">
+        <div class="card-header">
+          <span class="company-name">{{ c.name }}</span>
+          <span class="plan-badge {{ c.plan_name|lower }}">{{ c.plan_name }}</span>
+          {% if c.is_parent_company() %}<span class="parent-badge badge">Parent</span>{% endif %}
+          {% if c.is_sub_company() %}<span class="sub-badge badge">Sub</span>{% endif %}
+        </div>
+        <div class="card-body">
+          <div class="section">
+            <strong>Admin(s):</strong>
+            {% for admin in c.admins %}
+              <div class="user-badge">
+                <span class="avatar">{{ admin.username[0]|upper }}</span>
+                <span>{{ admin.username }}</span>
+                <span class="text-muted">({{ admin.email }})</span>
+                <span class="role-badge">Admin</span>
+              </div>
+            {% else %}
+              <span class="text-muted"><i class="fas fa-user-slash"></i> No admin</span>
+            {% endfor %}
+          </div>
+          <div class="section">
+            <strong>Members:</strong>
+            {% for member in c.members %}
+              <div class="user-badge">
+                <span class="avatar">{{ member.username[0]|upper }}</span>
+                <span>{{ member.username }}</span>
+                <span class="text-muted">({{ member.email }})</span>
+                <span class="role-badge">{{ member.company_role|capitalize }}</span>
+              </div>
+            {% else %}
+              <span class="text-muted"><i class="fas fa-users-slash"></i> No members</span>
+            {% endfor %}
+          </div>
+          <div class="section stats">
+            <span><b>Credits:</b> {{ c.total_credits }}</span>
+            <span><b>Max Members:</b> {{ c.max_members }}</span>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button class="btn btn-danger btn-sm" onclick="deleteCompany('{{ c.company_id }}', '{{ c.name }}', '{{ c.get_sub_companies()|length }}')">Delete</button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+  <script>
+    function deleteCompany(companyId, companyName, subCompaniesCount) {
+      let confirmMessage = `Are you sure you want to delete "${companyName}"?`;
+      if (subCompaniesCount > 0) {
+        confirmMessage += `\n\nThis will also delete ${subCompaniesCount} sub-company account(s) and all their data.`;
+      }
+      confirmMessage += '\n\nThis action cannot be undone.';
+      if (!confirm(confirmMessage)) return;
+      fetch(`/api/admin/companies/${companyId}`, {
+        method: 'DELETE',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.message) {
+          alert('Company deleted successfully!');
+          location.reload();
+        } else {
+          alert('Error: ' + (data.error || 'Failed to delete company'));
+        }
+      })
+      .catch(() => alert('Failed to delete company'));
+    }
+  </script>
+</div>
+{% endblock %} 

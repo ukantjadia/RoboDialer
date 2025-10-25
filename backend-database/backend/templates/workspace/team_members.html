@@ -1,0 +1,1899 @@
+{% extends "base.html" %}
+
+{% block title %}Team Management - {{ workspace.name }}{% endblock %}
+
+{% block additional_styles %}
+{{ super() }}
+<style>
+    .members-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+    
+    /* Navigation Tabs */
+    .nav-tabs {
+        display: flex;
+        background: var(--card-bg);
+        border-radius: 8px;
+        padding: 0.5rem;
+        margin-bottom: 2rem;
+        border: 1px solid var(--border-color);
+    }
+    
+    .nav-tab {
+        flex: 1;
+        padding: 0.75rem 1rem;
+        text-align: center;
+        color: var(--text-muted);
+        text-decoration: none;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    
+    .nav-tab.active {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .nav-tab:hover:not(.active) {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-color);
+    }
+    
+    /* Sub Navigation */
+    .sub-nav-tabs {
+        display: flex;
+        background: var(--background-color);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 0.25rem;
+        margin-bottom: 1.5rem;
+        gap: 0.25rem;
+    }
+    
+    .sub-nav-tab {
+        flex: 1;
+        padding: 0.5rem 1rem;
+        text-align: center;
+        color: var(--text-muted);
+        text-decoration: none;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        font-size: 0.9rem;
+        white-space: nowrap;
+    }
+    
+    .sub-nav-tab.active {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .sub-nav-tab:hover:not(.active) {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-color);
+    }
+    
+    .content-section {
+        min-height: 300px;
+    }
+    
+    /* Header Section */
+    .members-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .btn-back {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .btn-back:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-color);
+    }
+    
+    .members-title {
+        color: var(--text-color);
+        font-size: 2rem;
+        font-weight: bold;
+        margin: 0;
+    }
+    
+    .btn-invite-member {
+        background: var(--success-color);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-invite-member:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+    }
+    
+    /* Members Grid */
+    .members-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    /* Join Requests Grid */
+    .join-requests-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .member-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        position: relative;
+        transition: all 0.2s ease;
+    }
+    
+    .member-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .member-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+    
+    .member-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .member-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+    
+    .member-details {
+        flex: 1;
+    }
+    
+    .member-name {
+        color: var(--text-color);
+        font-size: 1.25rem;
+        font-weight: bold;
+        margin: 0 0 0.25rem 0;
+    }
+    
+    .member-email {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        margin: 0;
+    }
+    
+    .member-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .btn-action {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+    }
+    
+    .btn-action:hover {
+        color: var(--text-color);
+        background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .btn-edit:hover {
+        color: var(--primary-color);
+        background: rgba(74, 144, 226, 0.1);
+    }
+    
+    .btn-delete:hover {
+        color: var(--danger-color);
+        background: rgba(220, 53, 69, 0.1);
+    }
+    
+    .btn-approve {
+        background: var(--success-color);
+        color: white;
+        border-radius: 6px;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin: 0;
+    }
+    
+    .btn-approve:hover {
+        background: #28a745;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+    }
+    
+    .btn-reject {
+        background: var(--danger-color);
+        color: white;
+        border-radius: 6px;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin: 0;
+    }
+    
+    .btn-reject:hover {
+        background: #dc3545;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+    }
+    
+    .btn-resend {
+        background: var(--warning-color);
+        color: white;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin: 0;
+    }
+    
+    .btn-resend:hover {
+        background: #e0a800;
+        transform: scale(1.1);
+        box-shadow: 0 2px 8px rgba(224, 168, 0, 0.3);
+    }
+    
+    .role-restriction-notice {
+        background: rgba(255, 193, 7, 0.1);
+        color: #856404;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        border: 1px solid rgba(255, 193, 7, 0.3);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    .member-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+    
+    .member-meta-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .member-role {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+    }
+    
+    .role-admin {
+        background: var(--danger-color);
+        color: white;
+    }
+    
+    .role-manager {
+        background: var(--warning-color);
+        color: white;
+    }
+    
+    .role-member {
+        background: var(--success-color);
+        color: white;
+    }
+    
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+    }
+    
+    .modal-content {
+        background: var(--card-bg);
+        margin: 5% auto;
+        padding: 2rem;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 500px;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--text-color);
+        font-weight: 500;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--background-color);
+        color: var(--text-color);
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-color);
+    }
+    
+    .btn-close {
+        float: right;
+        font-size: 1.5rem;
+        font-weight: bold;
+        cursor: pointer;
+        color: var(--secondary-color);
+        background: none;
+        border: none;
+    }
+    
+    .btn-close:hover {
+        color: var(--text-color);
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .members-header {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+        
+        .members-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .member-header {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .member-actions {
+            align-self: flex-end;
+        }
+    }
+    
+    /* Role Request Styles */
+    .request-role-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        max-width: 1000px;
+    }
+    
+    .role-request-form-container,
+    .my-requests-container {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 2rem;
+    }
+    
+    .role-request-form-container h3,
+    .my-requests-container h4 {
+        color: var(--text-color);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .role-request-description {
+        color: var(--text-muted);
+        margin-bottom: 2rem;
+        line-height: 1.5;
+    }
+    
+    .role-request-form .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .role-requests-grid {
+        display: grid;
+        gap: 1.5rem;
+    }
+    
+    .role-request-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.2s ease;
+    }
+    
+    .role-request-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .role-request-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+    
+    .role-request-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .role-request-avatar {
+        width: 50px;
+        height: 50px;
+        background: var(--primary-color);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+    
+    .role-request-details h4 {
+        color: var(--text-color);
+        margin: 0 0 0.25rem 0;
+        font-size: 1.1rem;
+    }
+    
+    .role-request-details p {
+        color: var(--text-muted);
+        margin: 0;
+        font-size: 0.9rem;
+    }
+    
+    .role-request-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .btn-approve {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-approve:hover {
+        background: #218838;
+    }
+    
+    .btn-reject {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-reject:hover {
+        background: #c82333;
+    }
+    
+    .role-request-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding: 1rem;
+        background: var(--background-color);
+        border-radius: 8px;
+    }
+    
+    .role-change-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .role-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .role-badge.current {
+        background: var(--border-color);
+        color: var(--text-muted);
+    }
+    
+    .role-badge.requested {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .role-request-message {
+        background: var(--background-color);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+        font-style: italic;
+        color: var(--text-muted);
+    }
+    
+    .my-request-item {
+        background: var(--background-color);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .my-request-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .request-status {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .request-status.pending {
+        background: #ffc107;
+        color: #000;
+    }
+    
+    .request-status.approved {
+        background: #28a745;
+        color: white;
+    }
+    
+    .request-status.rejected {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .request-status.cancelled {
+        background: #6c757d;
+        color: white;
+    }
+    
+    .btn-cancel-request {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.8rem;
+    }
+    
+    .btn-cancel-request:hover {
+        background: #c82333;
+    }
+    
+    @media (max-width: 768px) {
+        .request-role-container {
+            grid-template-columns: 1fr;
+        }
+        
+        .role-request-header {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .role-request-actions {
+            align-self: flex-end;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="members-container">
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+        <a href="/workspace/team/{{ team_id }}" class="nav-tab">Overview</a>
+        <a href="/workspace/team/{{ team_id }}/projects" class="nav-tab">Projects</a>
+        <a href="#" class="nav-tab active">Team Management</a>
+        <a href="/workspace/team/{{ team_id }}/settings" class="nav-tab">Settings</a>
+    </div>
+
+    <!-- Members Header -->
+    <div class="members-header">
+        <div class="header-left">
+            <button class="btn-back" onclick="goBack()">
+                <i class="bi bi-arrow-left"></i>
+                Back to Workspaces
+            </button>
+            <h1 class="members-title">Team Management</h1>
+        </div>
+        {% if user_role in ['admin', 'manager'] %}
+        <button class="btn-invite-member" onclick="openInviteModal()">
+            <i class="bi bi-person-plus"></i>
+            Invite Member
+        </button>
+        {% elif user_role == 'member' %}
+        <button class="btn-invite-member" onclick="openRequestCreditModal()">
+            <i class="bi bi-credit-card"></i>
+            Request Credits
+        </button>
+        {% else %}
+        <div class="role-restriction-notice">
+            <i class="bi bi-info-circle"></i>
+            Only admins and managers can invite members
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Sub Navigation -->
+    <div class="sub-nav-tabs">
+        <a href="#" class="sub-nav-tab active" data-tab="members" onclick="switchSubTab('members', this)">
+            <i class="bi bi-people"></i>
+            Current Members
+        </a>
+        {% if user_role in ['admin', 'manager'] %}
+        <a href="#" class="sub-nav-tab" data-tab="joinRequests" onclick="switchSubTab('joinRequests', this)">
+            <i class="bi bi-person-plus"></i>
+            Join Requests (<span id="joinRequestsCount">0</span>)
+        </a>
+        <a href="#" class="sub-nav-tab" data-tab="roleRequests" onclick="switchSubTab('roleRequests', this)">
+            <i class="bi bi-arrow-up-circle"></i>
+            Role Requests (<span id="roleRequestsCount">0</span>)
+        </a>
+        <a href="#" class="sub-nav-tab" data-tab="creditRequests" onclick="switchSubTab('creditRequests', this)">
+            <i class="bi bi-credit-card"></i>
+            Credit Requests (<span id="creditRequestsCount">0</span>)
+        </a>
+        {% endif %}
+        {% if user_role == 'member' %}
+        <a href="#" class="sub-nav-tab" data-tab="requestRole" onclick="switchSubTab('requestRole', this)">
+            <i class="bi bi-arrow-up-circle"></i>
+            Request Role
+        </a>
+        <a href="#" class="sub-nav-tab" data-tab="myCreditRequests" onclick="switchSubTab('myCreditRequests', this)">
+            <i class="bi bi-credit-card"></i>
+            My Credit Requests
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Content Sections -->
+    <div id="membersSection" class="content-section active">
+        <div class="members-grid" id="membersGrid">
+            <!-- Members will be loaded here -->
+        </div>
+    </div>
+
+
+
+    {% if user_role in ['admin', 'manager'] %}
+    <div id="joinRequestsSection" class="content-section" style="display: none;">
+        <div class="join-requests-grid" id="joinRequestsGrid">
+            <!-- Join requests will be loaded here -->
+        </div>
+    </div>
+    
+    <div id="roleRequestsSection" class="content-section" style="display: none;">
+        <div class="role-requests-grid" id="roleRequestsGrid">
+            <!-- Role requests will be loaded here -->
+        </div>
+    </div>
+    
+    <div id="creditRequestsSection" class="content-section" style="display: none;">
+        <div class="role-requests-grid" id="creditRequestsGrid">
+            <!-- Credit requests will be loaded here -->
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if user_role == 'member' %}
+    <div id="requestRoleSection" class="content-section" style="display: none;">
+        <div class="request-role-container">
+            <div class="role-request-form-container">
+                <h3><i class="bi bi-arrow-up-circle"></i> Request Role Change</h3>
+                <p class="role-request-description">
+                    Request a role change from your current team lead or admin. Please provide a reason for your request.
+                </p>
+                
+                <form id="roleRequestForm" class="role-request-form">
+                    <div class="form-group">
+                        <label class="form-label">Current Role</label>
+                        <input type="text" class="form-control" value="{{ user_role|title }}" readonly>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Requested Role</label>
+                        <select class="form-control" id="requestedRole" required>
+                            <option value="">Select role...</option>
+                            <option value="manager">Manager</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Message (Optional)</label>
+                        <textarea class="form-control" id="requestMessage" rows="4" 
+                                placeholder="Please explain why you are requesting this role change..."></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn-invite-member">
+                        <i class="bi bi-arrow-up-circle"></i>
+                        Submit Request
+                    </button>
+                </form>
+            </div>
+            
+            <!-- My Role Requests -->
+            <div class="my-requests-container">
+                <h4><i class="bi bi-clock-history"></i> My Requests</h4>
+                <div class="my-requests-list" id="myRequestsList">
+                    <!-- User's role requests will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="myCreditRequestsSection" class="content-section" style="display: none;">
+        <div class="role-requests-grid" id="myCreditRequestsGrid">
+            <!-- My credit requests will be loaded here -->
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Invite Member Modal -->
+<div id="inviteModal" class="modal">
+    <div class="modal-content">
+        <button class="btn-close" onclick="closeInviteModal()">&times;</button>
+        <h3>Invite Team Member</h3>
+        <form id="inviteForm">
+            <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" class="form-control" id="inviteEmail" required placeholder="Enter email address">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Role</label>
+                <select class="form-control" id="inviteRole">
+                    <option value="member">Member</option>
+                    <option value="manager">Manager</option>
+                </select>
+            </div>
+            <button type="submit" class="btn-invite-member">Send Invitation</button>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Member Modal -->
+<div id="editMemberModal" class="modal">
+    <div class="modal-content">
+        <button class="btn-close" onclick="closeEditMemberModal()">&times;</button>
+        <h3>Edit Member</h3>
+        <form id="editMemberForm">
+            <input type="hidden" id="editMemberId">
+            <div class="form-group">
+                <label class="form-label">Role</label>
+                <select class="form-control" id="editMemberRole">
+                    <option value="member">Member</option>
+                    <option value="manager">Manager</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Credits</label>
+                <input type="number" class="form-control" id="editMemberCredits" min="0" placeholder="Enter credits">
+            </div>
+            <button type="submit" class="btn-invite-member">Update Member</button>
+        </form>
+    </div>
+</div>
+
+<!-- Request Credit Modal -->
+<div id="requestCreditModal" class="modal">
+    <div class="modal-content">
+        <button class="btn-close" onclick="closeRequestCreditModal()">&times;</button>
+        <h3>Request Credits</h3>
+        <form id="requestCreditForm">
+            <div class="form-group">
+                <label class="form-label">Amount</label>
+                <input type="number" class="form-control" id="requestCreditAmount" min="1" required placeholder="Enter credit amount">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Reason</label>
+                <textarea class="form-control" id="requestCreditReason" rows="4" 
+                        placeholder="Please explain why you need these credits..."></textarea>
+            </div>
+            <button type="submit" class="btn-invite-member">Submit Request</button>
+        </form>
+    </div>
+</div>
+
+<!-- Role Request Review Modal -->
+<div id="reviewRoleRequestModal" class="modal">
+    <div class="modal-content">
+        <button class="btn-close" onclick="closeReviewRoleRequestModal()">&times;</button>
+        <h3>Review Role Request</h3>
+        <div id="roleRequestReviewContent">
+            <!-- Content will be populated by JavaScript -->
+        </div>
+        <form id="reviewRoleRequestForm">
+            <input type="hidden" id="reviewRequestId">
+            <div class="form-group">
+                <label class="form-label">Action</label>
+                <select class="form-control" id="reviewAction" required onchange="toggleReasonField()">
+                    <option value="">Select action...</option>
+                    <option value="approve">Approve</option>
+                    <option value="reject">Reject</option>
+                </select>
+            </div>
+            <div class="form-group" id="reasonField" style="display: none;">
+                <label class="form-label">Reason for Rejection</label>
+                <textarea class="form-control" id="reviewReason" rows="3" 
+                        placeholder="Please provide a reason for rejecting this request..."></textarea>
+            </div>
+            <div class="form-actions" style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+                <button type="button" class="btn-cancel" onclick="closeReviewRoleRequestModal()">Cancel</button>
+                <button type="submit" class="btn-invite-member">Submit Review</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+let currentTeamId = '{{ team_id }}';
+let members = [];
+
+// --- Modal Controls ---
+function openInviteModal() {
+    document.getElementById('inviteModal').style.display = 'block';
+}
+
+function closeInviteModal() {
+    document.getElementById('inviteModal').style.display = 'none';
+    document.getElementById('inviteForm').reset();
+}
+
+function openEditMemberModal(member) {
+    document.getElementById('editMemberId').value = member.id;
+    document.getElementById('editMemberRole').value = member.role || 'member';
+    document.getElementById('editMemberCredits').value = member.credits || 0;
+    document.getElementById('editMemberModal').style.display = 'block';
+}
+
+function closeEditMemberModal() {
+    document.getElementById('editMemberModal').style.display = 'none';
+    document.getElementById('editMemberForm').reset();
+}
+
+function openRequestCreditModal() {
+    document.getElementById('requestCreditModal').style.display = 'block';
+}
+
+function closeRequestCreditModal() {
+    document.getElementById('requestCreditModal').style.display = 'none';
+    document.getElementById('requestCreditForm').reset();
+}
+
+// --- Tab Switching ---
+function switchSubTab(tabName, element) {
+    // Remove active class from all tabs
+    document.querySelectorAll('.sub-nav-tab').forEach(tab => tab.classList.remove('active'));
+    // Add active class to clicked tab
+    element.classList.add('active');
+    
+    // Hide all content sections
+    document.querySelectorAll('.content-section').forEach(section => section.style.display = 'none');
+    
+    // Show selected content section
+    const sectionId = tabName + 'Section';
+    const sectionElement = document.getElementById(sectionId);
+    if (sectionElement) {
+        sectionElement.style.display = 'block';
+    }
+    
+    // Load data for the selected tab
+    if (tabName === 'members') {
+        fetchMembers();
+    } else if (tabName === 'joinRequests') {
+        fetchJoinRequests();
+    } else if (tabName === 'roleRequests') {
+        fetchRoleRequests();
+    } else if (tabName === 'creditRequests') {
+        fetchCreditRequests();
+    } else if (tabName === 'requestRole') {
+        fetchMyRoleRequests();
+    } else if (tabName === 'myCreditRequests') {
+        fetchMyCreditRequests();
+    }
+}
+
+// --- Alert Helper ---
+function showAlert(msg, type = 'success') {
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type}`;
+    alert.style.position = 'fixed';
+    alert.style.top = '20px';
+    alert.style.right = '20px';
+    alert.style.zIndex = 2000;
+    alert.innerText = msg;
+    document.body.appendChild(alert);
+    setTimeout(() => alert.remove(), 2500);
+}
+
+// --- Fetch & Render Members ---
+async function fetchMembers() {
+    try {
+        // Fetch team credits first
+        const creditsRes = await fetch(`/api/teams/${currentTeamId}/credits`, { credentials: 'include' });
+        if (!creditsRes.ok) throw new Error('Failed to fetch team credits');
+        const creditsData = await creditsRes.json();
+        
+        // Then fetch members
+        const membersRes = await fetch(`/api/teams/${currentTeamId}/members`, { credentials: 'include' });
+        if (!membersRes.ok) throw new Error('Failed to fetch members');
+        const membersData = await membersRes.json();
+        members = membersData.members || membersData || [];
+        
+        // Add team credits info to the page
+        const teamCreditsInfo = `
+            <div class="team-credits-info" style="margin-bottom: 2rem; background: var(--card-bg); padding: 1rem; border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin: 0;">Team Credits</h3>
+                    <div style="text-align: right;">
+                        <div>Used: ${creditsData.used_credits}</div>
+                        <div>Remaining: ${creditsData.remaining_credits}</div>
+                    </div>
+                </div>
+                <div style="margin-top: 1rem;">
+                    <div class="progress" style="height: 20px; background: var(--background-color); border-radius: 10px; overflow: hidden;">
+                        <div class="progress-bar" style="width: ${(creditsData.used_credits / creditsData.total_credits) * 100}%; 
+                             background: var(--primary-color); height: 100%;">
+                        </div>
+                    </div>
+                    <div style="text-align: center; margin-top: 0.5rem; font-size: 0.9rem; color: var(--text-muted);">
+                        ${creditsData.used_credits} / ${creditsData.total_credits} credits used
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remove existing team credits info if any
+        const existingInfo = document.querySelector('.team-credits-info');
+        if (existingInfo) existingInfo.remove();
+        
+        document.getElementById('membersSection').insertAdjacentHTML('afterbegin', teamCreditsInfo);
+        
+        renderMembers(members);
+    } catch (e) {
+        
+        renderMembers([]);
+        showAlert('Could not load members', 'danger');
+    }
+}
+
+function renderMembers(members) {
+    const membersGrid = document.getElementById('membersGrid');
+    
+    if (!members || !members.length) {
+        membersGrid.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--text-muted);">
+                <i class="bi bi-people" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                <p>No members found. Invite your first team member!</p>
+            </div>
+        `;
+        return;
+    }
+    
+    membersGrid.innerHTML = members.map(member => `
+        <div class="member-card">
+            <div class="member-header">
+                <div class="member-info">
+                    <div class="member-avatar">${member.name ? member.name.charAt(0).toUpperCase() : 'U'}</div>
+                    <div class="member-details">
+                        <h3 class="member-name">${member.name || 'Unknown'}</h3>
+                        <p class="member-email">${member.email}</p>
+                    </div>
+                </div>
+                <div class="member-actions">
+                    <button class="btn-action btn-edit" onclick='editMember(${JSON.stringify(member)})' title="Edit">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn-action btn-delete" onclick='removeMember("${member.id}", "${member.name}")' title="Remove">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="member-meta">
+                <div class="member-meta-item">
+                    <span>Role:</span>
+                    <span class="member-role role-${member.role || 'member'}">${member.role || 'member'}</span>
+                </div>
+                <div class="member-meta-item">
+                    <span>Credits:</span>
+                    <span>${member.credits || 0}</span>
+                </div>
+                <div class="member-meta-item">
+                    <span>Joined:</span>
+                    <span>${member.joined_at ? new Date(member.joined_at).toLocaleDateString() : 'Unknown'}</span>
+                </div>
+                <div class="member-meta-item">
+                    <span>Status:</span>
+                    <span>${member.status || 'active'}</span>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// --- Invite Member ---
+document.getElementById('inviteForm').onsubmit = async function(e) {
+    e.preventDefault();
+    const email = document.getElementById('inviteEmail').value.trim();
+    const role = document.getElementById('inviteRole').value;
+    
+    try {
+        const res = await fetch(`/api/teams/${currentTeamId}/members/invite`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ email, role })
+        });
+        
+        if (!res.ok) throw new Error('Failed to send invitation');
+        
+        showAlert('Invitation sent successfully!');
+        closeInviteModal();
+        fetchMembers();
+    } catch (e) {
+        showAlert('Failed to send invitation', 'danger');
+    }
+};
+
+// --- Edit Member ---
+document.getElementById('editMemberForm').onsubmit = async function(e) {
+    e.preventDefault();
+    const memberId = document.getElementById('editMemberId').value;
+    const role = document.getElementById('editMemberRole').value;
+    const credits = parseInt(document.getElementById('editMemberCredits').value) || 0;
+    
+    try {
+        // Assign credits using new endpoint
+        const creditsRes = await fetch(`/api/teams/${currentTeamId}/credits/assign`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ 
+                member_id: memberId,
+                amount: credits 
+            })
+        });
+        
+        if (!creditsRes.ok) {
+            const error = await creditsRes.json();
+            throw new Error(error.error || 'Failed to assign credits');
+        }
+        
+        // Update role if changed
+        if (role) {
+            const roleRes = await fetch(`/api/teams/${currentTeamId}/members/${memberId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ role })
+            });
+            
+            if (!roleRes.ok) {
+                throw new Error('Failed to update role');
+            }
+        }
+        
+        showAlert('Member updated successfully!');
+        closeEditMemberModal();
+        fetchMembers();
+    } catch (e) {
+        showAlert(e.message || 'Failed to update member', 'danger');
+    }
+};
+
+// --- Global Functions ---
+window.editMember = function(member) {
+    openEditMemberModal(member);
+};
+
+window.removeMember = function(memberId, memberName) {
+    if (confirm(`Remove "${memberName}" from the team? This cannot be undone.`)) {
+        removeMemberAction(memberId);
+    }
+};
+
+// --- Remove Member ---
+async function removeMemberAction(memberId) {
+    try {
+        const res = await fetch(`/api/teams/${currentTeamId}/members/${memberId}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+        
+        if (!res.ok) throw new Error('Failed to remove member');
+        
+        showAlert('Member removed successfully!');
+        fetchMembers();
+    } catch (e) {
+        showAlert('Failed to remove member', 'danger');
+    }
+}
+
+// --- Request Credit Form ---
+document.getElementById('requestCreditForm').onsubmit = async function(e) {
+    e.preventDefault();
+    const amount = parseInt(document.getElementById('requestCreditAmount').value);
+    const reason = document.getElementById('requestCreditReason').value.trim();
+    
+    if (!amount || amount <= 0) {
+        showAlert('Please enter a valid amount', 'warning');
+        return;
+    }
+    
+    try {
+        await requestCredits(amount, reason);
+        closeRequestCreditModal();
+    } catch (e) {
+        // Error already handled in requestCredits function
+    }
+};
+
+// --- Modal Dismiss on Outside Click ---
+window.onclick = function(event) {
+    ['inviteModal', 'editMemberModal', 'requestCreditModal'].forEach(id => {
+        const modal = document.getElementById(id);
+        if (modal && event.target === modal) modal.style.display = 'none';
+    });
+};
+
+// --- Back Button Function ---
+window.goBack = function() {
+    window.location.href = '/workspace/';
+};
+
+// --- Initialize ---
+// --- Join Requests Functions ---
+async function fetchJoinRequests() {
+    try {
+        const res = await fetch(`/api/workspace-join-requests/workspace/${currentTeamId}/requests`, { 
+            credentials: 'include' 
+        });
+        if (!res.ok) throw new Error('Failed to fetch join requests');
+        const data = await res.json();
+        const requests = data.requests || [];
+        renderJoinRequests(requests);
+        updateJoinRequestsCount(requests.length);
+    } catch (e) {
+        renderJoinRequests([]);
+        updateJoinRequestsCount(0);
+        showAlert('Could not load join requests', 'danger');
+    }
+}
+
+function renderJoinRequests(requests) {
+    const requestsGrid = document.getElementById('joinRequestsGrid');
+    
+    if (!requestsGrid) {
+        return;
+    }
+    
+    if (!requests || !requests.length) {
+        requestsGrid.innerHTML = `
+            <div style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                <i class="bi bi-person-plus" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                <p>No pending join requests</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const html = requests.map(request => {
+        // Extract user data safely
+        const userData = request.user_data || {};
+        const username = userData.username || userData.email || 'Unknown User';
+        const email = userData.email || 'No email';
+        const avatar = username.charAt(0).toUpperCase();
+        
+        return `
+        <div class="member-card">
+            <div class="member-header">
+                <div class="member-info">
+                    <div class="member-avatar">${avatar}</div>
+                    <div class="member-details">
+                        <h3 class="member-name">${username}</h3>
+                        <p class="member-email">${email}</p>
+                    </div>
+                </div>
+                <div class="member-actions">
+                    <button class="btn-action btn-approve" onclick='approveJoinRequest("${request.request_id}")' title="Approve">
+                        <i class="bi bi-check-lg"></i>
+                    </button>
+                    <button class="btn-action btn-reject" onclick='rejectJoinRequest("${request.request_id}")' title="Reject">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="member-meta">
+                <div class="member-meta-item">
+                    <span>Requested Role:</span>
+                    <span class="member-role role-${request.requested_role}">${request.requested_role}</span>
+                </div>
+                <div class="member-meta-item">
+                    <span>Requested:</span>
+                    <span>${new Date(request.created_at).toLocaleDateString()}</span>
+                </div>
+                ${request.message ? `
+                <div class="member-meta-item" style="grid-column: 1 / -1;">
+                    <span>Message:</span>
+                    <span style="word-break: break-word;">${request.message}</span>
+                </div>
+                ` : ''}
+            </div>
+        </div>
+        `;
+    }).join('');
+    
+    requestsGrid.innerHTML = html;
+}
+
+function updateJoinRequestsCount(count) {
+    document.getElementById('joinRequestsCount').textContent = count;
+}
+
+async function approveJoinRequest(requestId) {
+    if (!confirm('Are you sure you want to approve this join request?')) return;
+    
+    try {
+        const res = await fetch(`/api/workspace-join-requests/workspace/${currentTeamId}/requests/${requestId}/approve`, {
+            method: 'POST',
+            credentials: 'include'
+        });
+        
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.error || 'Failed to approve request');
+        }
+        
+        showAlert('Join request approved successfully!', 'success');
+        fetchJoinRequests();
+        // Refresh members list too
+        fetchMembers();
+    } catch (e) {
+        showAlert(e.message || 'Failed to approve join request', 'danger');
+    }
+}
+
+async function rejectJoinRequest(requestId) {
+    const reason = prompt('Reason for rejection (optional):');
+    if (reason === null) return; // User cancelled
+    
+    try {
+        const res = await fetch(`/api/workspace-join-requests/workspace/${currentTeamId}/requests/${requestId}/reject`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ reason: reason || 'No reason provided' })
+        });
+        
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.error || 'Failed to reject request');
+        }
+        
+        showAlert('Join request rejected', 'success');
+        fetchJoinRequests();
+    } catch (e) {
+        showAlert(e.message || 'Failed to reject join request', 'danger');
+    }
+}
+
+
+
+// --- Role Request Functions ---
+async function submitRoleRequest() {
+    const requestedRole = document.getElementById('requestedRole').value;
+    const message = document.getElementById('requestMessage').value;
+    
+    if (!requestedRole) {
+        showAlert('Please select a role to request', 'warning');
+        return;
+    }
+    
+    try {
+        const res = await fetch(`/api/role-request/workspace/${currentTeamId}/request`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+                requested_role: requestedRole,
+                message: message
+            })
+        });
+        
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.error || 'Failed to submit role request');
+        }
+        
+        showAlert('Role request submitted successfully!', 'success');
+        document.getElementById('roleRequestForm').reset();
+        fetchMyRoleRequests();
+    } catch (e) {
+        showAlert(e.message || 'Failed to submit role request', 'danger');
+    }
+}
+
+async function fetchRoleRequests() {
+    try {
+        const res = await fetch(`/api/role-request/workspace/${currentTeamId}/pending`, {
+            method: 'GET',
+            credentials: 'include'
+        });
+        
+        if (!res.ok) {
+            throw new Error('Failed to fetch role requests');
+        }
+        
+        const data = await res.json();
+        renderRoleRequests(data.requests || []);
+        updateRoleRequestsCount(data.count || 0);
+    } catch (e) {
+        console.error('Error fetching role requests:', e);
+        renderRoleRequests([]);
+        updateRoleRequestsCount(0);
+    }
+}
+
+function renderRoleRequests(requests) {
+    const grid = document.getElementById('roleRequestsGrid');
+    
+    if (!requests || !requests.length) {
+        grid.innerHTML = `
+            <div style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                <i class="bi bi-arrow-up-circle" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                <p>No pending role requests</p>
+            </div>
+        `;
+        return;
+    }
+    
+    grid.innerHTML = requests.map(request => `
+        <div class="role-request-card">
+            <div class="role-request-header">
+                <div class="role-request-info">
+                    <div class="role-request-avatar">
+                        ${request.user_data?.username ? request.user_data.username.charAt(0).toUpperCase() : 'U'}
+                    </div>
+                    <div class="role-request-details">
+                        <h4>${request.user_data?.username || 'Unknown User'}</h4>
+                        <p>${request.user_data?.email || 'No email'}</p>
+                    </div>
+                </div>
+                <div class="role-request-actions">
+                    <button class="btn-approve" onclick="openReviewRoleRequestModal('${request.request_id}', 'approve')">
+                        <i class="bi bi-check-lg"></i> Approve
+                    </button>
+                    <button class="btn-reject" onclick="openReviewRoleRequestModal('${request.request_id}', 'reject')">
+                        <i class="bi bi-x-lg"></i> Reject
+                    </button>
+                </div>
+            </div>
+            
+            <div class="role-request-meta">
+                <div class="role-change-info">
+                    <span class="role-badge current">${request.current_role?.toUpperCase() || 'UNKNOWN'}</span>
+                    <i class="bi bi-arrow-right" style="color: var(--text-muted);"></i>
+                    <span class="role-badge requested">${request.requested_role?.toUpperCase() || 'UNKNOWN'}</span>
+                </div>
+                <small style="color: var(--text-muted);">
+                    ${new Date(request.created_at).toLocaleDateString()}
+                </small>
+            </div>
+            
+            ${request.message ? `
+                <div class="role-request-message">
+                    <strong>Message:</strong> ${request.message}
+                </div>
+            ` : ''}
+        </div>
+    `).join('');
+}
+
+function updateRoleRequestsCount(count) {
+    document.getElementById('roleRequestsCount').textContent = count;
+}
+
+async function fetchMyRoleRequests() {
+    try {
+        const res = await fetch(`/api/role-request/my-requests`, {
+            method: 'GET',
+            credentials: 'include'
+        });
+        
+        if (!res.ok) {
+            throw new Error('Failed to fetch my role requests');
+        }
+        
+        const data = await res.json();
+        renderMyRoleRequests(data.requests || []);
+    } catch (e) {
+        console.error('Error fetching my role requests:', e);
+        renderMyRoleRequests([]);
+    }
+}
+
+function renderMyRoleRequests(requests) {
+    const container = document.getElementById('myRequestsList');
+    
+    if (!requests || !requests.length) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                <p>No role requests found</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = requests.map(request => `
+        <div class="my-request-item">
+            <div class="my-request-header">
+                <div>
+                    <strong>${request.current_role?.toUpperCase() || 'UNKNOWN'} → ${request.requested_role?.toUpperCase() || 'UNKNOWN'}</strong>
+                    <br>
+                    <small style="color: var(--text-muted);">
+                        ${new Date(request.created_at).toLocaleDateString()}
+                    </small>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span class="request-status ${request.status}">${request.status?.toUpperCase() || 'UNKNOWN'}</span>
+                    ${request.status === 'pending' ? `
+                        <button class="btn-cancel-request" onclick="cancelRoleRequest('${request.request_id}')">
+                            Cancel
+                        </button>
+                    ` : ''}
+                </div>
+            </div>
+            ${request.message ? `
+                <div style="margin-top: 0.5rem; font-style: italic; color: var(--text-muted);">
+                    "${request.message}"
+                </div>
+            ` : ''}
+            ${request.rejection_reason ? `
+                <div style="margin-top: 0.5rem; color: #dc3545; font-size: 0.9rem;">
+                    <strong>Rejection reason:</strong> ${request.rejection_reason}
+                </div>
+            ` : ''}
+        </div>
+    `).join('');
+}
+
+async function cancelRoleRequest(requestId) {
+    if (!confirm('Are you sure you want to cancel this role request?')) return;
+    
+    try {
+        const res = await fetch(`/api/role-request/requests/${requestId}/cancel`, {
+            method: 'POST',
+            credentials: 'include'
+        });
+        
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.error || 'Failed to cancel request');
+        }
+        
+        showAlert('Role request cancelled successfully', 'success');
+        fetchMyRoleRequests();
+    } catch (e) {
+        showAlert(e.message || 'Failed to cancel role request', 'danger');
+    }
+}
+
+function openReviewRoleRequestModal(requestId, action = '') {
+    // Find the request data
+    fetch(`/api/role-request/workspace/${currentTeamId}/pending`, {
+        method: 'GET',
+        credentials: 'include'
+    })
+    .then(res => res.json())
+    .then(data => {
+        const request = data.requests.find(r => r.request_id === requestId);
+        if (!request) throw new Error('Request not found');
+        
+        // Populate modal content
+        document.getElementById('roleRequestReviewContent').innerHTML = `
+            <div style="background: var(--background-color); border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                    <div class="role-request-avatar">
+                        ${request.user_data?.username ? request.user_data.username.charAt(0).toUpperCase() : 'U'}
+                    </div>
+                    <div>
+                        <h4 style="margin: 0;">${request.user_data?.username || 'Unknown User'}</h4>
+                        <p style="margin: 0; color: var(--text-muted);">${request.user_data?.email || 'No email'}</p>
+                    </div>
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                    <span class="role-badge current">${request.current_role?.toUpperCase() || 'UNKNOWN'}</span>
+                    <i class="bi bi-arrow-right"></i>
+                    <span class="role-badge requested">${request.requested_role?.toUpperCase() || 'UNKNOWN'}</span>
+                </div>
+                
+                ${request.message ? `
+                    <div style="background: var(--card-bg); border-radius: 6px; padding: 1rem;">
+                        <strong>Message:</strong><br>
+                        ${request.message}
+                    </div>
+                ` : ''}
+            </div>
+        `;
+        
+        document.getElementById('reviewRequestId').value = requestId;
+        document.getElementById('reviewAction').value = action;
+        toggleReasonField();
+        document.getElementById('reviewRoleRequestModal').style.display = 'block';
+    })
+    .catch(e => {
+        showAlert('Failed to load request details', 'danger');
+    });
+}
+
+function closeReviewRoleRequestModal() {
+    document.getElementById('reviewRoleRequestModal').style.display = 'none';
+    document.getElementById('reviewRoleRequestForm').reset();
+}
+
+function toggleReasonField() {
+    const action = document.getElementById('reviewAction').value;
+    const reasonField = document.getElementById('reasonField');
+    const reasonTextarea = document.getElementById('reviewReason');
+    
+    if (action === 'reject') {
+        reasonField.style.display = 'block';
+        reasonTextarea.required = true;
+    } else {
+        reasonField.style.display = 'none';
+        reasonTextarea.required = false;
+    }
+}
+
+async function submitRoleRequestReview() {
+    const requestId = document.getElementById('reviewRequestId').value;
+    const action = document.getElementById('reviewAction').value;
+    const reason = document.getElementById('reviewReason').value;
+    
+    if (!requestId || !action) {
+        showAlert('Please fill in all required fields', 'warning');
+        return;
+    }
+    
+    if (action === 'reject' && !reason.trim()) {
+        showAlert('Please provide a reason for rejection', 'warning');
+        return;
+    }
+    
+    try {
+        const res = await fetch(`/api/role-request/requests/${requestId}/review`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+                action: action,
+                reason: reason || undefined
+            })
+        });
+        
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.error || 'Failed to submit review');
+        }
+        
+        showAlert(`Role request ${action}d successfully!`, 'success');
+        closeReviewRoleRequestModal();
+        fetchRoleRequests();
+        fetchMembers(); // Refresh members if approved
+    } catch (e) {
+        showAlert(e.message || 'Failed to submit review', 'danger');
+    }
+}
+
+
+// --- Credit Request Functions ---
+async function requestCredits(amount, reason) {
+    try {
+        const res = await fetch(`/api/teams/${currentTeamId}/credits/request`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ amount, reason })
+        });
+        
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.error || 'Failed to request credits');
+        }
+        
+        showAlert('Credit request submitted successfully!');
+        fetchMembers();
+    } catch (e) {
+        showAlert(e.message || 'Failed to request credits', 'danger');
+    }
+}
+
+async function fetchCreditRequests() {
+    try {
+        const res = await fetch(`/api/teams/${currentTeamId}/credits/requests`, { 
+            credentials: 'include' 
+        });
+        if (!res.ok) throw new Error('Failed to fetch credit requests');
+        const data = await res.json();
+        renderCreditRequests(data.requests || []);
+    } catch (e) {
+        showAlert('Could not load credit requests', 'danger');
+    }
+}
+
+async function approveCreditRequest(requestId) {
+    try {
+        const res = await fetch(`/api/teams/${currentTeamId}/credits/requests/${requestId}/approve`, {
+            method: 'POST',
+            credentials: 'include'
+        });
+        
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.error || 'Failed to approve request');
+        }
+        
+        showAlert('Credit request approved successfully!');
+        fetchCreditRequests();
+        fetchMembers();
+    } catch (e) {
+        showAlert(e.message || 'Failed to approve credit request', 'danger');
+    }
+}
+
+async function rejectCreditRequest(requestId, reason) {
+    try {
+        const res = await fetch(`/api/teams/${currentTeamId}/credits/requests/${requestId}/reject`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ reason })
+        });
+        
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.error || 'Failed to reject request');
+        }
+        
+        showAlert('Credit request rejected');
+        fetchCreditRequests();
+    } catch (e) {
+        showAlert(e.message || 'Failed to reject credit request', 'danger');
+    }
+}
+
+function renderCreditRequests(requests) {
+    const container = document.getElementById('creditRequestsGrid');
+    if (!container) return;
+    
+    if (!requests || !requests.length) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                <i class="bi bi-credit-card" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                <p>No pending credit requests</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = requests.map(request => `
+        <div class="role-request-card">
+            <div class="role-request-header">
+                <div class="role-request-info">
+                    <div class="role-request-avatar">
+                        ${request.user_data?.username ? request.user_data.username.charAt(0).toUpperCase() : 'U'}
+                    </div>
+                    <div class="role-request-details">
+                        <h4>${request.user_data?.username || 'Unknown User'}</h4>
+                        <p>${request.user_data?.email || 'No email'}</p>
+                    </div>
+                </div>
+                <div class="role-request-actions">
+                    <button class="btn-approve" onclick="approveCreditRequest('${request.request_id}')">
+                        <i class="bi bi-check-lg"></i> Approve
+                    </button>
+                    <button class="btn-reject" onclick="rejectCreditRequest('${request.request_id}', prompt('Reason for rejection:'))">
+                        <i class="bi bi-x-lg"></i> Reject
+                    </button>
+                </div>
+            </div>
+            <div class="role-request-meta">
+                <div>Requested Amount: ${request.amount} credits</div>
+                ${request.reason ? `<div>Reason: ${request.reason}</div>` : ''}
+                <div>Requested: ${new Date(request.created_at).toLocaleDateString()}</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function fetchMyCreditRequests() {
+    try {
+        const res = await fetch(`/api/teams/${currentTeamId}/credits/requests`, { 
+            credentials: 'include' 
+        });
+        if (!res.ok) throw new Error('Failed to fetch my credit requests');
+        const data = await res.json();
+        // Backend now filters for current user's requests automatically
+        renderMyCreditRequests(data.requests);
+    } catch (e) {
+        showAlert('Could not load my credit requests', 'danger');
+        renderMyCreditRequests([]);
+    }
+}
+
+function renderMyCreditRequests(requests) {
+    const container = document.getElementById('myCreditRequestsGrid');
+    if (!container) return;
+    
+    if (!requests || !requests.length) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                <i class="bi bi-credit-card" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                <p>No credit requests found</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = requests.map(request => `
+        <div class="my-request-item">
+            <div class="my-request-header">
+                <div>
+                    <strong>${request.amount} Credits</strong>
+                    <br>
+                    <small style="color: var(--text-muted);">
+                        ${new Date(request.created_at).toLocaleDateString()}
+                    </small>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span class="request-status ${request.status}">${request.status?.toUpperCase() || 'PENDING'}</span>
+                </div>
+            </div>
+            ${request.reason ? `
+                <div style="margin-top: 0.5rem; font-style: italic; color: var(--text-muted);">
+                    "${request.reason}"
+                </div>
+            ` : ''}
+        </div>
+    `).join('');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    fetchMembers();
+    
+    // Only load join requests if user is admin or manager
+    const userRole = '{{ user_role }}';
+    if (userRole === 'admin' || userRole === 'manager') {
+        fetchJoinRequests(); // Load join requests on startup
+        fetchRoleRequests(); // Load role requests on startup
+        fetchCreditRequests(); // Load credit requests on startup
+    }
+    
+    // If user is member, load their role requests and credit requests
+    if (userRole === 'member') {
+        fetchMyRoleRequests();
+        fetchMyCreditRequests();
+    }
+    
+    // Form submissions
+    document.getElementById('roleRequestForm')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        submitRoleRequest();
+    });
+    
+    document.getElementById('reviewRoleRequestForm')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        submitRoleRequestReview();
+    });
+});
+</script>
+{% endblock %} 

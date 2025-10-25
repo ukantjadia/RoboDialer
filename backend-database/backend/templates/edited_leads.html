@@ -1,0 +1,355 @@
+{% extends "base.html" %}
+
+{% block title %}Edited Leads{% endblock %}
+
+{% block additional_styles %}
+<style>
+    .container {
+        padding: 20px;
+        max-width: 100%;
+    }
+    .page-header {
+        background: var(--primary-color);
+        padding: 20px 24px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .page-header h1 {
+        margin: 0;
+        color: white;
+        font-size: 24px;
+        font-weight: 500;
+    }
+    .btn-back {
+        background: rgba(0, 0, 0, 0.2);
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    .btn-back:hover {
+        background: rgba(0, 0, 0, 0.3);
+        color: white;
+    }
+    .table-container {
+        background: var(--card-bg);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .table {
+        width: 100%;
+        margin-bottom: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    .table th {
+        background: var(--background-color);
+        color: var(--text-muted);
+        font-weight: 500;
+        font-size: 14px;
+        padding: 16px 24px;
+        border: none;
+        text-align: left;
+    }
+    .table td {
+        padding: 20px 24px;
+        border: none;
+        border-bottom: 1px solid var(--border-color);
+        background: var(--card-bg);
+        color: var(--text-color);
+        font-size: 14px;
+        line-height: 1.5;
+    }
+    .table tr:last-child td {
+        border-bottom: none;
+    }
+    .table tr:hover td {
+        background: rgba(255, 255, 255, 0.02);
+    }
+    .badge.new {
+        background: var(--primary-color);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+        margin-right: 8px;
+    }
+    .old-value {
+        color: var(--text-muted);
+        font-size: 13px;
+        margin-top: 4px;
+        padding-left: 4px;
+    }
+    .btn-apply {
+        background: linear-gradient(90deg, #14b8a6 0%, #3b82f6 100%);
+        color: white;
+        border: none;
+        padding: 6px 16px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    .btn-apply:hover {
+        filter: brightness(1.1);
+    }
+    .btn-delete {
+        background: linear-gradient(90deg, #ef4444 0%, #f87171 100%);
+        color: white;
+        border: none;
+        padding: 6px 16px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    .btn-delete:hover {
+        filter: brightness(1.1);
+    }
+    .edited-field {
+        display: none;
+        flex-direction: column;
+        gap: 16px;
+        padding: 12px 0;
+    }
+    .edited-field.expanded {
+        display: flex;
+    }
+    .lead-row {
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .lead-row:hover {
+        background: rgba(255, 255, 255, 0.02);
+    }
+    .lead-summary {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .expand-icon {
+        color: var(--text-muted);
+        transition: transform 0.2s ease;
+        font-size: 18px;
+    }
+    .lead-row.expanded .expand-icon {
+        transform: rotate(90deg);
+    }
+    .field-count {
+        background: var(--primary-color);
+        color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    .edited-field-preview {
+        color: var(--text-muted);
+        font-size: 13px;
+    }
+    .lead-row:hover .actions-cell {
+        opacity: 1;
+    }
+    .divider {
+        height: 1px;
+        background: var(--border-color);
+        margin: 8px 0;
+    }
+    .lead-id {
+        font-family: monospace;
+        color: var(--text-color);
+        font-size: 14px;
+    }
+    .timestamp {
+        color: var(--text-color);
+        font-size: 14px;
+    }
+    .email {
+        color: var(--text-color);
+        font-size: 14px;
+    }
+    .actions {
+        display: flex;
+        gap: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Edited Leads</h1>
+        <a href="{{ url_for('lead.view_leads') }}" class="btn-back">
+            Back to Leads
+        </a>
+    </div>
+    
+    {% if leads %}
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Lead ID</th>
+                    <th>Edited Fields</th>
+                    <th>Edited At</th>
+                    <th>Edited By</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in leads %}
+                {% set lead_id = item.edit.lead_id or item.original.lead_id %}
+                {% set field_changes = [] %}
+                {% for key, new_val in item.edit.draft_data.items() %}
+                    {% set old_val = item.original.to_dict()[key] if key in item.original.to_dict() else '' %}
+                    {% if (new_val|string)|trim != (old_val|string)|trim %}
+                        {% set _ = field_changes.append(key) %}
+                    {% endif %}
+                {% endfor %}
+                <tr class="lead-row" data-lead-id="{{ lead_id }}">
+                    <td style="width: 15%;">
+                        <div class="lead-summary">
+                            <i class="bi bi-chevron-right expand-icon"></i>
+                            <span class="lead-id">
+                                {% if lead_id|length > 12 %}{{ lead_id[:6] }}...{{ lead_id[-4:] }}{% else %}{{ lead_id }}{% endif %}
+                            </span>
+                        </div>
+                    </td>
+                    <td style="width: 40%;">
+                        <div class="lead-summary">
+                            <span class="field-count">{{ field_changes|length }} fields</span>
+                            <span class="edited-field-preview">{{ field_changes|join(', ') }}</span>
+                        </div>
+                        <div class="edited-field">
+                            {% for key, new_val in item.edit.draft_data.items() %}
+                                {% set old_val = item.original.to_dict()[key] if key in item.original.to_dict() else '' %}
+                                {% if (new_val|string)|trim != (old_val|string)|trim %}
+                                    <div class="edited-field-item">
+                                        <div class="field-label">
+                                            <span class="badge new">New</span>
+                                            <strong>{{ key|replace('_', ' ')|title }}:</strong>
+                                            {{ new_val if new_val else '-' }}
+                                        </div>
+                                        <div class="old-value">Old: {{ old_val if old_val else '-' }}</div>
+                                    </div>
+                                    {% if not loop.last %}
+                                    <div class="divider"></div>
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </td>
+                    <td style="width: 15%;">
+                        <span class="timestamp">
+                            {% set edited_at = item.edit.updated_at or item.original.updated_at %}
+                            {% if edited_at %}
+                                {{ edited_at.strftime('%Y-%m-%d %H:%M') if edited_at else '-' }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </span>
+                    </td>
+                    <td style="width: 20%;">
+                        <span class="email">
+                            {% if item.edit_user %}
+                                {{ item.edit_user.email or item.edit_user.username or item.edit_user.user_id }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </span>
+                    </td>
+                    <td style="width: 10%;" class="actions-cell">
+                        <div class="actions">
+                            <button type="button" class="btn-apply" data-lead-id="{{ lead_id }}">Apply</button>
+                            <button type="button" class="btn-delete" data-lead-id="{{ lead_id }}">Delete</button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <h4>No Edited Leads</h4>
+        <p>There are no edited leads to display.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle row expansion
+    document.querySelectorAll('.lead-row').forEach(function(row) {
+        row.addEventListener('click', function(e) {
+            // Don't expand if clicking on action buttons
+            if (e.target.closest('.actions')) return;
+            
+            // Toggle expanded class
+            this.classList.toggle('expanded');
+            
+            // Find and toggle the edited field content
+            const editedField = this.querySelector('.edited-field');
+            if (editedField) {
+                editedField.classList.toggle('expanded');
+            }
+        });
+    });
+
+    // Handle apply button
+    document.querySelectorAll('.btn-apply').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation(); // Prevent row expansion
+            const leadId = this.getAttribute('data-lead-id');
+            fetch(`/leads/${leadId}/apply`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin'
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '/leads/edited';
+                } else {
+                    alert(data.message || 'Failed to process action.');
+                }
+            })
+            .catch(() => alert('Failed to process action.'));
+        });
+    });
+    
+    // Handle delete button
+    document.querySelectorAll('.btn-delete').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation(); // Prevent row expansion
+            const leadId = this.getAttribute('data-lead-id');
+            if (!confirm('Are you sure you want to permanently delete this draft?')) return;
+            fetch('/api/draft/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify({ lead_id: leadId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    btn.closest('tr').remove();
+                } else {
+                    alert(data.message || 'Failed to delete draft.');
+                }
+            })
+            .catch(() => alert('Failed to delete draft.'));
+        });
+    });
+});
+</script>
+{% endblock %} 

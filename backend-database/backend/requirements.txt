@@ -1,0 +1,107 @@
+# ----------------------------------------------------------------------
+# CORE WEB FRAMEWORK (FLASK) & SERVER
+# ----------------------------------------------------------------------
+Flask
+Flask-SQLAlchemy
+Flask-Mail
+Flask-WTF
+Flask-CORS
+flask-login
+werkzeug
+# itsdangerous
+gunicorn
+python-dotenv
+
+# ----------------------------------------------------------------------
+# DATA PROCESSING, ORM & DATABASE DRIVERS
+# ----------------------------------------------------------------------
+SQLAlchemy
+sqlalchemy
+psycopg2-binary
+pymysql
+# pandas
+# numpy
+openpyxl
+python-dateutil
+# chardet
+
+# ----------------------------------------------------------------------
+# AI, LLMS & RETRIEVAL (RAG)
+# ----------------------------------------------------------------------
+# groq
+# openai
+# anthropic
+# langchain
+# langchain-core
+# langchain-community
+# langchain-huggingface
+# langchain-deepseek
+# langgraph
+# sentence-transformers
+# faiss-cpu
+# tiktoken
+
+# ----------------------------------------------------------------------
+# WEB SCRAPING, ASYNC & API CLIENTS
+# ----------------------------------------------------------------------
+# scrapegraphai[all]
+# pydantic
+# aiohttp
+# playwright
+# beautifulsoup4
+# readability-lxml
+# lxml_html_clean
+# python-multipart
+# requests
+# httpx
+
+# ----------------------------------------------------------------------
+# UTILITIES, SECURITY & INTEGRATION
+# ----------------------------------------------------------------------
+# jwt
+# PyJWT
+# thefuzz
+# boto3
+# stripe
+# reportlab
+# structlog
+# PyYAML
+
+# ----------------------------------------------------------------------
+# ROBODIALER SPECIFIC DEPENDENCIES
+# ----------------------------------------------------------------------
+# Twilio for telephony
+twilio
+
+# FastAPI framework (for RoboDialer service)
+fastapi
+uvicorn[standard]
+
+# Database & ORM (additional async support)
+asyncpg
+alembic
+
+# WebSocket & Async
+# websockets
+
+# Additional utilities
+# loguru
+# python-jose[cryptography]
+# passlib[bcrypt]
+Jinja2
+
+# Testing (additional)
+# pytest-asyncio
+# faker
+
+# Development tools (additional)
+# isort
+
+# ----------------------------------------------------------------------
+# DEVELOPMENT, TESTING & QUALITY
+# ----------------------------------------------------------------------
+# pytest
+# pytest-cov
+# black
+# flake8
+# mypy

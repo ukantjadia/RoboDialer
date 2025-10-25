@@ -1,0 +1,18 @@
+version: "3.9"
+
+services:
+  backend:
+    build: .   # Use your patched image here
+    ports:
+      - "8001:8001"
+    env_file:
+      - ./.env
+
+  frontend:
+    build: ./services/backend_robodialer/frontend
+    ports:
+      - "9002:9002"
+    env_file:
+      - ./services/backend_robodialer/frontend/.env.local
+    depends_on:
+      - backend

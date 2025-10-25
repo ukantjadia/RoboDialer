@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block title %}Create Company Account{% endblock %}
+
+{% block additional_styles %}
+{{ super() }}
+<style>
+    body {
+        background: linear-gradient(135deg, #181f2a 0%, #232b3a 100%);
+        min-height: 100vh;
+    }
+    .no-company-container {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .company-card {
+        background: rgba(30, 41, 59, 0.95);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        padding: 4rem 3.5rem;
+        margin: 0 auto;
+        max-width: 700px;
+        box-shadow: 0 8px 32px rgba(34, 211, 238, 0.08);
+        text-align: center;
+    }
+    .company-icon {
+        font-size: 4.5rem;
+        color: #22d3ee;
+        margin-bottom: 1.5rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .company-icon i {
+        filter: drop-shadow(0 2px 8px #22d3ee44);
+    }
+    h1 {
+        font-size: 2.4rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+        letter-spacing: -1px;
+    }
+    .lead {
+        font-size: 1.15rem;
+        color: #a5b4fc;
+        margin-bottom: 2rem;
+    }
+    .feature-list {
+        list-style: none;
+        padding: 0;
+        margin: 2rem 0 2.5rem 0;
+        text-align: left;
+    }
+    .feature-list li {
+        display: flex;
+        align-items: center;
+        font-size: 1.08rem;
+        margin-bottom: 1.1rem;
+        color: #e0e7ef;
+        font-weight: 500;
+    }
+    .feature-list i {
+        font-size: 1.3rem;
+        margin-right: 0.8rem;
+        color: #22d3ee;
+        background: #0e7490;
+        border-radius: 50%;
+        padding: 0.3em 0.4em;
+        box-shadow: 0 2px 8px #22d3ee33;
+    }
+    .btn-create {
+        background: linear-gradient(90deg, #22d3ee 0%, #4ad66d 100%);
+        color: white;
+        border: none;
+        padding: 1.1rem 2.5rem;
+        border-radius: 2rem;
+        font-size: 1.25rem;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 4px 16px #22d3ee33;
+        transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+        margin-top: 1.5rem;
+    }
+    .btn-create:hover {
+        background: linear-gradient(90deg, #4ad66d 0%, #22d3ee 100%);
+        box-shadow: 0 8px 24px #22d3ee55;
+        transform: translateY(-2px) scale(1.03);
+    }
+    @media (max-width: 900px) {
+        .company-card {
+            padding: 2.5rem 1rem;
+            max-width: 98vw;
+        }
+    }
+    @media (max-width: 600px) {
+        .company-card {
+            padding: 2rem 0.7rem;
+            max-width: 98vw;
+        }
+        h1 {
+            font-size: 1.5rem;
+        }
+    }
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #334155;
+        border-radius: 8px;
+        background: #232b3a;
+        color: #f1f5f9;
+        font-size: 1rem;
+        transition: border 0.2s, box-shadow 0.2s;
+    }
+    .form-control::placeholder {
+        color: #94a3b8;
+        opacity: 1;
+    }
+    .form-control:focus {
+        border: 1.5px solid #22d3ee;
+        outline: none;
+        box-shadow: 0 0 0 2px #22d3ee33;
+        background: #232b3a;
+        color: #f1f5f9;
+    }
+    .compact-form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.2rem 2rem;
+        margin-top: 2.5rem;
+    }
+    .compact-form-grid .form-group {
+        margin-bottom: 0;
+    }
+    .compact-form-grid .form-group.full {
+        grid-column: 1 / -1;
+    }
+    @media (max-width: 700px) {
+        .compact-form-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+    }
+    .form-label {
+        display: block;
+        margin-bottom: 0.3rem;
+        color: var(--text-color);
+        font-weight: 500;
+        font-size: 0.98rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="no-company-container">
+    <div class="company-card">
+        <div class="company-icon">
+            <i class="fas fa-building"></i>
+        </div>
+        <h1>Create Your Company Account</h1>
+        <p class="lead">Manage your team, share credits, and scale your lead generation efforts</p>
+        <ul class="feature-list">
+            <li><i class="fas fa-users"></i> Team member management</li>
+            <li><i class="fas fa-coins"></i> Shared credit pool</li>
+            <li><i class="fas fa-chart-line"></i> Usage analytics</li>
+            <li><i class="fas fa-shield-alt"></i> Role-based access control</li>
+        </ul>
+        {% if current_user.tier in ['silver', 'gold', 'platinum', 'silver_annual', 'gold_annual', 'platinum_annual'] %}
+            <form id="createCompanyForm" style="margin-top:2.5rem; text-align:left;">
+                <div class="compact-form-grid">
+                    <div class="form-group full">
+                        <label class="form-label">Company Name *</label>
+                        <input type="text" class="form-control" id="companyName" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Domain (optional)</label>
+                        <input type="text" class="form-control" id="companyDomain" placeholder="example.com">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Industry</label>
+                        <select class="form-control" id="companyIndustry">
+                            <option value="">Select Industry</option>
+                            <option value="technology">Technology</option>
+                            <option value="healthcare">Healthcare</option>
+                            <option value="finance">Finance</option>
+                            <option value="education">Education</option>
+                            <option value="retail">Retail</option>
+                            <option value="manufacturing">Manufacturing</option>
+                            <option value="consulting">Consulting</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Company Size</label>
+                        <select class="form-control" id="companySize">
+                            <option value="small">Small (1-10 employees)</option>
+                            <option value="medium" selected>Medium (11-50 employees)</option>
+                            <option value="large">Large (50+ employees)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Website (optional)</label>
+                        <input type="url" class="form-control" id="companyWebsite" placeholder="https://example.com">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description (optional)</label>
+                        <textarea class="form-control" id="companyDescription" rows="2" placeholder="Brief description of your company"></textarea>
+                    </div>
+                    <div class="form-group full" style="margin-top:0.5rem;">
+                        <button type="submit" class="btn-create w-100">Create Company Account</button>
+                    </div>
+                </div>
+            </form>
+        {% else %}
+            <a href="/subscription" class="btn-upgrade">Upgrade to Silver+ to Create Company Account</a>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.getElementById('createCompanyForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const formData = {
+        name: document.getElementById('companyName').value,
+        domain: document.getElementById('companyDomain').value || null,
+        industry: document.getElementById('companyIndustry').value || null,
+        size: document.getElementById('companySize').value,
+        website: document.getElementById('companyWebsite').value || null,
+        description: document.getElementById('companyDescription').value || null
+    };
+    try {
+        const response = await fetch('/api/companies', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        });
+        if (response.ok) {
+            alert('Company account created successfully!');
+            window.location.href = '/company/dashboard';
+        } else {
+            const error = await response.json();
+            alert(`Error: ${error.error}`);
+        }
+    } catch (error) {
+        alert('Failed to create company account');
+    }
+});
+</script>
+{% endblock %} 

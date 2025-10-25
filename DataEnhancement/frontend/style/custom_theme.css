@@ -1,0 +1,142 @@
+/* Main background and sidebar */
+body, .stApp {
+    background-color: #f4f7fb;
+    color: #1a2233;
+    font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+}
+
+.stApp {
+    background: linear-gradient(135deg, #f6f8fa 0%, #e8ecf4 100%);
+}
+
+
+header[data-testid="stHeader"] {
+    background: linear-gradient(90deg, #183153 0%, #1e656d 100%);
+    color: #fff !important;
+}
+
+section[data-testid="stSidebar"] {
+    background: #1e656d !important;
+    color: #fff !important;
+}
+
+section[data-testid="stSidebar"] .css-1d391kg {
+    color: #fff !important;
+}
+
+.stButton>button {
+    background: linear-gradient(90deg, #1e656d 0%, #ffb347 100%);
+    color: #fff;
+    border-radius: 8px;
+    border: none;
+    font-weight: bold;
+    font-size: 1rem;
+    padding: 0.5rem 2rem;
+    margin-top: 0.5rem;
+    transition: background 0.2s;
+}
+
+.stButton>button:hover {
+    background: linear-gradient(90deg, #ffb347 0%, #1e656d 100%);
+}
+
+.stDataFrame, .stTable, .stDataEditor {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(24,49,83,0.06);
+    padding: 1rem;
+}
+
+.stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {
+    color: #183153;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.5px;
+    text-shadow: 0 2px 8px rgba(24,49,83,0.06);
+}
+
+.stMarkdown h1 {
+    font-size: 2.5rem;
+}
+
+.stMarkdown h2 {
+    font-size: 2rem;
+}
+
+.stMarkdown h3 {
+    font-size: 1.5rem;
+}
+
+a {
+    color: #ff6f61;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #1e656d;
+    text-decoration: underline;
+}
+
+/* Card style for sections */
+.card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(30,101,109,0.10);
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+/* Add emoji-friendly font for headings */
+.stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {
+    font-family: 'Segoe UI Emoji', 'Segoe UI', 'Roboto', Arial, sans-serif;
+}
+
+/* Subtle shadow for sidebar */
+section[data-testid="stSidebar"] {
+    box-shadow: 2px 0 16px rgba(30,101,109,0.06);
+}
+
+/* Table header styling */
+.stDataFrame th, .stTable th {
+    background: #ffb347;
+    color: #183153;
+    font-weight: bold;
+}
+
+/* Highlighted text */
+.highlight {
+    color: #ff6f61;
+    font-weight: bold;
+}
+
+/* Make error/warning/info boxes plain and visible */
+.stAlert {
+    background: none !important;
+    color: inherit !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    opacity: 1 !important;
+    font-weight: 700 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+}
+.stAlert [data-testid="stMarkdownContainer"] {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+.stAlert .stAlert-icon, .stAlert [data-testid="stAlertIcon"] {
+    display: none !important;
+}
+
+
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+    background: #f6f8fa;
+}
+::-webkit-scrollbar-thumb {
+    background: #1e656d;
+    border-radius: 8px;
+}

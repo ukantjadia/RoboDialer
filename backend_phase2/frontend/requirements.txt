@@ -1,0 +1,6 @@
+streamlit==1.43.2
+requests==2.32.3
+pandas
+python-dotenv
+streamlit-cookies-controller==0.0.4
+

@@ -1,0 +1,139 @@
+/* Import Inter font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg-page: #0a0f1f;
+  --bg-card: #11162b;
+  --text-primary: #ffffff;
+  --text-secondary: #cbd5e1;
+  --accent: #1fcc9a;
+  --input-bg: #ffffff;
+  --input-border: #2d3748;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 2rem;
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+/* Card wrapper */
+.card {
+  background-color: var(--bg-card);
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Form elements */
+label {
+  display: block;
+  margin-bottom: 1rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  background-color: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: #1a202c;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-family: 'Inter', sans-serif;
+  margin-top: 0.5rem;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #94A3B8;   /* darker placeholder for visibility */
+}
+
+/* Primary button */
+button[type="submit"] {
+  display: block;
+  width: 100%;
+  background-color: var(--accent);
+  color: var(--text-primary);
+  border: none;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 1.5rem;
+  transition: opacity 0.2s ease;
+}
+
+button[type="submit"]:hover {
+  opacity: 0.9;
+}
+
+/* Result card */
+#result-area {
+  background-color: var(--bg-card);
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  border: 1px dashed #2d3748;
+}
+
+/* Generated email */
+#result-area pre {
+  background-color: #1f2130;
+  color: var(--text-primary);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  font-size: 0.95rem;
+}
+
+/* Feedback buttons */
+#result-area button {
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-right: 0.5rem;
+  transition: opacity 0.2s ease;
+}
+
+#result-area button#upvote {
+  background-color: #22c55e;
+  color: var(--text-primary);
+}
+
+#result-area button#downvote {
+  background-color: #e53e3e;
+  color: #ffffff;
+}
+
+#result-area button#regenerate {
+  background-color: #facc15;
+  color: #1a202c;
+}
+
+#result-area button:hover {
+  opacity: 0.9;
+}
+/* Add your CSS here */

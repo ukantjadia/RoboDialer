@@ -1,0 +1,2256 @@
+{% extends "base.html" %}
+
+{% block title %}Projects - {{ team.name if team else workspace.name }}{% endblock %}
+
+{% block additional_styles %}
+{{ super() }}
+<style>
+    .projects-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+    
+    /* Navigation Tabs */
+    .nav-tabs {
+        display: flex;
+        background: var(--card-bg);
+        border-radius: 8px;
+        padding: 0.5rem;
+        margin-bottom: 2rem;
+        border: 1px solid var(--border-color);
+    }
+    
+    .nav-tab {
+        flex: 1;
+        padding: 0.75rem 1rem;
+        text-align: center;
+        color: var(--text-muted);
+        text-decoration: none;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        font-size: 0.9rem;
+    }
+    
+    .nav-tab.active {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .nav-tab:hover:not(.active) {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-color);
+    }
+    
+    /* Header Section */
+    .projects-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .btn-back {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .btn-back:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-color);
+    }
+    
+    .projects-title {
+        color: var(--text-color);
+        font-size: 2rem;
+        font-weight: bold;
+        margin: 0;
+    }
+    
+    .btn-create-project {
+        background: var(--success-color);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-create-project:hover {
+        background: var(--card-bg);
+        transform: translateY(-1px);
+    }
+    
+    .role-restriction-notice {
+        background: rgba(255, 193, 7, 0.1);
+        color: #856404;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        border: 1px solid rgba(255, 193, 7, 0.3);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    /* Projects Grid Layout */
+    .projects-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(380px, 380px));
+        gap: 1.5rem;
+        margin-top: 1rem;
+        justify-content: start;
+    }
+    
+    /* Project Cards */
+    .project-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        position: relative;
+        width: 380px;
+        min-height: 200px;
+        max-height: 280px;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .project-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        border-color: var(--primary-color);
+    }
+    
+    .project-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.75rem;
+    }
+    
+    .project-title {
+        color: var(--text-color);
+        font-size: 1.25rem;
+        font-weight: bold;
+        margin: 0;
+        flex: 1;
+        line-height: 1.3;
+    }
+    
+    .project-actions {
+        display: flex;
+        gap: 0.5rem;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+    
+    .project-card:hover .project-actions {
+        opacity: 1;
+    }
+    
+    .btn-action {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 0.25rem;
+        border-radius: 4px;
+        transition: color 0.2s ease;
+        font-size: 0.875rem;
+    }
+    
+    .btn-action:hover {
+        color: var(--text-color);
+    }
+    
+    .btn-edit:hover {
+        color: var(--primary-color);
+    }
+    
+    .btn-delete:hover {
+        color: var(--danger-color);
+    }
+    
+    .project-description {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        margin: 0 0 1rem 0;
+        line-height: 1.4;
+        flex-grow: 1;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+    
+    .project-members {
+        display: flex;
+        align-items: center;
+    }
+    
+    /* Task List Table Styles */
+    .task-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .task-table th {
+        text-align: left;
+        padding: 0.75rem;
+        color: var(--text-muted);
+        font-weight: 500;
+        border-bottom: 1px solid var(--border-color);
+        background: var(--background-color);
+    }
+    
+    .task-table td {
+        padding: 0.75rem;
+        border-bottom: 1px solid var(--border-color);
+        vertical-align: middle;
+    }
+    
+    .task-table tbody tr:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+    
+    .task-status-select {
+        padding: 0.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background: var(--background-color);
+        color: var(--text-color);
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: border-color 0.2s ease;
+    }
+    
+    .task-status-select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+    }
+    
+    .task-priority {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: white;
+    }
+    
+    .task-priority.high {
+        background: var(--danger-color);
+    }
+    
+    .task-priority.medium {
+        background: var(--warning-color);
+    }
+    
+    .task-priority.low {
+        background: var(--success-color);
+    }
+    
+    .task-priority.urgent {
+        background: var(--danger-color);
+    }
+    
+
+    
+    .project-members {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        color: var(--text-muted);
+        font-size: 0.875rem;
+    }
+    
+    .project-members i {
+        color: var(--primary-color);
+    }
+    
+    .project-metrics {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        margin-top: auto;
+        flex-shrink: 0;
+    }
+    
+    .metric-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .metric-label {
+        font-weight: 500;
+    }
+    
+    .metric-value {
+        color: var(--text-color);
+        font-weight: 500;
+    }
+    
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        backdrop-filter: blur(4px);
+        animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    .modal-content {
+        background: var(--card-bg);
+        margin: 5% auto;
+        padding: 2rem;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 700px;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+    
+    .btn-close {
+        float: right;
+        font-size: 1.5rem;
+        font-weight: bold;
+        cursor: pointer;
+        color: #666;
+        background: none;
+        border: none;
+    }
+    
+    .btn-close:hover {
+        color: #333;
+    }
+    
+    /* Form Styles */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-row {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-row .form-group {
+        margin-bottom: 0;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: white;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background: var(--card-bg);
+        color: white;
+        font-size: 0.9rem;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.1);
+    }
+    
+    .form-control::placeholder {
+        color: #999;
+    }
+    
+    /* Input Row Styles */
+    .input-row {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .input-row .form-control {
+        flex: 1;
+    }
+    
+    .btn-add {
+        background: var(--success-color);
+        color: white;
+        border: none;
+        padding: 0.75rem 1rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        min-width: 60px;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-add:hover {
+        opacity: 0.9;
+    }
+    
+    .empty-state {
+        color: #999;
+        font-size: 0.85rem;
+        font-style: italic;
+        margin-top: 0.5rem;
+    }
+    
+    /* Modal Actions */
+    .modal-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        justify-content: flex-end;
+    }
+    
+    .btn-cancel {
+        background: #f5f5f5;
+        color: #666;
+        border: 1px solid #ddd;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-cancel:hover {
+        background: #eee;
+    }
+    
+    /* Create Task Modal Styles */
+    .create-task-modal {
+        background: white !important;
+        color: #333 !important;
+        max-width: 600px;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        padding: 2rem;
+    }
+    
+    .create-task-modal     .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .modal-title {
+        color: var(--text-color);
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0;
+    }
+    
+    .create-task-modal .modal-title-section {
+        flex: 1;
+    }
+    
+    .create-task-modal .modal-title {
+        color: #333 !important;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0 0 0.5rem 0;
+    }
+    
+    .create-task-modal .modal-subtitle {
+        color: #666 !important;
+        font-size: 0.9rem;
+        margin: 0;
+    }
+    
+    .create-task-modal .btn-close {
+        color: #666 !important;
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        font-weight: bold;
+        cursor: pointer;
+        padding: 0;
+        margin-left: 1rem;
+    }
+    
+    .create-task-modal .btn-close:hover {
+        color: #333 !important;
+    }
+    
+    .create-task-modal .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .create-task-modal .form-label {
+        color: white !important;
+        font-weight: 500;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .btn-add-task {
+        width: 100%;
+        color: white;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-add-task:hover {
+        background: var(--background-color);
+        border-color: var(--primary-color);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .btn-add-task:active {
+        background: var(--card-bg);
+        transform: translateY(0);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .create-task-modal .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background: var(--card-bg);
+        color: white;
+        font-size: 0.9rem;
+    }
+    
+    .create-task-modal .form-control:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.1);
+    }
+    
+    .create-task-modal .form-control::placeholder {
+        color: #999;
+    }
+    
+    .create-task-modal .modal-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        justify-content: flex-end;
+    }
+    
+    .create-task-modal .btn-cancel {
+        background: #f5f5f5;
+        color: #666;
+        border: 1px solid #ddd;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .create-task-modal .btn-cancel:hover {
+        background: #eee;
+    }
+    
+    .create-task-modal .btn-create-task {
+        background: var(--success-color);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .create-task-modal .btn-create-task:hover {
+        opacity: 0.9;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .projects-header {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+        
+        .projects-grid {
+            grid-template-columns: 1fr;
+            justify-content: center;
+        }
+        
+        .project-card {
+            width: 100%;
+            max-width: 380px;
+        }
+        
+        .project-header {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .project-actions {
+            opacity: 1;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="projects-container">
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+        <a href="/workspace/team/{{ team_id }}" class="nav-tab">Overview</a>
+        <a href="#" class="nav-tab active">Projects</a>
+        <a href="/workspace/team/{{ team_id }}/members" class="nav-tab">Team Management</a>
+        <a href="/workspace/team/{{ team_id }}/settings" class="nav-tab">Settings</a>
+    </div>
+
+    <!-- Projects Header -->
+    <div class="projects-header">
+        <div class="header-left">
+            <button class="btn-back" onclick="goBack()">
+                <i class="bi bi-arrow-left"></i>
+                Back to Workspaces
+            </button>
+            <h1 class="projects-title">Your Projects</h1>
+        </div>
+        {% if user_role in ['admin', 'manager'] %}
+        <button class="btn-create-project" onclick="openCreateProjectModal()">
+            <i class="bi bi-plus"></i>
+            Create Project
+        </button>
+        {% else %}
+        <div class="role-restriction-notice">
+            <i class="bi bi-info-circle"></i>
+            Only admins and managers can create projects
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Projects Grid -->
+    <div class="projects-grid" id="projectsGrid">
+        <!-- Projects will be loaded here -->
+    </div>
+    
+    <!-- Project Tasks Section (Hidden by default) -->
+    <div id="projectTasksSection" style="display: none; margin-top: 2rem;">
+        <div class="tasks-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <div class="header-left" style="display: flex; align-items: center; gap: 1rem;">
+                <button class="btn-back" onclick="hideProjectTasks()" style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 0.5rem; border-radius: 6px; transition: all 0.2s ease; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem;">
+                    <i class="bi bi-arrow-left"></i>
+                    Back to Projects
+                </button>
+                <h1 id="projectTasksTitle" class="projects-title" style="color: var(--text-color); font-size: 2rem; font-weight: bold; margin: 0;">Project Tasks</h1>
+            </div>
+            <button class="btn-add-task" onclick="openAddTaskModal()" style="background: var(--success-color); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s ease;">
+                <i class="fas fa-plus"></i>
+                Add Task
+            </button>
+        </div>
+        
+        <p id="projectTasksDescription" style="color: var(--text-muted); margin-bottom: 2rem;"></p>
+        
+        <!-- Task List View -->
+        <div class="task-list-container" style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem;">
+            <div class="task-list-header" style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color);">
+                <h3 style="color: var(--text-color); font-size: 1.2rem; font-weight: bold; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-tasks"></i>
+                    Tasks
+                    <span class="task-count" style="background: var(--background-color); color: var(--text-muted); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.875rem;" id="total-task-count">0</span>
+                </h3>
+            </div>
+            
+            <!-- Task List Table -->
+            <div class="task-table-container">
+                <table class="task-table" style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <th style="text-align: left; padding: 0.75rem; color: var(--text-muted); font-weight: 500;">Task</th>
+                            <th style="text-align: left; padding: 0.75rem; color: var(--text-muted); font-weight: 500;">Status</th>
+                            <th style="text-align: left; padding: 0.75rem; color: var(--text-muted); font-weight: 500;">Priority</th>
+                            <th style="text-align: left; padding: 0.75rem; color: var(--text-muted); font-weight: 500;">Assignee</th>
+                            <th style="text-align: left; padding: 0.75rem; color: var(--text-muted); font-weight: 500;">Due Date</th>
+                            <th style="text-align: center; padding: 0.75rem; color: var(--text-muted); font-weight: 500;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="task-list-body">
+                        <!-- Tasks will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Empty State -->
+            <div id="empty-tasks-state" style="text-align: center; padding: 3rem; color: var(--text-muted); display: none;">
+                <i class="fas fa-tasks" style="font-size: 3rem; margin-bottom: 1rem; display: block; opacity: 0.5;"></i>
+                <h4>No tasks found</h4>
+                <p>Create your first task to get started!</p>
+            </div>
+        </div>
+        
+        <!-- Project Leads Section -->
+        <div class="project-leads-container" style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; margin-top: 2rem;">
+            <div class="leads-header" style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color);">
+                <h3 style="color: var(--text-color); font-size: 1.2rem; font-weight: bold; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-users"></i>
+                    Forwarded Leads
+                    <span class="leads-count" style="background: var(--background-color); color: var(--text-muted); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.875rem;" id="total-leads-count">0</span>
+                </h3>
+            </div>
+            
+            <!-- Leads Table -->
+            <div class="leads-table-container">
+                <table class="task-table" style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <th style="text-align: left; padding: 0.75rem; color: var(--text-muted); font-weight: 500;">Company</th>
+                            <th style="text-align: left; padding: 0.75rem; color: var(--text-muted); font-weight: 500;">Task</th>
+                            <th style="text-align: left; padding: 0.75rem; color: var(--text-muted); font-weight: 500;">Contact</th>
+                            <th style="text-align: left; padding: 0.75rem; color: var(--text-muted); font-weight: 500;">Industry</th>
+                            <th style="text-align: left; padding: 0.75rem; color: var(--text-muted); font-weight: 500;">Revenue</th>
+                            <th style="text-align: left; padding: 0.75rem; color: var(--text-muted); font-weight: 500;">Added By</th>
+                            <th style="text-align: center; padding: 0.75rem; color: var(--text-muted); font-weight: 500;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leads-list-body">
+                        <!-- Leads will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Empty Leads State -->
+            <div id="empty-leads-state" style="text-align: center; padding: 3rem; color: var(--text-muted); display: none;">
+                <i class="fas fa-users" style="font-size: 3rem; margin-bottom: 1rem; display: block; opacity: 0.5;"></i>
+                <h4>No leads found</h4>
+                <p>Leads forwarded to tasks in this project will appear here.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Project Modal -->
+<div id="createProjectModal" class="modal">
+    <div class="modal-content">
+        <button class="btn-close" onclick="closeCreateProjectModal()">&times;</button>
+        <h3>Create New Project</h3>
+        <form id="createProjectForm">
+            <div class="form-group">
+                <label class="form-label">Project Name</label>
+                <input type="text" class="form-control" id="projectName" required placeholder="Enter project name">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Priority</label>
+                <select class="form-control" id="projectPriority">
+                    <option value="low">Low</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea class="form-control" id="projectDescription" rows="3" placeholder="Describe your project's purpose and goals"></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Metrics</label>
+                <div class="input-row">
+                    <select class="form-control" id="metricName">
+                        <option value="">Select metric</option>
+                        <!-- Options will be loaded dynamically from API -->
+                    </select>
+                    <input type="text" class="form-control" id="metricValue" placeholder="Enter value">
+                    <button type="button" class="btn-add" id="addMetricBtn">Add</button>
+                </div>
+                <div id="metricsList" class="empty-state">No metrics added.</div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Team</label>
+                <div class="input-row">
+                    <select class="form-control" id="teamMemberSelect">
+                        <option value="">Select member/manager</option>
+                    </select>
+                    <button type="button" class="btn-add" id="addTeamMemberBtn">Add</button>
+                </div>
+                <div id="teamList" class="empty-state">No team members added.</div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="closeCreateProjectModal()">Cancel</button>
+                <button type="submit" class="btn-create-project">Create Project</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Project Modal -->
+<div id="editProjectModal" class="modal">
+    <div class="modal-content">
+        <button class="btn-close" onclick="closeEditProjectModal()">&times;</button>
+        <h3>Edit Project</h3>
+        <form id="editProjectForm">
+            <input type="hidden" id="editProjectId">
+            <div class="form-group">
+                <label class="form-label">Project Name</label>
+                <input type="text" class="form-control" id="editProjectName" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea class="form-control" id="editProjectDescription" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Revenue Target</label>
+                <input type="number" class="form-control" id="editProjectRevenue">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Location</label>
+                <input type="text" class="form-control" id="editProjectLocation">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Employee Count</label>
+                <input type="number" class="form-control" id="editProjectEmployees">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Progress (%)</label>
+                <input type="number" class="form-control" id="editProjectProgress" min="0" max="100">
+            </div>
+            <button type="submit" class="btn-create-project">Update Project</button>
+        </form>
+    </div>
+</div>
+
+<!-- Create Task Modal -->
+<div id="createTaskModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Create New Task</h2>
+            <button class="btn-close" onclick="closeCreateTaskModal()">&times;</button>
+        </div>
+        <form id="createTaskForm">
+            <input type="hidden" id="createTaskProjectId">
+            <div class="form-group">
+                <label class="form-label" for="taskTitle">Task Title</label>
+                <input type="text" id="taskTitle" name="title" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="taskDescription">Description</label>
+                <textarea id="taskDescription" name="description" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="taskAssignee">Assignee</label>
+                <select id="taskAssignee" name="assigned_to" class="form-control">
+                    <option value="">Select Assignee</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="taskPriority">Priority</label>
+                <select id="taskPriority" name="priority" class="form-control" required>
+                    <option value="low">Low</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="taskDueDate">Due Date</label>
+                <input type="date" id="taskDueDate" name="due_date" class="form-control" required>
+            </div>
+            <button type="submit" class="btn-add-task">
+                <i class="fas fa-plus"></i>
+                Create Task
+            </button>
+        </form>
+    </div>
+</div>
+
+
+
+<!-- Edit Task Modal -->
+<div id="editTaskModal" class="modal">
+    <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-header">
+            <h2 class="modal-title">Edit Task</h2>
+            <button class="btn-close" onclick="closeEditTaskModal()">&times;</button>
+        </div>
+        <form id="editTaskForm">
+            <input type="hidden" id="editTaskId">
+            <div class="form-group">
+                <label class="form-label" for="editTaskTitle">Task Title</label>
+                <input type="text" id="editTaskTitle" name="title" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="editTaskDescription">Description</label>
+                <textarea id="editTaskDescription" name="description" class="form-control" rows="4"></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group" style="flex: 1;">
+                    <label class="form-label" for="editTaskStatus">Status</label>
+                    <select id="editTaskStatus" name="status" class="form-control">
+                        <option value="todo">To Do</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="review">Review</option>
+                        <option value="completed">Done</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label class="form-label" for="editTaskPriority">Priority</label>
+                    <select id="editTaskPriority" name="priority" class="form-control">
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="urgent">Urgent</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group" style="flex: 1;">
+                    <label class="form-label" for="editTaskAssignee">Assignee</label>
+                    <select id="editTaskAssignee" name="assigned_to" class="form-control">
+                        <option value="">Select Assignee</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label class="form-label" for="editTaskDueDate">Due Date</label>
+                    <input type="date" id="editTaskDueDate" name="due_date" class="form-control">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="editTaskEstimatedHours">Estimated Hours</label>
+                <input type="number" id="editTaskEstimatedHours" name="estimated_hours" class="form-control" step="0.5" min="0">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="editTaskTags">Tags</label>
+                <input type="text" id="editTaskTags" name="tags" class="form-control" placeholder="Enter tags separated by commas">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="closeEditTaskModal()">Cancel</button>
+                <button type="submit" class="btn-create-project">Update Task</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+let currentTeamId = '{{ team_id }}';
+let projects = [];
+let metrics = [];
+let teamMembers = [];
+let selectedTeam = [];
+
+// --- Modal Controls ---
+function openCreateProjectModal() {
+    document.getElementById('createProjectModal').style.display = 'block';
+    fetchTeamMembersForProject();
+    fetchCommonMetrics();
+    resetCreateProjectForm();
+}
+
+function closeCreateProjectModal() {
+    document.getElementById('createProjectModal').style.display = 'none';
+    resetCreateProjectForm();
+}
+
+function openEditProjectModal(project) {
+    document.getElementById('editProjectId').value = project.project_id;
+    document.getElementById('editProjectName').value = project.name;
+    document.getElementById('editProjectDescription').value = project.description || '';
+    document.getElementById('editProjectRevenue').value = project.revenue || '';
+    document.getElementById('editProjectLocation').value = project.location || '';
+    document.getElementById('editProjectEmployees').value = project.employees || '';
+    document.getElementById('editProjectModal').style.display = 'block';
+}
+
+function closeEditProjectModal() {
+    document.getElementById('editProjectModal').style.display = 'none';
+    document.getElementById('editProjectForm').reset();
+}
+
+// --- Alert Helper ---
+function showAlert(msg, type = 'success') {
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type}`;
+    alert.style.position = 'fixed';
+    alert.style.top = '20px';
+    alert.style.right = '20px';
+    alert.style.zIndex = 2000;
+    alert.innerText = msg;
+    document.body.appendChild(alert);
+    setTimeout(() => alert.remove(), 2500);
+}
+
+// --- Fetch & Render Projects ---
+async function fetchProjects() {
+    try {
+        const res = await fetch(`/api/teams/${currentTeamId}/projects`, { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to fetch projects');
+        const data = await res.json();
+        projects = data.projects || data || [];
+        renderProjects(projects);
+    } catch (e) {
+        renderProjects([]);
+        showAlert('Could not load projects', 'danger');
+    }
+}
+
+function renderProjects(projects) {
+    const projectsGrid = document.getElementById('projectsGrid');
+    
+    if (!projects || !projects.length) {
+        projectsGrid.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--text-muted);">
+                <i class="bi bi-folder" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                <p>No projects found. Create your first project!</p>
+            </div>
+        `;
+        return;
+    }
+    
+    projectsGrid.innerHTML = projects.map(project => renderProjectCard(project)).join('');
+    
+    if (projects.length === 1) {
+        projectsGrid.style.justifyContent = 'start';
+    }
+    
+    // Add event listeners to project cards after rendering
+    addProjectCardEventListeners();
+}
+
+function renderProjectCard(project) {
+    
+    // Check if project_id exists
+    if (!project.project_id) {
+        return '';
+    }
+    
+    const cardHtml = `
+        <div class="project-card" data-project-id="${project.project_id}" data-project-name="${project.name}">
+            <div class="project-header">
+                <h3 class="project-title">${project.name}</h3>
+                <div class="project-actions" onclick="event.stopPropagation()">
+
+                <button class="btn-action btn-edit" onclick='editProject(${JSON.stringify(project)})' title="Edit">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                    <button class="btn-action btn-delete" onclick='deleteProject("${project.project_id}", "${project.name}")' title="Delete">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+            </div>
+            <p class="project-description">${project.description || 'No description available'}</p>
+            <div class="project-members">
+                <i class="bi bi-people"></i>
+                <span>${project.member_count || 0} members</span>
+            </div>
+            <div class="project-metrics">
+                <div class="metric-item">
+                    <span class="metric-label">Revenue:</span>
+                    <span class="metric-value">$${project.revenue ? project.revenue.toLocaleString() : '0'}</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Location:</span>
+                    <span class="metric-value">${project.location || 'N/A'}</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Employee number:</span>
+                    <span class="metric-value">${project.employees || 0}</span>
+                </div>
+            </div>
+                </div>
+    `;
+    
+    return cardHtml;
+}
+
+// Add event listeners to project cards
+function addProjectCardEventListeners() {
+    
+    // Add event delegation
+    document.addEventListener('click', function(e) {
+        
+        // Check if clicked on a project card
+        const projectCard = e.target.closest('.project-card');
+        if (projectCard) {
+            
+            // Don't trigger if clicking on action buttons
+            if (e.target.closest('.project-actions')) {
+                return;
+            }
+            
+            const projectId = projectCard.dataset.projectId;
+            
+            if (projectId) {
+                
+                // Show tasks inline instead of modal
+                showProjectTasksInline(projectId);
+            } else {
+            }
+        }
+    });
+}
+
+// Handle project card click (direct onclick)
+window.handleProjectCardClickDirect = function(projectId) {
+    
+    if (!projectId) {
+        alert('No project ID found');
+        return;
+    }
+    
+    if (!currentTeamId) {
+        // Don't block the user, just continue
+    }
+    
+    // Construct the URL
+    const url = `/workspace/team/${currentTeamId}/projects/${projectId}/tasks`;
+    
+    // Log the navigation instead of showing alert
+    
+    openProjectTasks(projectId);
+};
+
+// Handle project card click
+function handleProjectCardClick(e) {
+    
+    // Don't trigger if clicking on action buttons
+    if (e.target.closest('.project-actions')) {
+        return;
+    }
+    
+    const projectId = this.dataset.projectId;
+    
+    if (!projectId) {
+        return;
+    }
+    
+    openProjectTasks(projectId);
+}
+
+// Fetch team members for dropdown
+async function fetchTeamMembersForProject() {
+    try {
+        const res = await fetch(`/api/teams/${currentTeamId}/members`, { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to fetch members');
+        const data = await res.json();
+        teamMembers = data.members || data || [];
+        renderTeamMemberOptions();
+    } catch (e) {
+        teamMembers = [];
+        renderTeamMemberOptions();
+    }
+}
+
+// Fetch common metrics from API
+async function fetchCommonMetrics() {
+    try {
+        const res = await fetch('/api/teams/projects/metrics/common', { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to fetch common metrics');
+        const data = await res.json();
+        const commonMetrics = data.metrics || [];
+        renderMetricOptions(commonMetrics);
+    } catch (e) {
+        // Fallback to default metrics if API fails
+        const defaultMetrics = [
+            'Revenue',
+            'Location', 
+            'Employee number',
+            'Industry',
+            'Min Revenue',
+            'Target Revenue',
+            'Max Revenue',
+            'Min Employee',
+            'Max Employee',
+            'Employee',
+            'Matching Keyword - Positive',
+            'Matching Keyword - Negative'
+        ];
+        renderMetricOptions(defaultMetrics);
+    }
+}
+
+function renderTeamMemberOptions() {
+    const select = document.getElementById('teamMemberSelect');
+    if (!select) return;
+    select.innerHTML = '<option value="">Select member/manager</option>';
+    teamMembers.forEach(m => {
+        select.innerHTML += `<option value="${m.id}">${m.name} (${m.role})</option>`;
+    });
+}
+
+function renderMetricOptions(metricsList) {
+    const select = document.getElementById('metricName');
+    if (!select) return;
+    select.innerHTML = '<option value="">Select metric</option>';
+    metricsList.forEach(metric => {
+        // Convert metric name to lowercase for value
+        const value = metric.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '');
+        select.innerHTML += `<option value="${value}">${metric}</option>`;
+    });
+}
+
+// Metrics add/remove
+function renderMetricsList() {
+    const list = document.getElementById('metricsList');
+    if (!list) return;
+    if (!metrics.length) {
+        list.innerHTML = '<div class="empty-state">No metrics added.</div>';
+        return;
+    }
+    list.innerHTML = metrics.map((m, i) => `
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.25rem;padding:0.75rem;background:#f8f9fa;border-radius:6px;border:1px solid #e9ecef;">
+            <span style="min-width:100px;font-weight:500;color:#333;">${m.name}</span>
+            <span style="flex:1;color:#666;">${m.value}</span>
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeMetric(${i})" style="padding:0.25rem 0.5rem;font-size:0.8rem;background:#dc3545;border:none;color:white;border-radius:4px;">Remove</button>
+        </div>
+    `).join('');
+}
+
+window.removeMetric = function(idx) {
+    metrics.splice(idx, 1);
+    renderMetricsList();
+};
+
+document.getElementById('addMetricBtn').onclick = function() {
+    const name = document.getElementById('metricName').value;
+    const value = document.getElementById('metricValue').value.trim();
+    if (!name || !value) return;
+    metrics.push({ name, value });
+    renderMetricsList();
+    document.getElementById('metricName').value = '';
+    document.getElementById('metricValue').value = '';
+};
+
+// Team add/remove
+function renderTeamList() {
+    const list = document.getElementById('teamList');
+    if (!list) return;
+    if (!selectedTeam.length) {
+        list.innerHTML = '<div class="empty-state">No team members added.</div>';
+        return;
+    }
+    list.innerHTML = selectedTeam.map((m, i) => {
+        const member = teamMembers.find(tm => tm.id === m);
+        return `<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.25rem;padding:0.75rem;background:#f8f9fa;border-radius:6px;border:1px solid #e9ecef;">
+            <span style="min-width:100px;font-weight:500;color:#333;">${member ? member.name : m}</span>
+            <span style="color:#666;font-size:0.9rem;">${member ? member.role : ''}</span>
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeTeamMember(${i})" style="padding:0.25rem 0.5rem;font-size:0.8rem;background:#dc3545;border:none;color:white;border-radius:4px;">Remove</button>
+        </div>`;
+    }).join('');
+}
+
+window.removeTeamMember = function(idx) {
+    selectedTeam.splice(idx, 1);
+    renderTeamList();
+};
+
+document.getElementById('addTeamMemberBtn').onclick = function() {
+    const memberId = document.getElementById('teamMemberSelect').value;
+    if (!memberId || selectedTeam.includes(memberId)) return;
+    selectedTeam.push(memberId);
+    renderTeamList();
+    document.getElementById('teamMemberSelect').value = '';
+};
+
+// Reset form state on open/close
+function resetCreateProjectForm() {
+    metrics = [];
+    selectedTeam = [];
+    renderMetricsList();
+    renderTeamList();
+    document.getElementById('projectName').value = '';
+    document.getElementById('projectPriority').value = 'medium';
+    document.getElementById('projectDescription').value = '';
+}
+
+// --- Create Project ---
+document.getElementById('createProjectForm').onsubmit = async function(e) {
+    e.preventDefault();
+    const name = document.getElementById('projectName').value.trim();
+    const priority = document.getElementById('projectPriority').value;
+    const description = document.getElementById('projectDescription').value.trim();
+    if (!name) { showAlert('Project name is required', 'danger'); return; }
+    if (!metrics.length) { showAlert('Add at least one metric', 'danger'); return; }
+    if (!selectedTeam.length) { showAlert('Add at least one team member', 'danger'); return; }
+    try {
+        const res = await fetch(`/api/teams/${currentTeamId}/projects`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ name, priority, description, metrics, team: selectedTeam })
+        });
+        if (!res.ok) throw new Error('Failed to create project');
+        showAlert('Project created!');
+        closeCreateProjectModal();
+        fetchProjects();
+    } catch (e) {
+        showAlert('Failed to create project', 'danger');
+    }
+};
+
+// --- Edit Project ---
+document.getElementById('editProjectForm').onsubmit = async function(e) {
+    e.preventDefault();
+    const projectId = document.getElementById('editProjectId').value;
+    const name = document.getElementById('editProjectName').value.trim();
+    const description = document.getElementById('editProjectDescription').value.trim();
+    const revenue = parseInt(document.getElementById('editProjectRevenue').value) || 0;
+    const location = document.getElementById('editProjectLocation').value.trim();
+    const employees = parseInt(document.getElementById('editProjectEmployees').value) || 0;
+    const progress = parseInt(document.getElementById('editProjectProgress').value) || 0;
+    
+    try {
+        const res = await fetch(`/api/teams/${currentTeamId}/projects/${projectId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ name, description, revenue, location, employees, progress })
+        });
+        
+        if (!res.ok) throw new Error('Failed to update project');
+        
+        showAlert('Project updated successfully!');
+        closeEditProjectModal();
+        fetchProjects();
+    } catch (e) {
+        showAlert('Failed to update project', 'danger');
+    }
+};
+
+// --- Global Functions ---
+window.editProject = function(project) {
+    openEditProjectModal(project);
+};
+
+window.deleteProject = function(projectId, projectName) {
+    if (confirm(`Delete project "${projectName}"? This cannot be undone.`)) {
+        deleteProjectAction(projectId);
+    }
+};
+
+
+// --- Project Tasks Inline Functions ---
+window.showProjectTasksInline = function(projectId) {
+    
+    // Store current project ID for task operations
+    currentProjectId = projectId;
+    
+    // Find the project data
+    const project = projects.find(p => p.project_id === projectId);
+    if (!project) {
+        return;
+    }
+    
+    // Update title and description
+    document.getElementById('projectTasksTitle').textContent = `${project.name} - Tasks`;
+    document.getElementById('projectTasksDescription').textContent = project.description || 'No description available';
+    
+    // Load tasks for this project
+    loadProjectTasksInline(projectId);
+    
+    // Hide header elements
+    document.querySelector('.projects-header').style.display = 'none';
+    
+    // Hide projects grid and show tasks section
+    document.getElementById('projectsGrid').style.display = 'none';
+    document.getElementById('projectTasksSection').style.display = 'block';
+    
+    // Scroll to tasks section
+    document.getElementById('projectTasksSection').scrollIntoView({ behavior: 'smooth' });
+};
+
+window.hideProjectTasks = function() {
+    // Show header elements
+    document.querySelector('.projects-header').style.display = 'flex';
+    
+    // Show projects grid and hide tasks section
+    document.getElementById('projectsGrid').style.display = 'grid';
+    document.getElementById('projectTasksSection').style.display = 'none';
+    
+    // Clear current project ID
+    currentProjectId = null;
+    
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+async function loadProjectTasksInline(projectId) {
+    try {
+        
+        // Call the real API
+        const response = await fetch(`/api/workspace/projects/${projectId}/tasks`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to fetch tasks for project');
+        }
+        
+        const data = await response.json();
+        const tasks = data.tasks || [];
+        
+        // Render tasks
+        renderTasksInline(tasks);
+        
+        // Load leads for this project
+        loadProjectLeadsInline(projectId);
+        
+    } catch (error) {
+        showAlert('Failed to load tasks', 'danger');
+    }
+}
+
+function renderTasksInline(tasks) {
+    // Combine all tasks into a single array
+    const allTasks = [
+        ...(tasks.todo || []),
+        ...(tasks.in_progress || []),
+        ...(tasks.review || []),
+        ...(tasks.done || [])
+    ];
+    
+    const taskListBody = document.getElementById('task-list-body');
+    const totalTaskCount = document.getElementById('total-task-count');
+    const emptyState = document.getElementById('empty-tasks-state');
+    
+    if (allTasks.length === 0) {
+        taskListBody.innerHTML = '';
+        totalTaskCount.textContent = '0';
+        emptyState.style.display = 'block';
+        return;
+    }
+    
+    emptyState.style.display = 'none';
+    totalTaskCount.textContent = allTasks.length;
+    
+    taskListBody.innerHTML = allTasks.map(task => renderTaskRow(task)).join('');
+}
+
+function renderTaskRow(task) {
+    const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'No due date';
+    const assigneeName = task.assignee ? task.assignee.name : 'Unassigned';
+    const assigneeInitials = task.assignee ? task.assignee.initials : 'U';
+    
+    // Get current status (map from backend status to frontend status)
+    let currentStatus = task.status;
+    if (currentStatus === 'completed') currentStatus = 'done';
+    
+    return `
+        <tr style="border-bottom: 1px solid var(--border-color);">
+            <td style="padding: 0.75rem; color: var(--text-color);">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div class="assignee-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: var(--primary-color); display: flex; align-items: center; justify-content: center; color: white; font-size: 0.875rem; font-weight: bold;">${assigneeInitials}</div>
+                    <div>
+                        <div style="font-weight: 500; margin-bottom: 0.25rem;">${task.title}</div>
+                        <div style="font-size: 0.875rem; color: var(--text-muted);">${task.description || 'No description'}</div>
+                    </div>
+                </div>
+            </td>
+            <td style="padding: 0.75rem;">
+                <select class="task-status-select" data-task-id="${task.id}" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; background: var(--background-color); color: var(--text-color); font-size: 0.875rem; cursor: pointer;" onchange="updateTaskStatus('${task.id}', this.value)">
+                    <option value="todo" ${currentStatus === 'todo' ? 'selected' : ''}>To Do</option>
+                    <option value="in_progress" ${currentStatus === 'in_progress' ? 'selected' : ''}>In Progress</option>
+                    <option value="review" ${currentStatus === 'review' ? 'selected' : ''}>Review</option>
+                    <option value="done" ${currentStatus === 'done' ? 'selected' : ''}>Done</option>
+                </select>
+            </td>
+            <td style="padding: 0.75rem;">
+                <span class="task-priority" style="padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 500; background: var(--${task.priority === 'high' ? 'danger' : task.priority === 'medium' ? 'warning' : 'success'}-color); color: white;">${task.priority}</span>
+            </td>
+            <td style="padding: 0.75rem; color: var(--text-color);">
+                ${assigneeName}
+            </td>
+            <td style="padding: 0.75rem; color: var(--text-color);">
+                <i class="far fa-calendar" style="margin-right: 0.5rem;"></i>
+                ${dueDate}
+            </td>
+            <td style="padding: 0.75rem; text-align: center;">
+                <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                    <button onclick="viewTaskDetail('${task.id}')" style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 0.25rem; border-radius: 4px; transition: color 0.2s ease;" title="View Details">
+                        <i class="fas fa-external-link-alt"></i>
+                    </button>
+                    <button onclick="editTask('${task.id}')" style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 0.25rem; border-radius: 4px; transition: color 0.2s ease;" title="Edit Task">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="deleteTask('${task.id}', '${task.title}')" style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 0.25rem; border-radius: 4px; transition: color 0.2s ease;" title="Delete Task">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `;
+}
+
+window.openProjectTasks = function(projectId) {
+    
+    if (!currentTeamId || currentTeamId === 'undefined' || currentTeamId === '') {
+        // Don't block the user, just continue
+    }
+    
+    if (!projectId || projectId === 'undefined' || projectId === '') {
+        // Don't block the user, just continue
+    }
+    
+    // Show tasks inline instead of navigating
+    showProjectTasksInline(projectId);
+};
+
+// --- Delete Project ---
+async function deleteProjectAction(projectId) {
+    try {
+        const res = await fetch(`/api/teams/${currentTeamId}/projects/${projectId}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+        
+        if (!res.ok) throw new Error('Failed to delete project');
+        
+        showAlert('Project deleted successfully!');
+        fetchProjects();
+    } catch (e) {
+        showAlert('Failed to delete project', 'danger');
+    }
+}
+
+// --- Modal Dismiss on Outside Click ---
+window.onclick = function(event) {
+    ['createProjectModal', 'editProjectModal', 'createTaskModal', 'editTaskModal'].forEach(id => {
+        const modal = document.getElementById(id);
+        if (modal && event.target === modal) {
+            if (id === 'createTaskModal') {
+                closeCreateTaskModal();
+            } else if (id === 'editTaskModal') {
+                closeEditTaskModal();
+            } else {
+                modal.style.display = 'none';
+            }
+        }
+    });
+};
+
+
+async function loadTeamMembersForTask() {
+    try {
+        // Get workspace members instead of team members
+        const workspaceId = currentTeamId; // currentTeamId is actually the workspace ID
+        const res = await fetch(`/api/workspace/${workspaceId}/members`, { 
+            credentials: 'include' 
+        });
+        
+        if (!res.ok) {
+            return;
+        }
+        
+        const data = await res.json();
+        const members = data.members || [];
+        
+        const select = document.getElementById('taskAssignee');
+        if (select) {
+            select.innerHTML = '<option value="">Select assignee</option>';
+            members.forEach(member => {
+                const userData = member.user_data || {};
+                const username = userData.username || 'Unknown User';
+                const role = member.role || 'member';
+                const userId = member.user_id || member.user_data?.user_id;
+                
+                if (userId) {
+                    select.innerHTML += `<option value="${userId}">${username} (${role})</option>`;
+                }
+            });
+        }
+    } catch (e) {
+        // Fallback to show error in dropdown
+        const select = document.getElementById('taskAssignee');
+        if (select) {
+            select.innerHTML = '<option value="">Error loading members</option>';
+        }
+    }
+}
+
+// --- Task CRUD Functions ---
+let currentProjectId = null;
+
+window.openAddTaskModal = function() {
+    if (!currentProjectId) {
+        showAlert('No project selected', 'danger');
+        return;
+    }
+    
+    document.getElementById('createTaskProjectId').value = currentProjectId;
+    document.getElementById('createTaskModal').style.display = 'block';
+    document.getElementById('createTaskForm').reset();
+    
+    // Load team members for assignee dropdown
+    loadTeamMembersForTask();
+};
+
+window.closeCreateTaskModal = function() {
+    document.getElementById('createTaskModal').style.display = 'none';
+    document.getElementById('createTaskForm').reset();
+};
+
+// Handle create task form submission
+document.getElementById('createTaskForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const taskData = {
+        title: formData.get('title'),
+        description: formData.get('description'),
+        assigned_to: formData.get('assigned_to') || null,
+        priority: formData.get('priority'),
+        due_date: formData.get('due_date'),
+        project_id: currentProjectId
+    };
+    
+    try {
+        const response = await fetch(`/api/workspace/${currentTeamId}/tasks`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify(taskData)
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to create task');
+        }
+        
+        const result = await response.json();
+        showAlert('Task created successfully!', 'success');
+        closeCreateTaskModal();
+        
+        // Reload tasks and leads
+        loadProjectTasksInline(currentProjectId);
+        
+    } catch (error) {
+        showAlert('Failed to create task', 'danger');
+    }
+});
+
+// Task Detail and Edit Functions
+window.viewTaskDetail = function(taskId) {
+    // Redirect to task detail page instead of modal
+    
+    if (!taskId || taskId === 'undefined' || taskId === 'null') {
+        showAlert('Invalid task ID', 'danger');
+        return;
+    }
+    
+    try {
+        // Navigate directly to task detail page
+        const baseUrl = window.location.origin;
+        const taskUrl = `${baseUrl}/workspace/tasks/${taskId}`;
+        window.location.href = taskUrl;
+    } catch (error) {
+        showAlert('Error opening task detail', 'danger');
+    }
+};
+
+
+
+window.closeEditTaskModal = function() {
+    document.getElementById('editTaskModal').style.display = 'none';
+    document.getElementById('editTaskForm').reset();
+};
+
+
+
+
+
+async function loadTaskForEdit(taskId) {
+    try {
+        const response = await fetch(`/api/workspace/tasks/${taskId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to fetch task details');
+        }
+        
+        const task = await response.json();
+        populateEditForm(task);
+        document.getElementById('editTaskModal').style.display = 'block';
+        
+    } catch (error) {
+        showAlert('Failed to load task for editing', 'danger');
+    }
+}
+
+function populateEditForm(task) {
+    document.getElementById('editTaskId').value = task.task_id;
+    document.getElementById('editTaskTitle').value = task.title;
+    document.getElementById('editTaskDescription').value = task.description || '';
+    document.getElementById('editTaskStatus').value = task.status;
+    document.getElementById('editTaskPriority').value = task.priority;
+    document.getElementById('editTaskDueDate').value = task.due_date ? task.due_date.split('T')[0] : '';
+    document.getElementById('editTaskEstimatedHours').value = task.estimated_hours || '';
+    document.getElementById('editTaskTags').value = task.tags ? task.tags.join(', ') : '';
+    
+    // Load team members for assignee dropdown
+    loadTeamMembersForEdit();
+    
+    // Set current assignee
+    if (task.assigned_to) {
+        document.getElementById('editTaskAssignee').value = task.assigned_to;
+    }
+}
+
+async function loadTeamMembersForEdit() {
+    try {
+        // Get workspace members instead of team members
+        const workspaceId = currentTeamId; // currentTeamId is actually the workspace ID
+        const res = await fetch(`/api/workspace/${workspaceId}/members`, { 
+            credentials: 'include' 
+        });
+        
+        if (!res.ok) {
+            return;
+        }
+        
+        const data = await res.json();
+        const members = data.members || [];
+        
+        const select = document.getElementById('editTaskAssignee');
+        if (select) {
+            select.innerHTML = '<option value="">Select assignee</option>';
+            members.forEach(member => {
+                const userData = member.user_data || {};
+                const username = userData.username || 'Unknown User';
+                const role = member.role || 'member';
+                const userId = member.user_id || member.user_data?.user_id;
+                
+                if (userId) {
+                    select.innerHTML += `<option value="${userId}">${username} (${role})</option>`;
+                }
+            });
+        }
+    } catch (e) {
+        // Fallback to show error in dropdown
+        const select = document.getElementById('editTaskAssignee');
+        if (select) {
+            select.innerHTML = '<option value="">Error loading members</option>';
+        }
+    }
+}
+
+// Handle edit task form submission
+document.getElementById('editTaskForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const taskId = document.getElementById('editTaskId').value;
+    const formData = new FormData(e.target);
+    
+    const taskData = {
+        title: formData.get('title'),
+        description: formData.get('description'),
+        status: formData.get('status'),
+        priority: formData.get('priority'),
+        assigned_to: formData.get('assigned_to') || null,
+        due_date: formData.get('due_date'),
+        estimated_hours: formData.get('estimated_hours') ? parseFloat(formData.get('estimated_hours')) : null,
+        tags: formData.get('tags') ? formData.get('tags').split(',').map(tag => tag.trim()).filter(tag => tag) : []
+    };
+    
+    try {
+        const response = await fetch(`/api/workspace/tasks/${taskId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify(taskData)
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to update task');
+        }
+        
+        const result = await response.json();
+        showAlert('Task updated successfully!', 'success');
+        closeEditTaskModal();
+        
+        // Reload tasks and leads
+        if (currentProjectId) {
+            loadProjectTasksInline(currentProjectId);
+        }
+        
+    } catch (error) {
+        showAlert('Failed to update task', 'danger');
+    }
+});
+
+window.editTask = function(taskId) {
+    loadTaskForEdit(taskId);
+};
+
+window.deleteTask = function(taskId, taskTitle) {
+    if (confirm(`Are you sure you want to delete task "${taskTitle}"?`)) {
+        deleteTaskAction(taskId);
+    }
+};
+
+async function deleteTaskAction(taskId) {
+    try {
+        const response = await fetch(`/api/workspace/tasks/${taskId}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to delete task');
+        }
+        
+        showAlert('Task deleted successfully!', 'success');
+        
+        // Reload tasks and leads
+        if (currentProjectId) {
+            loadProjectTasksInline(currentProjectId);
+        }
+        
+    } catch (error) {
+        showAlert('Failed to delete task', 'danger');
+    }
+}
+
+window.updateTaskStatus = function(taskId, newStatus) {
+    // Map frontend status to backend status
+    let backendStatus = newStatus;
+    if (newStatus === 'done') backendStatus = 'completed';
+    
+    updateTaskStatusAction(taskId, backendStatus);
+};
+
+async function updateTaskStatusAction(taskId, newStatus) {
+    try {
+        const response = await fetch(`/api/workspace/tasks/${taskId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({ status: newStatus })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to update task status');
+        }
+        
+        // Reload tasks and leads to reflect changes
+        if (currentProjectId) {
+            loadProjectTasksInline(currentProjectId);
+        }
+        
+    } catch (error) {
+        showAlert('Failed to update task status', 'danger');
+    }
+}
+
+// --- Project Leads Functions ---
+async function loadProjectLeadsInline(projectId) {
+    try {
+        
+        // Call the API to get task leads from project
+        const response = await fetch(`/api/task-lead/projects/${projectId}/task-leads`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to fetch leads for project');
+        }
+        
+        const data = await response.json();
+        const leads = data.task_leads || [];
+        
+        // Render leads
+        renderLeadsInline(leads);
+        
+    } catch (error) {
+        console.error('Error loading project leads:', error);
+        showAlert('Failed to load project leads', 'danger');
+        renderLeadsInline([]);
+    }
+}
+
+function renderLeadsInline(leads) {
+    const leadsListBody = document.getElementById('leads-list-body');
+    const totalLeadsCount = document.getElementById('total-leads-count');
+    const emptyLeadsState = document.getElementById('empty-leads-state');
+    
+    if (!leads || leads.length === 0) {
+        leadsListBody.innerHTML = '';
+        totalLeadsCount.textContent = '0';
+        emptyLeadsState.style.display = 'block';
+        return;
+    }
+    
+    emptyLeadsState.style.display = 'none';
+    totalLeadsCount.textContent = leads.length;
+    
+    leadsListBody.innerHTML = leads.map(lead => renderLeadRow(lead)).join('');
+}
+
+function renderLeadRow(taskLead) {
+    
+    const leadData = taskLead.lead || {};
+    const taskData = taskLead.task || {};
+    const userData = taskLead.user || {};
+    
+    // Get company name from lead data
+    const companyName = leadData.company || leadData.company_name || 'Unknown Company';
+    
+    // Get task title (fallback to basic task info if not available)
+    const taskTitle = taskData?.title || 'Lead Task';
+    
+    // Get contact info
+    const contactName = `${leadData.owner_first_name || ''} ${leadData.owner_last_name || ''}`.trim() || 
+                       leadData.contact_name || 'N/A';
+    const contactEmail = leadData.owner_email || leadData.email || '';
+    
+    // Get industry
+    const industry = leadData.industry || 'N/A';
+    
+    // Get revenue - check multiple possible field names
+    const revenueValue = leadData.revenue || leadData.annual_revenue || 0;
+    const revenue = revenueValue ? `$${parseInt(revenueValue).toLocaleString()}` : 'N/A';
+    
+    // Get employee count
+    const employeeCount = leadData.employee_count || leadData.employees || 0;
+    const employeeDisplay = employeeCount ? `${employeeCount} employees` : 'Size unknown';
+    
+    // Get added by user
+    const addedBy = userData.username || 'Unknown';
+    
+    // Format created date
+    const createdDate = taskLead.added_at ? new Date(taskLead.added_at).toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        year: 'numeric'
+    }) : 'N/A';
+    
+    return `
+        <tr style="border-bottom: 1px solid var(--border-color);">
+            <td style="padding: 0.75rem; color: var(--text-color);">
+                <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                    <div style="font-weight: 500;">${companyName}</div>
+                    <div style="font-size: 0.875rem; color: var(--text-muted);">
+                        <i class="fas fa-building" style="margin-right: 0.25rem;"></i>
+                        ${employeeDisplay}
+                    </div>
+                </div>
+            </td>
+            <td style="padding: 0.75rem; color: var(--text-color);">
+                <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                    <div style="font-weight: 500;">Task Lead</div>
+                        <div style="font-size: 0.875rem; color: var(--text-muted);">
+                            <i class="fas fa-calendar" style="margin-right: 0.25rem;"></i>
+                                Added ${createdDate}
+                        </div>
+                    </div>
+            </td>
+            <td style="padding: 0.75rem; color: var(--text-color);">
+                <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                    <div style="font-weight: 500;">${contactName}</div>
+                    ${contactEmail ? `<div style="font-size: 0.875rem; color: var(--text-muted);">${contactEmail}</div>` : ''}
+                </div>
+            </td>
+            <td style="padding: 0.75rem; color: var(--text-color);">
+                <span style="padding: 0.25rem 0.5rem; background: rgba(var(--primary-color-rgb, 74, 144, 226), 0.1); color: var(--primary-color); border-radius: 4px; font-size: 0.875rem;">
+                    ${industry}
+                </span>
+            </td>
+            <td style="padding: 0.75rem; color: var(--text-color);">
+                <div style="font-weight: 500; color: var(--success-color);">${revenue}</div>
+            </td>
+            <td style="padding: 0.75rem; color: var(--text-color);">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div class="user-avatar" style="width: 24px; height: 24px; border-radius: 50%; background: var(--primary-color); display: flex; align-items: center; justify-content: center; color: white; font-size: 0.75rem; font-weight: bold;">
+                        ${addedBy.charAt(0).toUpperCase()}
+                    </div>
+                    <span style="font-size: 0.875rem;">${addedBy}</span>
+                </div>
+            </td>
+            <td style="padding: 0.75rem; text-align: center;">
+                <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                    <button onclick="viewLeadDetail('${leadData.lead_id || taskLead.lead_id}')" style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 0.25rem; border-radius: 4px; transition: color 0.2s ease;" title="View Lead Details">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button onclick="viewTaskDetail('${taskLead.task_id}')" style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 0.25rem; border-radius: 4px; transition: color 0.2s ease;" title="View Task">
+                        <i class="fas fa-tasks"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `;
+}
+
+window.viewLeadDetail = function(leadId) {
+    if (!leadId || leadId === 'undefined' || leadId === 'null') {
+        showAlert('Invalid lead ID', 'danger');
+        return;
+    }
+    
+    // Show lead detail modal
+    showLeadDetailModal(leadId);
+};
+
+// --- Back Button Function ---
+window.goBack = function() {
+    window.location.href = '/workspace/';
+};
+
+// --- Lead Detail Modal Functions ---
+function showLeadDetailModal(leadId) {
+    const modal = document.getElementById('leadDetailModal');
+    const content = document.getElementById('leadDetailContent');
+    
+    // Show modal with loading state
+    modal.style.display = 'block';
+    content.innerHTML = `
+        <div class="loading-spinner" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+            <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+            <p>Loading lead details...</p>
+        </div>
+    `;
+    
+    // Fetch lead details
+    fetchLeadDetails(leadId);
+}
+
+function closeLeadDetailModal() {
+    const modal = document.getElementById('leadDetailModal');
+    modal.style.display = 'none';
+}
+
+async function fetchLeadDetails(leadId) {
+    try {
+        const response = await fetch(`/api/leads/${leadId}`);
+        const content = document.getElementById('leadDetailContent');
+        
+        if (response.ok) {
+            const leadData = await response.json();
+            renderLeadDetail(leadData);
+        } else {
+            content.innerHTML = `
+                <div style="text-align: center; padding: 2rem; color: var(--danger-color);">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                    <h4>Failed to load lead details</h4>
+                    <p>Error: ${response.status} ${response.statusText}</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        const content = document.getElementById('leadDetailContent');
+        content.innerHTML = `
+            <div style="text-align: center; padding: 2rem; color: var(--danger-color);">
+                <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                <h4>Network Error</h4>
+                <p>Failed to connect to server</p>
+            </div>
+        `;
+    }
+}
+
+function renderLeadDetail(lead) {
+    const content = document.getElementById('leadDetailContent');
+    
+    const companyName = lead.company || lead.company_name || 'Unknown Company';
+    const contactName = `${lead.owner_first_name || ''} ${lead.owner_last_name || ''}`.trim() || 
+                       lead.contact_name || 'N/A';
+    const contactEmail = lead.owner_email || lead.email || 'N/A';
+    const contactPhone = lead.owner_phone || lead.phone || 'N/A';
+    const industry = lead.industry || 'N/A';
+    const revenueValue = lead.revenue || lead.annual_revenue || 0;
+    const revenue = revenueValue ? `$${parseInt(revenueValue).toLocaleString()}` : 'N/A';
+    const employeeCount = lead.employee_count || lead.employees || 'N/A';
+    const website = lead.website || 'N/A';
+    const location = `${lead.city || ''} ${lead.state || ''} ${lead.country || ''}`.trim() || 'N/A';
+    const description = lead.description || lead.company_description || 'No description available';
+    
+    content.innerHTML = `
+        <div class="lead-detail-container">
+            <!-- Company Header -->
+            <div class="company-header" style="background: var(--primary-color); color: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div class="company-avatar" style="width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold;">
+                        ${companyName.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                        <h2 style="margin: 0; font-size: 1.5rem; font-weight: bold;">${companyName}</h2>
+                        <p style="margin: 0.25rem 0 0 0; opacity: 0.9;">${industry}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Information -->
+            <div class="info-section" style="margin-bottom: 2rem;">
+                <h4 style="color: var(--text-color); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-user" style="color: var(--primary-color);"></i>
+                    Contact Information
+                </h4>
+                <div class="info-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                    <div class="info-item" style="background: var(--background-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <div style="font-weight: 500; color: var(--text-muted); font-size: 0.875rem; margin-bottom: 0.25rem;">Name</div>
+                        <div style="color: var(--text-color);">${contactName}</div>
+                    </div>
+                    <div class="info-item" style="background: var(--background-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <div style="font-weight: 500; color: var(--text-muted); font-size: 0.875rem; margin-bottom: 0.25rem;">Email</div>
+                        <div style="color: var(--text-color);">${contactEmail}</div>
+                    </div>
+                    <div class="info-item" style="background: var(--background-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <div style="font-weight: 500; color: var(--text-muted); font-size: 0.875rem; margin-bottom: 0.25rem;">Phone</div>
+                        <div style="color: var(--text-color);">${contactPhone}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Company Details -->
+            <div class="info-section" style="margin-bottom: 2rem;">
+                <h4 style="color: var(--text-color); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-building" style="color: var(--primary-color);"></i>
+                    Company Details
+                </h4>
+                <div class="info-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                    <div class="info-item" style="background: var(--background-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <div style="font-weight: 500; color: var(--text-muted); font-size: 0.875rem; margin-bottom: 0.25rem;">Annual Revenue</div>
+                        <div style="color: var(--success-color); font-weight: 600;">${revenue}</div>
+                    </div>
+                    <div class="info-item" style="background: var(--background-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <div style="font-weight: 500; color: var(--text-muted); font-size: 0.875rem; margin-bottom: 0.25rem;">Employees</div>
+                        <div style="color: var(--text-color);">${employeeCount}</div>
+                    </div>
+                    <div class="info-item" style="background: var(--background-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <div style="font-weight: 500; color: var(--text-muted); font-size: 0.875rem; margin-bottom: 0.25rem;">Website</div>
+                        <div style="color: var(--text-color);">${website !== 'N/A' ? `<a href="${website}" target="_blank" style="color: var(--primary-color); text-decoration: none;">${website}</a>` : website}</div>
+                    </div>
+                    <div class="info-item" style="background: var(--background-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <div style="font-weight: 500; color: var(--text-muted); font-size: 0.875rem; margin-bottom: 0.25rem;">Location</div>
+                        <div style="color: var(--text-color);">${location}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Company Description -->
+            <div class="info-section">
+                <h4 style="color: var(--text-color); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-info-circle" style="color: var(--primary-color);"></i>
+                    Company Description
+                </h4>
+                <div style="background: var(--background-color); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border-color); color: var(--text-color); line-height: 1.6;">
+                    ${description}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const leadModal = document.getElementById('leadDetailModal');
+    if (event.target === leadModal) {
+        closeLeadDetailModal();
+    }
+}
+
+// Close modal with ESC key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        const leadModal = document.getElementById('leadDetailModal');
+        if (leadModal.style.display === 'block') {
+            closeLeadDetailModal();
+        }
+    }
+});
+
+// --- Initialize ---
+document.addEventListener('DOMContentLoaded', function() {
+    fetchProjects();
+});
+
+</script>
+
+<!-- Lead Detail Modal -->
+<div id="leadDetailModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);">
+    <div class="modal-content" style="background-color: var(--card-bg); margin: 5% auto; padding: 0; border: none; border-radius: 12px; width: 90%; max-width: 800px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); max-height: 90vh; overflow-y: auto;">
+        <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 2rem; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; background: var(--card-bg); border-radius: 12px 12px 0 0;">
+            <h3 style="color: var(--text-color); margin: 0; font-size: 1.25rem; font-weight: bold;">
+                <i class="fas fa-user-circle" style="margin-right: 0.5rem; color: var(--primary-color);"></i>
+                Lead Details
+            </h3>
+            <span class="close" onclick="closeLeadDetailModal()" style="color: var(--text-muted); font-size: 1.5rem; font-weight: bold; cursor: pointer; padding: 0.25rem;">&times;</span>
+        </div>
+        
+        <div class="modal-body" style="padding: 2rem;" id="leadDetailContent">
+            <div class="loading-spinner" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                <p>Loading lead details...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %} 

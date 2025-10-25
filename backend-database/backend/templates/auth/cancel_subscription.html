@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cancel Subscription - SaasquatchLeads</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .cancellation-form {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .feedback-option {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .feedback-option:hover {
+            background-color: #f8f9fa;
+        }
+        .feedback-option input[type="radio"] {
+            margin-right: 0.5rem;
+        }
+        .btn-danger-soft {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .btn-danger-soft:hover {
+            background-color: #f1b0b7;
+            border-color: #ef8c94;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <div class="cancellation-form bg-white rounded shadow-sm">
+            <div class="text-center mb-4">
+                <h2 class="text-danger">Cancel Subscription</h2>
+                <p class="text-muted">We're sorry to see you go! Please let us know why you're canceling.</p>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Current Subscription</h5>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Plan:</strong> {{ subscription_info.subscription.plan_name }}</p>
+                            <p><strong>Credits Remaining:</strong> {{ subscription_info.subscription.credits_remaining }}</p>
+                            <p><strong>Payment Frequency:</strong> {{ subscription_info.subscription.payment_frequency|title }}</p>
+                            {% if subscription_info.subscription.plan_expiration_timestamp %}
+                            <p><strong>Next Billing Date:</strong> {{ subscription_info.subscription.plan_expiration_timestamp[:10] }}</p>
+                            {% endif %}
+                            {% if subscription_info.subscription.is_scheduled_for_cancellation %}
+                            <div class="alert alert-warning mt-3">
+                                <strong>⚠️ Scheduled for Cancellation</strong><br>
+                                Your subscription is scheduled to cancel at the end of your current billing period. You will retain access to your current plan until then.
+                                
+                                {% if subscription_info.subscription.can_be_reactivated %}
+                                <div class="mt-3">
+                                    <button type="button" class="btn btn-success btn-sm" id="reactivateBtn">
+                                        <i class="fas fa-undo me-2"></i>Reactivate Subscription
+                                    </button>
+                                    <small class="text-muted d-block mt-1">Changed your mind? You can reactivate your subscription at any time before it expires.</small>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <form id="cancellationForm">
+                <div class="mb-4">
+                    <h5>When would you like to cancel?</h5>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="cancellationType" id="immediate" value="immediate" checked>
+                        <label class="form-check-label" for="immediate">
+                            <strong>Cancel Immediately</strong>
+                            <small class="text-muted d-block">Your subscription will be canceled right away and you'll be moved to the free plan.</small>
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="cancellationType" id="periodEnd" value="period_end">
+                        <label class="form-check-label" for="periodEnd">
+                            <strong>Cancel at End of Billing Period</strong>
+                            <small class="text-muted d-block">Continue using your current plan until the end of your billing period, then switch to free.</small>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h5>Why are you canceling? (Optional)</h5>
+                    <div class="feedback-option p-2 border rounded mb-2">
+                        <input type="radio" name="feedback" value="too_expensive" id="too_expensive">
+                        <label for="too_expensive">Too expensive</label>
+                    </div>
+                    <div class="feedback-option p-2 border rounded mb-2">
+                        <input type="radio" name="feedback" value="missing_features" id="missing_features">
+                        <label for="missing_features">Missing features I need</label>
+                    </div>
+                    <div class="feedback-option p-2 border rounded mb-2">
+                        <input type="radio" name="feedback" value="switched_service" id="switched_service">
+                        <label for="switched_service">Switched to another service</label>
+                    </div>
+                    <div class="feedback-option p-2 border rounded mb-2">
+                        <input type="radio" name="feedback" value="unused" id="unused">
+                        <label for="unused">Not using the service enough</label>
+                    </div>
+                    <div class="feedback-option p-2 border rounded mb-2">
+                        <input type="radio" name="feedback" value="customer_service" id="customer_service">
+                        <label for="customer_service">Customer service issues</label>
+                    </div>
+                    <div class="feedback-option p-2 border rounded mb-2">
+                        <input type="radio" name="feedback" value="too_complex" id="too_complex">
+                        <label for="too_complex">Too complex to use</label>
+                    </div>
+                    <div class="feedback-option p-2 border rounded mb-2">
+                        <input type="radio" name="feedback" value="low_quality" id="low_quality">
+                        <label for="low_quality">Service quality issues</label>
+                    </div>
+                    <div class="feedback-option p-2 border rounded">
+                        <input type="radio" name="feedback" value="other" id="other">
+                        <label for="other">Other</label>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="comment" class="form-label">Additional Comments (Optional)</label>
+                    <textarea class="form-control" id="comment" name="comment" rows="3" placeholder="Tell us more about your experience or what we could improve..."></textarea>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('auth.choose_plan') }}" class="btn btn-secondary">Keep Subscription</a>
+                    <button type="submit" class="btn btn-danger" id="cancelBtn">
+                        <span id="cancelBtnText">Cancel Subscription</span>
+                        <span id="cancelBtnSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('cancellationForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('cancelBtn');
+            const submitBtnText = document.getElementById('cancelBtnText');
+            const submitBtnSpinner = document.getElementById('cancelBtnSpinner');
+
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtnText.classList.add('d-none');
+            submitBtnSpinner.classList.remove('d-none');
+
+            const formData = new FormData(this);
+            const data = {
+                type: formData.get('cancellationType'),
+                feedback: formData.get('feedback'),
+                comment: formData.get('comment')
+            };
+
+            try {
+                const response = await fetch('/api/subscription/cancel', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    // Success
+                    if (result.status === 'scheduled_for_cancellation') {
+                        alert('✅ ' + result.message);
+                        // Reload the page to show updated cancellation status
+                        location.reload();
+                    } else {
+                        alert('✅ ' + result.message);
+                        // For immediate cancellations, redirect to subscription page
+                        window.location.href = '/subscription';
+                    }
+                } else {
+                    // Error
+                    alert('❌ ' + (result.error || 'An error occurred while canceling your subscription.'));
+                }
+            } catch (error) {
+                alert('An error occurred while canceling your subscription. Please try again.');
+            } finally {
+                // Reset button state
+                submitBtn.disabled = false;
+                submitBtnText.classList.remove('d-none');
+                submitBtnSpinner.classList.add('d-none');
+            }
+        });
+
+        // Reactivation functionality
+        const reactivateBtn = document.getElementById('reactivateBtn');
+        if (reactivateBtn) {
+            reactivateBtn.addEventListener('click', async function() {
+                if (!confirm('Are you sure you want to reactivate your subscription? This will prevent the cancellation and continue your subscription as normal.')) {
+                    return;
+                }
+
+                // Show loading state
+                const originalText = reactivateBtn.innerHTML;
+                reactivateBtn.disabled = true;
+                reactivateBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Reactivating...';
+
+                try {
+                    const response = await fetch('/api/subscription/reactivate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        credentials: 'include'
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        alert('✅ ' + result.message);
+                        // Reload the page to show updated status
+                        location.reload();
+                    } else {
+                        alert('❌ ' + (result.error || 'An error occurred while reactivating your subscription.'));
+                    }
+                } catch (error) {
+                    alert('An error occurred while reactivating your subscription. Please try again.');
+                } finally {
+                    // Reset button state
+                    reactivateBtn.disabled = false;
+                    reactivateBtn.innerHTML = originalText;
+                }
+            });
+        }
+
+        
+    </script>
+</body>
+</html>
+```This code modifies the JavaScript part of the HTML to improve cancellation success handling by providing more informative alerts and redirecting to the appropriate page based on the cancellation type.

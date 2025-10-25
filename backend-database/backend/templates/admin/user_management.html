@@ -1,0 +1,2728 @@
+{% extends "base.html" %}
+
+{% block title %}User Subscription Management{% endblock %}
+
+{% block additional_styles %}
+{{ super() }}
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+<style>
+:root {
+    --background-color: #181f2a;
+    --text-color: #f8f9fa;
+    --border-color: #232b3b;
+    --card-bg: #232b3a;
+    --card-border: #232b3b;
+    --primary-color: #3a817b;
+    --secondary-color: #64748b;
+    --success-color: #22c55e;
+    --danger-color: #ef4444;
+    --shadow: 0 4px 24px rgba(0,0,0,0.07);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background-color: #181f2a;
+    --text-color: #f8f9fa;
+    --border-color: #232b3b;
+    --card-bg: #232b3a;
+    --card-border: #232b3b;
+  }
+  table.dataTable tbody tr:hover {
+    background: #232b3a;
+  }
+}
+body, .container-fluid, .main-content {
+    background-color: var(--background-color) !important;
+    color: var(--text-color);
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+}
+.card, .modal-content, .table, .dataTables_wrapper, .form-control, .form-select {
+    background-color: var(--card-bg) !important;
+    color: var(--text-color) !important;
+    border-color: var(--card-border) !important;
+    border-radius: 16px !important;
+    box-shadow: var(--shadow);
+}
+.card-header, .modal-header, .modal-footer {
+    background-color: var(--card-bg) !important;
+    border-color: var(--card-border) !important;
+    border-radius: 16px 16px 0 0 !important;
+}
+.table > :not(caption) > * > * {
+    background-color: var(--card-bg) !important;
+    color: #fff !important;
+    border-color: var(--card-border) !important;
+}
+.avatar-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    background: var(--secondary-color);
+    font-size: 1.2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.card, .modal-content, .table {
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.btn, .form-control, .form-select {
+    border-radius: 10px !important;
+}
+::-webkit-scrollbar {
+    width: 8px;
+    background: var(--background-color);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    height: 2rem;
+    padding: 0 0.5rem;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 6px !important;
+    background: var(--card-bg) !important;
+    color: #c7cdd6 !important;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s;
+    margin: 0 0.25rem;
+    box-shadow: none !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button.current,
+.dataTables_wrapper .dataTables_paginate .paginate_button:active,
+.dataTables_wrapper .dataTables_paginate .paginate_button:focus {
+    background: var(--primary-color, #3a817b) !important;
+    color: #e0f2fe !important;
+    border: 1.5px solid var(--primary-color, #3a817b) !important;
+    font-weight: 600;
+    box-shadow: none !important;
+    outline: none !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover:not(.current) {
+    background: var(--card-bg) !important;
+    border-color: var(--border-color) !important;
+    color: #fff !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover {
+    opacity: 0.5;
+    cursor: not-allowed !important;
+    background: var(--card-bg) !important;
+    color: #64748b !important;
+    border: 1px solid var(--border-color) !important;
+}
+.dataTables_wrapper .dataTables_paginate .ellipsis {
+    color: #64748b;
+    font-weight: bold;
+    padding: 0 0.25rem;
+    background: none !important;
+    border: none !important;
+    min-width: 1.5rem;
+    display: inline-block;
+}
+.dataTables_length label {
+    color: #b0b8c1;
+    font-size: 1rem;
+    font-weight: 500;
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.dataTables_length select {
+    color: #fff;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 0.95rem;
+    padding: 0.25rem 0.5rem;
+    margin-left: 0.5rem;
+}
+.dataTables_wrapper .dataTables_info {
+    display: none !important;
+}
+
+/* Container and Card Spacing */
+.container-fluid {
+    padding: 32px 24px !important;
+}
+.card {
+    margin-bottom: 2rem;
+    padding: 1.5rem 1.5rem 1rem 1.5rem;
+}
+
+/* Table Spacing */
+.table {
+    padding: 0.5rem 0.5rem 1.5rem 0.5rem;
+}
+#usersTable {
+    margin-bottom: 0 !important;
+}
+.dataTables_wrapper {
+    padding: 0.5rem 0 1.5rem 0;
+}
+
+/* Bootstrap Pagination (if used) */
+.page-item .page-link {
+    background: var(--card-bg) !important;
+    color: #3a817b !important;
+    border: 1px solid #3a817b !important;
+    border-radius: 8px !important;
+    margin: 0 2px;
+    min-width: 40px;
+    transition: background 0.2s, color 0.2s;
+}
+.page-item.active .page-link {
+    background: #3a817b !important;
+    color: #fff !important;
+    border: 1px solid #3a817b !important;
+}
+.page-item.disabled .page-link {
+    background: var(--card-bg) !important;
+    color: #888 !important;
+    border: 1px solid var(--border-color) !important;
+    cursor: not-allowed !important;
+    opacity: 0.7;
+}
+
+/* Table Row Spacing */
+table.dataTable tbody td {
+    padding-top: 16px;
+    padding-bottom: 16px;
+}
+
+/* Avatar and Button Spacing */
+.avatar-circle {
+    margin-right: 12px;
+}
+.btn {
+    margin-right: 4px;
+    margin-bottom: 4px;
+}
+
+.pagination-bar-flex {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin: 1rem 0;
+    padding: 0.5rem;
+    background: var(--card-bg);
+    border-radius: 8px;
+}
+.pagination-numbers {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.btn-pagination {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    height: 2rem;
+    padding: 0 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--card-bg);
+    color: #eeeff1;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.btn-pagination:hover:not(.active) {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #1e293b;
+}
+.btn-pagination.active {
+    background: var(--primary-color, #3a817b);
+    border-color: var(--primary-color, #3a817b);
+    color: white;
+    font-weight: 600;
+}
+.pagination-ellipsis {
+    color: #64748b;
+    font-weight: bold;
+    padding: 0 0.25rem;
+}
+.rows-per-page select {
+    padding: 0.25rem 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--card-bg);
+    font-size: 0.875rem;
+}
+.page-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: #475569;
+}
+.page-info input[type="number"] {
+    text-align: center;
+}
+@media (max-width: 640px) {
+    .pagination-bar-flex {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    .pagination-numbers {
+        order: -1;
+    }
+    .btn-pagination {
+        color: #fff;
+        min-width: 1.75rem;
+        height: 1.75rem;
+        font-size: 0.75rem;
+    }
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button:before,
+.dataTables_wrapper .dataTables_paginate .paginate_button:after {
+    background: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    content: none !important;
+}
+.dataTables_wrapper .dataTables_paginate li.paginate_button,
+.dataTables_wrapper .dataTables_paginate li.paginate_button.active,
+.dataTables_wrapper .dataTables_paginate li.paginate_button.current {
+    background: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    outline: none !important;
+    padding: 0 !important;
+}
+.dt-pagination-bar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 2rem;
+    margin-top: 1.5rem;
+}
+
+/* Table Styling Enhancement */
+.table {
+    margin: 0;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+    border: 1px solid var(--card-border);
+}
+
+.table thead th {
+    background: var(--card-bg);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    padding: 1.2rem 1rem;
+    color: #94a3b8 !important;
+    border-bottom: 2px solid var(--border-color) !important;
+}
+
+.table tbody tr {
+    transition: all 0.2s ease-in-out;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.table tbody tr:hover {
+    background: rgba(59, 130, 246, 0.05) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.table tbody td {
+    padding: 1rem;
+    vertical-align: middle;
+    font-size: 0.95rem;
+}
+
+/* Badge Enhancement */
+.badge {
+    padding: 0.5rem 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.badge:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* Avatar Enhancement */
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border: 2px solid rgba(255,255,255,0.1);
+    transition: all 0.2s ease;
+}
+
+.avatar-circle:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
+
+/* Action Button Enhancement */
+.btn-manage {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+}
+
+.btn-manage:hover {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.3);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+/* Status Badge Enhancement */
+.badge.bg-success {
+    background: rgba(34, 197, 94, 0.15) !important;
+    color: #4ade80 !important;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.badge.bg-danger {
+    background: rgba(239, 68, 68, 0.15) !important;
+    color: #f87171 !important;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.badge.bg-warning {
+    background: rgba(234, 179, 8, 0.15) !important;
+    color: #facc15 !important;
+    border: 1px solid rgba(234, 179, 8, 0.3);
+}
+
+.badge.bg-info {
+    background: rgba(6, 182, 212, 0.15) !important;
+    color: #67e8f9 !important;
+    border: 1px solid rgba(6, 182, 212, 0.3);
+}
+
+.badge.bg-secondary {
+    background: rgba(148, 163, 184, 0.15) !important;
+    color: #cbd5e1 !important;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+/* Table Card Enhancement */
+.card {
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    border: 1px solid var(--card-border);
+    backdrop-filter: blur(8px);
+}
+
+.card-header {
+    border-bottom: 1px solid var(--card-border);
+    padding: 1.2rem 1.5rem;
+}
+
+/* Search Box Enhancement */
+.dataTables_filter input {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 0.5rem 1rem;
+    color: var(--text-color);
+    transition: all 0.2s ease;
+}
+
+.dataTables_filter input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    outline: none;
+}
+
+/* Pagination Enhancement */
+.dataTables_paginate .paginate_button {
+    margin: 0 2px;
+    border-radius: 8px !important;
+    transition: all 0.2s ease;
+}
+
+.dataTables_paginate .paginate_button:hover {
+    background: rgba(59, 130, 246, 0.1) !important;
+    border-color: rgba(59, 130, 246, 0.2) !important;
+    color: #60a5fa !important;
+}
+
+.dataTables_paginate .paginate_button.current {
+    background: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+    color: white !important;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* Table Loading State */
+.table-loading {
+    position: relative;
+}
+
+.table-loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: white;
+}
+
+/* Empty State Enhancement */
+.dataTables_empty {
+    padding: 3rem !important;
+    font-size: 1.1rem;
+    color: #94a3b8;
+    text-align: center;
+    background: var(--card-bg) !important;
+}
+
+/* Row Alternating Colors */
+.table tbody tr:nth-child(odd) {
+    background: rgba(255,255,255,0.02);
+}
+
+.table tbody tr:nth-child(even) {
+    background: rgba(0,0,0,0.02);
+}
+
+/* Icons Enhancement */
+.fas {
+    transition: all 0.2s ease;
+}
+
+tr:hover .fas {
+    transform: scale(1.1);
+}
+
+/* New styles for subscription action buttons */
+.subscription-action {
+    padding: 0.8rem 1.2rem;
+    font-weight: 500;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.subscription-action::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, rgba(255,255,255,0), rgba(255,255,255,0.1), rgba(255,255,255,0));
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+}
+
+.subscription-action:hover::before {
+    transform: translateX(100%);
+}
+
+.subscription-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* Button specific styles */
+.btn-outline-danger {
+    border-width: 2px;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.btn-outline-success {
+    border-width: 2px;
+    background: rgba(34, 197, 94, 0.1);
+}
+
+.btn-outline-warning {
+    border-width: 2px;
+    background: rgba(234, 179, 8, 0.1);
+}
+
+/* Loading state */
+.subscription-action.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.subscription-action.loading::after {
+    content: '';
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+@keyframes spin {
+    to { transform: translateY(-50%) rotate(360deg); }
+}
+
+#syncCouponsBtn {
+  filter: hue-rotate(10deg);
+}
+
+/* Pause Status Styling */
+#pauseStatusContainer {
+    transition: all 0.3s ease;
+    border-radius: 8px;
+}
+
+#pauseStatusContainer:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.pause-status-active {
+    background: rgba(255, 193, 7, 0.15) !important;
+    border: 1px solid rgba(255, 193, 7, 0.4) !important;
+}
+
+.pause-status-pending {
+    background: rgba(6, 182, 212, 0.15) !important;
+    border: 1px solid rgba(6, 182, 212, 0.4) !important;
+}
+
+.pause-status-completed {
+    background: rgba(34, 197, 94, 0.15) !important;
+    border: 1px solid rgba(34, 197, 94, 0.4) !important;
+}
+
+.pause-status-none {
+    background: rgba(34, 197, 94, 0.15) !important;
+    border: 1px solid rgba(34, 197, 94, 0.4) !important;
+}
+
+.alert-warning {
+    background-color: rgba(245, 158, 11, 0.2);
+    color: #f59e0b;
+    border: 1px solid #f59e0b;
+}
+.alert-danger {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    border: 1px solid #ef4444;
+}
+.alert-success {
+    background-color: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+    border: 1px solid #22c55e;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-light">User Subscription Management</h1>
+            <p class="text-muted">Manage user subscriptions</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-info text-white" id="syncCouponsBtn">
+                <i class="fas fa-server me-1"></i>Sync Coupons
+            </button>
+            <button class="btn btn-success" id="addWorkspaceCreditBtn">
+                <i class="fas fa-plus-circle me-1"></i> Add Credit for Workspace
+            </button>
+            <button class="btn btn-primary" id="refreshBtn">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-dark border-primary h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Total Users</h6>
+                            <h3 class="mb-0 text-light" id="totalUsers">0</h3>
+                        </div>
+                        <div class="bg-primary bg-opacity-25 p-3 rounded">
+                            <i class="fas fa-users fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-dark border-success h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Active Users</h6>
+                            <h3 class="mb-0 text-light" id="activeUsers">0</h3>
+                        </div>
+                        <div class="bg-success bg-opacity-25 p-3 rounded">
+                            <i class="fas fa-user-check fa-2x text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+                <!-- Activity Rate (last N days) -->
+                <div class="col-md-3">
+                    <div class="card bg-dark border-info h-100">
+                        <div class="card-body" id="activityRateTile" style="cursor: pointer;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <h6 class="text-muted mb-1">Activity Rate (30 days)</h6>
+                                    </div>
+                                    <h3 class="mb-0 text-light" id="activityRate">0%</h3>
+                                </div>
+                                <div class="bg-info bg-opacity-25 p-3 rounded">
+                                    <i class="fas fa-chart-line fa-2x text-info"></i>
+                                </div>
+                            </div>
+                            <div class="small text-muted mt-2">
+                                <span id="activityRateMeta">Active: 0 • Inactive: 0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+        <div class="col-md-3">
+            <div class="card bg-dark border-info h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Premium Users</h6>
+                            <h3 class="mb-0 text-light" id="premiumUsers">0</h3>
+                        </div>
+                        <div class="bg-info bg-opacity-25 p-3 rounded">
+                            <i class="fas fa-crown fa-2x text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark border-warning h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Expiring Soon</h6>
+                            <h3 class="mb-0 text-light" id="expiringUsers">0</h3>
+                        </div>
+                        <div class="bg-warning bg-opacity-25 p-3 rounded">
+                            <i class="fas fa-clock fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tier Stats Cards -->
+    <div id="tierStatsCards" class="row g-3 mb-4"></div>
+
+    <!-- Activity Users Modal -->
+    <div class="modal fade" id="activityUsersModal" tabindex="-1" aria-labelledby="activityUsersModalLabel">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content bg-dark text-light border-secondary">
+                <div class="modal-header bg-dark border-secondary">
+                    <h5 class="modal-title" id="activityUsersModalLabel">
+                        <i class="fas fa-users me-2"></i>Active Users
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <label class="text-muted">Days:</label>
+                        <select id="activityDaysSelectModal" class="form-select form-select-sm bg-dark text-light border-secondary" style="width: auto;">
+                            <option value="1">1</option>
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="30" selected>30</option>
+                            <option value="60">60</option>
+                            <option value="90">90</option>
+                        </select>
+                        <button id="loadActivityUsersBtnModal" class="btn btn-sm btn-outline-info ms-2">
+                            <i class="fas fa-search me-1"></i>Load Users
+                        </button>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <input type="text" id="activityUsersSearch" class="form-control bg-dark text-light border-secondary" placeholder="Search users, emails, or dates..." style="max-width: 300px;">
+                            <span id="activityUsersCounter" class="text-muted small">0 of 0</span>
+                        </div>
+                    </div>
+                    <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                        <table class="table table-dark mb-0">
+                            <thead style="position: sticky; top: 0; background: #212529; z-index: 1;">
+                                <tr>
+                                    <th>User</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Last Login</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activityUsersTbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Table Card -->
+    <div class="card bg-dark border-secondary">
+        <div class="card-body p-0">
+            <div class="table">
+                <table class="table table-dark mb-0" id="usersTable">
+                    <thead class="bg-dark text-light">
+                        <tr>
+                            <th class="border-0">User</th>
+                            <th class="border-0">Status</th>
+                            <th class="border-0">Role</th>
+                            <th class="border-0">Tier</th>
+                            <th class="border-0">Credits</th>
+                            <th class="border-0">Discount</th>
+                            <th class="border-0">Expires</th>
+                            <th class="border-0 text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Data will be populated via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Manage User Modal -->
+<div class="modal fade" id="manageUserModal" tabindex="-1" aria-labelledby="manageUserModalLabel">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark text-light border-secondary">
+            <div class="modal-header bg-dark border-secondary">
+                <h5 class="modal-title" id="manageUserModalLabel">
+                    <i class="fas fa-user-cog me-2"></i>
+                    Manage User
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-4">
+                    <!-- User Info Card -->
+                    <div class="col-md-6">
+                        <div class="card bg-dark border-secondary h-100">
+                            <div class="card-header bg-dark border-secondary">
+                                <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>User Information</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="avatar-circle me-3" id="modalUserAvatar"></div>
+                                        <div>
+                                            <h5 class="mb-1" id="modalUsername"></h5>
+                                            <p class="text-muted mb-0" id="modalEmail"></p>
+                            </div>
+                        </div>
+                                    <div class="row g-3">
+                                        <div class="col-6">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-circle text-success me-2" id="modalStatusIcon"></i>
+                                                <span id="modalStatus"></span>
+                    </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-user me-2" id="modalRoleIcon"></i>
+                                                <span id="modalRole"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <hr class="border-secondary">
+                                <div class="row g-3">
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">Tier</small>
+                                        <span class="badge" id="modalTierBadge">
+                                            <i class="fas me-1" id="modalTierIcon"></i>
+                                            <span id="modalTier"></span>
+                                        </span>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">Credits</small>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-coins text-warning me-2"></i>
+                                            <span id="modalCredits">0</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">Created At</small>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-calendar-alt text-info me-2"></i>
+                                            <span id="modalCreatedAt">N/A</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">Expires At</small>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-calendar-alt text-info me-2"></i>
+                                            <span id="modalExpiresAt">N/A</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <small class="text-muted d-block">Email Verified</small>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-envelope text-primary me-2"></i>
+                                            <select class="form-select form-select-sm bg-dark text-light border-secondary" id="modalEmailVerified" style="max-width: 120px;">
+                                                <option value="true">Verified</option>
+                                                <option value="false">Not Verified</option>
+                                            </select>
+                                            <button class="btn btn-sm btn-outline-primary ms-2" id="updateEmailVerifiedBtn" style="display: none;">
+                                                <i class="fas fa-save"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="card bg-dark border-secondary">
+                                            <div class="card-header bg-dark border-secondary">
+                                                <h6 class="mb-0"><i class="fas fa-tag me-2"></i>Coupon Information</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div id="couponInfo" class="p-3 rounded" style="background: var(--card-bg); border: 1px solid var(--border-color);">
+                                                    <div id="activeCouponSection" style="display: none;">
+                                                        <div class="d-flex align-items-center mb-2">
+                                                            <i id="couponStatusIcon" class="fas fa-check-circle text-success me-2"></i>
+                                                            <span id="couponStatusText" class="fw-bold text-success">Active Discount</span>
+                                                        </div>
+                                                        <div id="couponDetails">
+                                                            <!-- Coupon details will be populated here -->
+                                                        </div>
+                                                    </div>
+                                                    <div id="noCouponSection">
+                                                        <div class="d-flex align-items-center">
+                                                            <i class="fas fa-info-circle text-muted me-2"></i>
+                                                            <span class="text-muted">No active coupon</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Subscription Actions Card -->
+                    <div class="col-md-6">
+                        <div class="card bg-dark border-secondary h-100">
+                            <div class="card-header bg-dark border-secondary">
+                                <h6 class="mb-0"><i class="fas fa-crown me-2"></i>Subscription Actions</h6>
+                            </div>
+                            <div class="card-body">
+                                <!-- Pause Status Notification -->
+                                <div class="mb-3 p-3 rounded" id="pauseStatusContainer" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="fas fa-pause-circle me-2" id="pauseStatusIcon"></i>
+                                        <span class="fw-bold" id="pauseStatusText">Pause Status</span>
+                                    </div>
+                                    <div class="small" id="pauseStatusDetails">
+                                        <!-- Pause details will be populated here -->
+                                    </div>
+                                </div>
+                                <div class="d-grid gap-3">
+                                    <!-- Add Credits Button -->
+                                    <button class="btn btn-outline-primary subscription-action" id="addCreditsBtn">
+                                        <i class="fas fa-plus-circle me-2"></i>Add Credits
+                                    </button>
+                                    <!-- Apply Promo Code Button -->
+                                    <button class="btn btn-outline-warning subscription-action" id="applyPromoBtn" style="display: none;">
+                                        <i class="fas fa-tag me-2"></i>Apply Promo Code
+                                    </button>
+                                    <!-- Cancel Subscription Button -->
+                                    <button class="btn btn-outline-danger subscription-action" id="cancelSubscriptionBtn">
+                                        <i class="fas fa-times-circle me-2"></i>Cancel Subscription
+                                    </button>
+
+                                    <!-- Reactivate Subscription Button -->
+                                    <button class="btn btn-outline-success subscription-action" id="reactivateSubscriptionBtn">
+                                        <i class="fas fa-redo-alt me-2"></i>Reactivate Subscription
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Cancel Confirmation Modal -->
+<div class="modal fade" id="cancelConfirmModal" tabindex="-1" aria-labelledby="cancelConfirmModalLabel">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark border-danger">
+            <div class="modal-header border-danger">
+                <h5 class="modal-title text-danger" id="cancelConfirmModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Cancel Subscription
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>How would you like to cancel this subscription?</p>
+                <div class="mb-3">
+                    <label class="form-label" for="cancelType">Cancellation Type</label>
+                    <select class="form-select bg-dark text-light" id="cancelType">
+                        <option value="immediate">Cancel Immediately</option>
+                        <option value="period_end">Cancel at Period End</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="cancelFeedback">Feedback (Optional)</label>
+                    <textarea class="form-control bg-dark text-light" id="cancelFeedback" rows="2" placeholder="Reason for cancellation..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-danger">
+                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-danger" id="confirmCancelBtn">
+                    <i class="fas fa-times-circle me-2"></i>Cancel Subscription
+                    </button>
+                </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Reactivate Confirmation Modal -->
+<div class="modal fade" id="reactivateConfirmModal" tabindex="-1" aria-labelledby="reactivateConfirmModalLabel">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark border-success">
+            <div class="modal-header border-success">
+                <h5 class="modal-title text-success" id="reactivateConfirmModalLabel">
+                    <i class="fas fa-check-circle me-2"></i>
+                    Reactivate Subscription
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to reactivate this subscription?</p>
+            </div>
+            <div class="modal-footer border-success">
+                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" id="confirmReactivateBtn">
+                    <i class="fas fa-check-circle me-2"></i>Reactivate
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Credits Modal -->
+<div class="modal fade" id="addCreditsModal" tabindex="-1" aria-labelledby="addCreditsModalLabel">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark border-primary">
+            <div class="modal-header border-primary">
+                <h5 class="modal-title text-primary" id="addCreditsModalLabel">
+                    <i class="fas fa-plus-circle me-2"></i>
+                    Add Credits
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Add credits to <strong id="addCreditsUsername"></strong>'s account:</p>
+                <div class="mb-3">
+                    <label class="form-label" for="creditsToAdd">Number of Credits</label>
+                    <input type="number" class="form-control bg-dark text-light" id="creditsToAdd" min="1" value="1" required>
+                    <div class="form-text text-muted">Current credits: <span id="currentCreditsDisplay">0</span></div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="addCreditsReason">Reason (Optional)</label>
+                    <textarea class="form-control bg-dark text-light" id="addCreditsReason" rows="2" placeholder="Reason for adding credits..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-primary">
+                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="confirmAddCreditsBtn">
+                    <i class="fas fa-plus-circle me-2"></i>Add Credits
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Credit for Workspace Modal -->
+<div class="modal fade" id="addWorkspaceCreditModal" tabindex="-1" aria-labelledby="addWorkspaceCreditModalLabel">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark border-success">
+            <div class="modal-header border-success">
+                <h5 class="modal-title text-success" id="addWorkspaceCreditModalLabel">
+                    <i class="fas fa-plus-circle me-2"></i>
+                    Add Credit for Workspace
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3">Add 2000 credits to a user account by email address:</p>
+                <div class="mb-3">
+                    <label class="form-label" for="workspaceEmail">User Email</label>
+                    <input type="email" class="form-control bg-dark text-light border-secondary" id="workspaceEmail" placeholder="user@example.com" required>
+                    <div class="form-text text-muted">Enter the email address of the user to receive 2000 credits</div>
+                </div>
+                <div class="alert alert-info border-info bg-dark" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>
+                    This will automatically add 2000 credits to the specified user's account.
+                </div>
+            </div>
+            <div class="modal-footer border-success">
+                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="confirmAddWorkspaceCreditBtn">
+                    <i class="fas fa-plus-circle me-2"></i>Add 2000 Credits
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination Controls -->
+{% if pages and pages > 1 %}
+<div class="pagination-bar-flex">
+    <div class="rows-per-page">
+        Rows per page:
+        <form id="paginationForm" method="get" style="display:inline;">
+            <select id="perPageSelect" name="per_page" class="rows-select" onchange="this.form.submit()">
+                <option value="10" {% if per_page==10 %}selected{% endif %}>10</option>
+                <option value="25" {% if per_page==25 %}selected{% endif %}>25</option>
+                <option value="50" {% if per_page==50 %}selected{% endif %}>50</option>
+                <option value="100" {% if per_page==100 %}selected{% endif %}>100</option>
+            </select>
+            {% for key, value in request.args.items() %}
+                {% if key != 'per_page' and key != 'page' %}
+                    <input type="hidden" name="{{ key }}" value="{{ value }}">
+                {% endif %}
+            {% endfor %}
+            <input type="hidden" name="page" value="{{ page }}">
+        </form>
+    </div>
+    {% set max_display = 2 %}
+    {% set start_page = [1, page - 2]|max %}
+    {% set end_page = [pages, start_page + max_display - 1]|min %}
+    {% set start_page = [1, end_page - max_display + 1]|max %}
+    {% set args = request.args.to_dict() %}
+    {% if 'page' in args %}{% set _ = args.pop('page') %}{% endif %}
+    <div class="pagination-numbers">
+        {% if page > 1 %}
+            <a href="?page={{ page-1 }}&per_page={{ per_page }}" class="btn-pagination"  title="Previous page">&lt;</a>
+        {% endif %}
+        {% if start_page > 1 %}
+            <a href="?page=1&per_page={{ per_page }}" class="btn-pagination">1</a>
+            {% if start_page > 2 %}
+                <span class="pagination-ellipsis">...</span>
+            {% endif %}
+        {% endif %}
+        {% for p in range(start_page, end_page + 1) %}
+            {% if p == page %}
+                <span class="btn-pagination active">{{ p }}</span>
+            {% else %}
+                <a href="?page={{ p }}&per_page={{ per_page }}" class="btn-pagination">{{ p }}</a>
+            {% endif %}
+        {% endfor %}
+        {% if end_page < pages %}
+            {% if end_page < pages - 1 %}
+                <span class="pagination-ellipsis">...</span>
+            {% endif %}
+            <a href="?page={{ pages }}&per_page={{ per_page }}" class="btn-pagination">{{ pages }}</a>
+        {% endif %}
+        {% if page < pages %}
+            <a href="?page={{ page+1 }}&per_page={{ per_page }}" class="btn-pagination" title="Next page">&gt;</a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<!-- Load jQuery and DataTables in the correct order -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+// Wait for jQuery to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if jQuery is loaded
+    if (typeof jQuery === 'undefined') {
+        document.getElementById('usersTable').innerHTML = '<div class="alert alert-danger">Error: jQuery is not loaded. Please refresh the page or contact support.</div>';
+        return;
+    }
+
+    // Initialize DataTable only after jQuery is confirmed to be loaded
+    try {
+        if (typeof jQuery.fn.DataTable === 'undefined') {
+            document.getElementById('usersTable').innerHTML = '<div class="alert alert-danger">Error: DataTables is not loaded. Please refresh the page or contact support.</div>';
+            return;
+        }
+
+        let users = [];
+        let dataTable = null;
+
+    const usersTable = document.getElementById('usersTable');
+    const manageModalElement = document.getElementById('manageUserModal');
+    const cancelConfirmModalElement = document.getElementById('cancelConfirmModal');
+    const reactivateConfirmModalElement = document.getElementById('reactivateConfirmModal');
+    const addCreditsModalElement = document.getElementById('addCreditsModal');
+    const addWorkspaceCreditModalElement = document.getElementById('addWorkspaceCreditModal');
+
+    let manageModal = null;
+    let cancelConfirmModal = null;
+    let reactivateConfirmModal = null;
+    let addCreditsModal = null;
+    let addWorkspaceCreditModal = null;
+
+    // Initialize modals only if elements exist
+    if (manageModalElement) {
+        manageModal = new bootstrap.Modal(manageModalElement);
+        // Add event listener to clean up when modal is hidden
+        manageModalElement.addEventListener('hidden.bs.modal', function () {
+            // Reset form fields
+            const cancelType = document.getElementById('cancelType');
+            const cancelFeedback = document.getElementById('cancelFeedback');
+            if (cancelType) cancelType.value = 'immediate';
+            if (cancelFeedback) cancelFeedback.value = '';
+
+            // Remove loading states
+            const buttons = document.querySelectorAll('.subscription-action.loading');
+            buttons.forEach(btn => btn.classList.remove('loading'));
+
+            // Reset reactivate button visibility
+            const reactivateBtn = document.getElementById('reactivateSubscriptionBtn');
+            if (reactivateBtn) {
+                reactivateBtn.style.display = 'none';
+                reactivateBtn.disabled = true;
+            }
+
+            // Reset add credits button visibility
+            const addCreditsBtn = document.getElementById('addCreditsBtn');
+            if (addCreditsBtn) {
+                addCreditsBtn.style.display = 'none';
+                addCreditsBtn.disabled = true;
+            }
+        });
+    }
+    if (cancelConfirmModalElement) {
+        cancelConfirmModal = new bootstrap.Modal(cancelConfirmModalElement);
+        // Add event listener to clean up when modal is hidden
+        cancelConfirmModalElement.addEventListener('hidden.bs.modal', function () {
+            // Remove loading state from confirm button
+            const confirmBtn = document.getElementById('confirmCancelBtn');
+            if (confirmBtn) confirmBtn.classList.remove('loading');
+        });
+    }
+    if (reactivateConfirmModalElement) {
+        reactivateConfirmModal = new bootstrap.Modal(reactivateConfirmModalElement);
+        // Add event listener to clean up when modal is hidden
+        reactivateConfirmModalElement.addEventListener('hidden.bs.modal', function () {
+            // Remove loading state from confirm button
+            const confirmBtn = document.getElementById('confirmReactivateBtn');
+            if (confirmBtn) confirmBtn.classList.remove('loading');
+        });
+    }
+    if (addCreditsModalElement) {
+        addCreditsModal = new bootstrap.Modal(addCreditsModalElement);
+        // Add event listener to clean up when modal is hidden
+        addCreditsModalElement.addEventListener('hidden.bs.modal', function () {
+            // Reset form fields
+            const creditsToAdd = document.getElementById('creditsToAdd');
+            const addCreditsReason = document.getElementById('addCreditsReason');
+            if (creditsToAdd) creditsToAdd.value = '1';
+            if (addCreditsReason) addCreditsReason.value = '';
+
+            // Remove loading states
+            const buttons = document.querySelectorAll('.subscription-action.loading');
+            buttons.forEach(btn => btn.classList.remove('loading'));
+        });
+    }
+    if (addWorkspaceCreditModalElement) {
+        addWorkspaceCreditModal = new bootstrap.Modal(addWorkspaceCreditModalElement);
+        // Add event listener to clean up when modal is hidden
+        addWorkspaceCreditModalElement.addEventListener('hidden.bs.modal', function () {
+            // Clear form fields
+            const emailInput = document.getElementById('workspaceEmail');
+            if (emailInput) emailInput.value = '';
+        });
+    }
+
+    let currentUserId = null;
+    let currentUser = null;
+
+    // Helper functions for tier display
+    function getTierBadgeClass(tier) {
+        if (!tier || tier === 'free') return 'bg-secondary';
+
+        const tierClasses = {
+            'bronze': 'bg-warning',
+            'silver': 'bg-secondary',
+            'gold': 'bg-warning',
+            'platinum': 'bg-info',
+            'bronze_annual': 'bg-warning',
+            'silver_annual': 'bg-secondary',
+            'gold_annual': 'bg-warning',
+            'platinum_annual': 'bg-info',
+            'pause_one_month': 'bg-warning',
+            'pause_two_month': 'bg-warning',
+            'pause_three_month': 'bg-warning',
+            'student_monthly': 'bg-success',
+            'student_semester': 'bg-success',
+            'student_annual': 'bg-success',
+            'call_outreach': 'bg-primary'
+        };
+
+        return tierClasses[tier] || 'bg-secondary';
+    }
+
+    function getTierIcon(tier) {
+        if (!tier || tier === 'free') return 'user';
+
+        const tierIcons = {
+            'bronze': 'medal',
+            'silver': 'medal',
+            'gold': 'medal',
+            'platinum': 'crown',
+            'bronze_annual': 'medal',
+            'silver_annual': 'medal',
+            'gold_annual': 'medal',
+            'platinum_annual': 'crown',
+            'pause_one_month': 'pause-circle',
+            'pause_two_month': 'pause-circle',
+            'pause_three_month': 'pause-circle',
+            'student_monthly': 'graduation-cap',
+            'student_semester': 'graduation-cap',
+            'student_annual': 'graduation-cap',
+            'call_outreach': 'phone'
+        };
+
+        return tierIcons[tier] || 'user';
+    }
+
+    // Update stats
+    function updateStats() {
+        const total = users.length;
+        const active = users.filter(u => u.status === 'active' && u.is_active).length;
+
+        // Define premium tiers to count
+        const premiumTiers = [
+            'bronze', 'silver', 'gold', 'platinum',
+            'bronze_annual', 'silver_annual', 'gold_annual', 'platinum_annual',
+            'pause_one_month', 'pause_two_month', 'pause_three_month',
+            'student_monthly', 'student_semester', 'student_annual',
+            'call_outreach'
+        ];
+
+        // Define roles to exclude from premium count
+        const excludedRoles = ['tester', 'developer', 'admin'];
+
+        // Count premium users excluding specific roles
+        const premium = users.filter(u =>
+            u.tier &&
+            premiumTiers.includes(u.tier) &&
+            u.status === 'active' &&
+            !excludedRoles.includes(u.role)
+        ).length;
+
+        const expiring = users.filter(u => {
+            if (!u.subscription?.expires_at) return false;
+            const expires = new Date(u.subscription.expires_at);
+            const now = new Date();
+            const diffDays = Math.ceil((expires - now) / (1000 * 60 * 60 * 24));
+            return diffDays <= 7 && diffDays > 0 && u.status === 'active';
+        }).length;
+
+        document.getElementById('totalUsers').textContent = total;
+        document.getElementById('activeUsers').textContent = active;
+        document.getElementById('premiumUsers').textContent = premium;
+        document.getElementById('expiringUsers').textContent = expiring;
+    }
+
+    // Update tier stats cards
+    function updateTierStatsCards() {
+        const tiersToShow = [
+            { name: 'Bronze', keys: ['bronze', 'bronze_annual'], icon: 'medal', color: 'warning' },
+            { name: 'Silver', keys: ['silver', 'silver_annual'], icon: 'medal', color: 'secondary' },
+            { name: 'Gold', keys: ['gold', 'gold_annual'], icon: 'medal', color: 'warning' },
+            { name: 'Platinum', keys: ['platinum', 'platinum_annual'], icon: 'crown', color: 'info' },
+            { name: 'Student', keys: ['student_monthly', 'student_semester', 'student_annual'], icon: 'graduation-cap', color: 'success' },
+            { name: 'Call Outreach', keys: ['call_outreach'], icon: 'phone', color: 'primary' },
+            { name: 'Paused', keys: ['pause_one_month', 'pause_two_month', 'pause_three_month'], icon: 'pause-circle', color: 'info' },
+            { name: 'Free', keys: ['free', null, undefined, ''], icon: 'user', color: 'secondary' }
+        ];
+
+        // Define roles to exclude from tier statistics
+        const excludedRoles = ['tester', 'developer', 'admin'];
+
+        const container = document.getElementById('tierStatsCards');
+        if (!container) return;
+        container.innerHTML = '';
+
+        tiersToShow.forEach(tierInfo => {
+            // Count users for this tier excluding specific roles
+            const count = users.filter(u =>
+                u.status === 'active' &&
+                tierInfo.keys.includes(u.tier) &&
+                !excludedRoles.includes(u.role)
+            ).length;
+
+            if (count > 0) {
+                const cardHtml = `
+                <div class="col-md-3">
+                    <div class="card bg-dark border-${tierInfo.color} h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted mb-1">${tierInfo.name} Users</h6>
+                                    <h3 class="mb-0 text-light">${count}</h3>
+                                </div>
+                                <div class="bg-${tierInfo.color} bg-opacity-25 p-3 rounded">
+                                    <i class="fas fa-${tierInfo.icon} fa-2x text-${tierInfo.color}"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
+                container.insertAdjacentHTML('beforeend', cardHtml);
+            }
+        });
+    }
+
+        // Update initializeDataTable function to check for jQuery
+        function initializeDataTable() {
+            if (typeof jQuery === 'undefined') {
+                return;
+            }
+
+            if (dataTable) {
+                dataTable.destroy();
+            }
+
+            try {
+                dataTable = jQuery('#usersTable').DataTable({
+                    ordering: false,
+                    pageLength: 10,
+                    order: [[0, 'asc']],
+                    dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rtip',
+                    language: {
+                        search: "",
+                        searchPlaceholder: "Search users...",
+                        emptyTable: "No users found",
+                        zeroRecords: "No matching users found"
+                    },
+                    drawCallback: function() {
+                        // Reattach event listeners after table redraw
+                        document.querySelectorAll('.manage-user').forEach(btn => {
+                            btn.addEventListener('click', () => openManageModal(btn.dataset.userId));
+                        });
+                    }
+                });
+            } catch (error) {
+                // Fallback to basic table if DataTables fails
+                const table = document.getElementById('usersTable');
+                if (table) {
+                    table.classList.add('table', 'table-dark');
+                }
+            }
+        }
+
+        // Update loadUsers function with better error handling and auth headers
+    async function loadUsers() {
+        try {
+                const response = await fetch('/api/admin/users', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin' // This ensures cookies are sent with the request
+                });
+
+                // Log the response status and headers for debugging
+
+                if (!response.ok) {
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                    } else {
+                        // If the response is not JSON, get the text and log it
+                        const text = await response.text();
+                        throw new Error(`Server error (${response.status}). Please check server logs.`);
+                    }
+                }
+
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('Server did not return JSON');
+                }
+
+                const data = await response.json();
+                users = data.users || [];
+            // Also refresh activity stats tile in parallel (non-blocking)
+            fetchActivityStats().catch(() => {});
+            const tbody = usersTable.querySelector('tbody');
+            tbody.innerHTML = '';
+
+            users.forEach(user => {
+                // Determine status based on user.status field and subscription state
+                let statusDisplay = 'Active';
+                let statusClass = 'bg-success';
+                let statusIcon = 'check-circle';
+
+                // Check both user.status and subscription state
+                const isScheduledCancelled = user.status === 's_cancelled' ||
+                    (user.subscription && (
+                        user.subscription.is_scheduled_for_cancellation ||
+                        user.subscription.payment_frequency?.includes('_scheduled_cancel')
+                    ));
+
+                if (user.status === 'cancelled') {
+                    statusDisplay = 'Cancelled';
+                    statusClass = 'bg-danger';
+                    statusIcon = 'times-circle';
+                } else if (isScheduledCancelled) {
+                    statusDisplay = 'Scheduled Cancelled';
+                    statusClass = 'bg-warning';
+                    statusIcon = 'clock';
+                } else if (user.status === 'pause') {
+                    statusDisplay = 'Paused';
+                    statusClass = 'bg-info';
+                    statusIcon = 'pause-circle';
+                } else if (!user.is_active) {
+                    statusDisplay = 'Inactive';
+                    statusClass = 'bg-secondary';
+                    statusIcon = 'ban';
+                }
+
+                const row = document.createElement('tr');
+                row.setAttribute('data-user-id', user.id); // Add this line to set data-user-id
+                row.innerHTML = `
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="avatar-circle bg-${user.role === 'admin' ? 'primary' : user.role === 'developer' ? 'info' : 'secondary'} me-2">
+                                ${user.username.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                                <div class="fw-bold">${user.username}</div>
+                                <div class="small text-muted">${user.email}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge ${statusClass} rounded-pill">
+                            <i class="fas fa-${statusIcon} me-1"></i>
+                            ${statusDisplay}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge ${user.role === 'admin' ? 'bg-primary' : user.role === 'developer' ? 'bg-info' : 'bg-secondary'} rounded-pill">
+                            <i class="fas fa-${user.role === 'admin' ? 'shield-alt' : user.role === 'developer' ? 'code' : 'user'}-me-1"></i>
+                            ${user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge ${getTierBadgeClass(user.tier)} rounded-pill">
+                            <i class="fas fa-${getTierIcon(user.tier)} me-1"></i>
+                            ${user.tier || 'Free'}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-coins text-warning me-2"></i>
+                            ${user.subscription?.credits || 0}
+                        </div>
+                    </td>
+                    <td>
+                        ${user.coupon && user.coupon.has_active_coupon ?
+                            `<div class="d-flex align-items-center">
+                                <i class="fas fa-tag text-success me-2"></i>
+                                ${user.coupon.discount_type === 'percent' ?
+                                    `${user.coupon.discount_value}%` :
+                                    `$${(user.coupon.discount_value / 100).toFixed(2)}`
+                                }
+                            </div>` :
+                            '<span class="text-muted">None</span>'
+                        }
+                    </td>
+                    <td>
+                        ${user.subscription?.expires_at ?
+                            `<div class="d-flex align-items-center">
+                                <i class="fas fa-calendar-alt text-info me-2"></i>
+                                ${new Date(user.subscription.expires_at).toLocaleDateString()}
+                            </div>` :
+                            '<span class="text-muted">N/A</span>'
+                        }
+                    </td>
+                    <td class="text-end">
+                        <button class="btn btn-manage" data-user-id="${user.id}">
+                            <i class="fas fa-cog"></i>
+                            <span class="d-none d-md-inline ms-1">Manage</span>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+
+                // Add event listener to the manage button
+                const manageBtn = row.querySelector('.btn-manage');
+                if (manageBtn) {
+                    manageBtn.addEventListener('click', () => openManageModal(user.id));
+                }
+            });
+
+            // Update stats
+            updateStats();
+            updateTierStatsCards();
+
+                // Initialize or reinitialize DataTable
+                initializeDataTable();
+
+            } catch (error) {
+                // Show more detailed error message to user
+                let errorMessage = 'Error loading users: ';
+                if (error.message.includes('401')) {
+                    errorMessage += 'Please log in again.';
+                } else if (error.message.includes('403')) {
+                    errorMessage += 'You do not have permission to access this page.';
+                } else if (error.message.includes('500')) {
+                    errorMessage += 'Server error. Please try again later or contact support.';
+                } else {
+                    errorMessage += error.message;
+                }
+                showToast(errorMessage, 'error');
+        }
+    }
+
+    // Fetch activity stats from admin API and update the tile
+    async function fetchActivityStats(days = 30) {
+        try {
+            const url = `/api/admin/users/active-stats?days=${days}`;
+            const res = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            });
+            if (!res.ok) return;
+            const payload = await res.json();
+            if (!payload || !payload.success) return;
+            const d = payload.data || {};
+            const rateEl = document.getElementById('activityRate');
+            const metaEl = document.getElementById('activityRateMeta');
+            if (rateEl) rateEl.textContent = `${Number(d.activity_rate_percentage || 0).toFixed(2)}%`;
+            if (metaEl) metaEl.textContent = `Active: ${d.active_users || 0} • Inactive: ${d.inactive_users || 0}`;
+        } catch (e) {
+            // Silent fail for admin dashboard widget
+        }
+    }
+
+    // Fetch active user list for the modal
+    async function fetchActiveUserList(days = 30) {
+        try {
+            const res = await fetch(`/api/admin/users/active-list?days=${days}`, {
+                method: 'GET',
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin'
+            });
+            if (!res.ok) return [];
+            const payload = await res.json();
+            if (!payload || !payload.success) return [];
+            return payload.users || [];
+        } catch (e) { return []; }
+    }
+
+    // Update button visibility based on subscription status
+    function updateActionButtons(user) {
+        const cancelBtn = document.getElementById('cancelSubscriptionBtn');
+        const reactivateBtn = document.getElementById('reactivateSubscriptionBtn');
+        const addCreditsBtn = document.getElementById('addCreditsBtn');
+        const applyPromoBtn = document.getElementById('applyPromoBtn');
+
+        if (cancelBtn && reactivateBtn && addCreditsBtn && applyPromoBtn) {
+            // Always show add credits button for all users
+            addCreditsBtn.style.display = 'block';
+            addCreditsBtn.disabled = false;
+
+            // Check if user has a paid subscription (not free tier)
+            const hasPaidSubscription = user.tier && user.tier !== 'free' && user.tier !== null;
+            const isActive = user.status === 'active' && user.is_active;
+            const isCanceled = user.status === 'cancelled';
+            const isScheduledCancelled = user.status === 's_cancelled' ||
+                (user.subscription && (
+                    user.subscription.is_scheduled_for_cancellation ||
+                    user.subscription.payment_frequency?.includes('_scheduled_cancel')
+                ));
+
+            // Show cancel button if user has paid subscription and not canceled
+            if (hasPaidSubscription && !isCanceled && !isScheduledCancelled) {
+                cancelBtn.style.display = 'block';
+                reactivateBtn.style.display = 'none';
+            }
+            // Show reactivate button if subscription is scheduled for cancellation
+            else if (hasPaidSubscription && isScheduledCancelled) {
+                cancelBtn.style.display = 'none';
+                reactivateBtn.style.display = 'block';
+                reactivateBtn.disabled = false;
+            }
+            // Hide both buttons in all other cases
+            else {
+                cancelBtn.style.display = 'none';
+                reactivateBtn.style.display = 'none';
+            }
+
+            if (hasPaidSubscription && isActive) {
+            applyPromoBtn.style.display = 'block';
+            applyPromoBtn.disabled = false;
+            } else {
+                applyPromoBtn.style.display = 'none';
+                applyPromoBtn.disabled = true;
+            }
+        }
+    }
+    // Function to update pause status display
+    function updatePauseStatusDisplay(user) {
+        const pauseStatusIcon = document.getElementById('pauseStatusIcon');
+        const pauseStatusText = document.getElementById('pauseStatusText');
+        const pauseStatusDetails = document.getElementById('pauseStatusDetails');
+        const pauseStatusContainer = document.getElementById('pauseStatusContainer');
+
+        if (!pauseStatusIcon || !pauseStatusText || !pauseStatusDetails || !pauseStatusContainer) return;
+
+        // Check if user subscription has pause information
+        const subscription = user.subscription || {};
+        const isPaused = subscription.is_paused || subscription.pause_status === 'active';
+        const pauseStatus = subscription.pause_status || 'none';
+        const pauseStartDate = subscription.pause_start_date;
+        const pauseEndDate = subscription.pause_end_date;
+        const pauseDurationDays = subscription.pause_duration_days;
+
+        if (isPaused && pauseStatus === 'active') {
+            // User is currently paused
+            pauseStatusIcon.className = 'fas fa-pause-circle me-2 text-warning';
+            pauseStatusText.textContent = 'Subscription Paused';
+            pauseStatusText.className = 'fw-bold text-warning';
+            pauseStatusContainer.style.background = 'rgba(255, 193, 7, 0.1)';
+            pauseStatusContainer.style.border = '1px solid rgba(255, 193, 7, 0.3)';
+
+            let detailsHtml = '<div class="text-warning">';
+            detailsHtml += '<i class="fas fa-exclamation-triangle me-1"></i>';
+            detailsHtml += 'User subscription is currently paused';
+            detailsHtml += '</div>';
+
+            if (pauseStartDate) {
+                const startDate = new Date(pauseStartDate).toLocaleDateString();
+                detailsHtml += `<div class="mt-1"><strong>Started:</strong> ${startDate}</div>`;
+            }
+
+            if (pauseDurationDays) {
+                detailsHtml += `<div><strong>Duration:</strong> ${pauseDurationDays} days</div>`;
+            }
+
+            if (pauseEndDate) {
+                const endDate = new Date(pauseEndDate).toLocaleDateString();
+                detailsHtml += `<div><strong>Ends:</strong> ${endDate}</div>`;
+
+                // Calculate remaining days
+                const today = new Date();
+                const end = new Date(pauseEndDate);
+                const remainingDays = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
+
+                if (remainingDays > 0) {
+                    detailsHtml += `<div class="text-info"><strong>Remaining:</strong> ${remainingDays} days</div>`;
+                } else if (remainingDays === 0) {
+                    detailsHtml += `<div class="text-danger"><strong>Ends today</strong></div>`;
+                } else {
+                    detailsHtml += `<div class="text-danger"><strong>Overdue by ${Math.abs(remainingDays)} days</strong></div>`;
+                }
+            }
+
+            pauseStatusDetails.innerHTML = detailsHtml;
+
+        } else if (pauseStatus === 'pending') {
+            // User has pending pause (paid but not yet activated)
+            pauseStatusIcon.className = 'fas fa-clock me-2 text-info';
+            pauseStatusText.textContent = 'Pause Pending';
+            pauseStatusText.className = 'fw-bold text-info';
+            pauseStatusContainer.style.background = 'rgba(6, 182, 212, 0.1)';
+            pauseStatusContainer.style.border = '1px solid rgba(6, 182, 212, 0.3)';
+
+            let detailsHtml = '<div class="text-info">';
+            detailsHtml += '<i class="fas fa-hourglass-half me-1"></i>';
+            detailsHtml += 'Pause subscription is pending activation';
+            detailsHtml += '</div>';
+
+            if (pauseDurationDays) {
+                detailsHtml += `<div class="mt-1"><strong>Duration:</strong> ${pauseDurationDays} days</div>`;
+            }
+
+            pauseStatusDetails.innerHTML = detailsHtml;
+
+        } else if (pauseStatus === 'completed') {
+            // User had pause but it's completed
+            pauseStatusIcon.className = 'fas fa-check-circle me-2 text-success';
+            pauseStatusText.textContent = 'Pause Completed';
+            pauseStatusText.className = 'fw-bold text-success';
+            pauseStatusContainer.style.background = 'rgba(34, 197, 94, 0.1)';
+            pauseStatusContainer.style.border = '1px solid rgba(34, 197, 94, 0.3)';
+
+            let detailsHtml = '<div class="text-success">';
+            detailsHtml += '<i class="fas fa-check me-1"></i>';
+            detailsHtml += 'Pause period has been completed';
+            detailsHtml += '</div>';
+
+            if (pauseStartDate && pauseEndDate) {
+                const startDate = new Date(pauseStartDate).toLocaleDateString();
+                const endDate = new Date(pauseEndDate).toLocaleDateString();
+                detailsHtml += `<div class="mt-1"><strong>Period:</strong> ${startDate} - ${endDate}</div>`;
+            }
+
+            pauseStatusDetails.innerHTML = detailsHtml;
+
+        } else {
+            // User is not paused (normal active subscription)
+            pauseStatusIcon.className = 'fas fa-play-circle me-2 text-success';
+            pauseStatusText.textContent = 'Not Paused';
+            pauseStatusText.className = 'fw-bold text-success';
+            pauseStatusContainer.style.background = 'rgba(34, 197, 94, 0.1)';
+            pauseStatusContainer.style.border = '1px solid rgba(34, 197, 94, 0.3)';
+
+            pauseStatusDetails.innerHTML = `
+                <div class="text-success">
+                    <i class="fas fa-check me-1"></i>
+                    Subscription is active and not paused
+                </div>
+            `;
+        }
+    }
+
+    function updateCouponDisplay(user) {
+        const activeCouponSection = document.getElementById('activeCouponSection');
+        const noCouponSection = document.getElementById('noCouponSection');
+        const couponDetails = document.getElementById('couponDetails');
+        const couponStatusIcon = document.getElementById('couponStatusIcon');
+        const couponStatusText = document.getElementById('couponStatusText');
+
+        if (!activeCouponSection || !noCouponSection || !couponDetails) return;
+
+        const coupon = user.coupon || {};
+
+        if (coupon.has_active_coupon) {
+            activeCouponSection.style.display = 'block';
+            noCouponSection.style.display = 'none';
+
+            // Update status
+            if (couponStatusIcon) {
+                couponStatusIcon.className = 'fas fa-check-circle text-success me-2';
+            }
+            if (couponStatusText) {
+                couponStatusText.textContent = 'Active Discount';
+                couponStatusText.className = 'fw-bold text-success';
+            }
+
+            // Build coupon details HTML
+            let detailsHtml = `
+                <div class="row">
+                    <div class="col-sm-6">
+                        <strong>Promo Code:</strong> ${coupon.promo_code || 'N/A'}
+                    </div>
+                    <div class="col-sm-6">
+                        <strong>Discount:</strong>
+                        ${coupon.discount_type === 'amount'
+                            ? `$${(coupon.discount_value / 100).toFixed(2)}`
+                            : `${coupon.discount_value}%`
+                        }
+                    </div>
+                </div>
+            `;
+
+            if (coupon.applied_at) {
+                const appliedDate = new Date(coupon.applied_at).toLocaleDateString();
+                detailsHtml += `
+                    <div class="row mt-2">
+                        <div class="col-sm-6">
+                            <strong>Applied:</strong> ${appliedDate}
+                        </div>
+                        <div class="col-sm-6">
+                            <strong>Expires:</strong> ${coupon.expires_at ? new Date(coupon.expires_at).toLocaleDateString() : 'Never'}
+                        </div>
+                    </div>
+                `;
+            }
+
+            couponDetails.innerHTML = detailsHtml;
+        } else {
+            activeCouponSection.style.display = 'none';
+            noCouponSection.style.display = 'block';
+        }
+    }
+
+    // Function to handle cancellation type change
+    function handleCancellationTypeChange() {
+        const cancelType = document.getElementById('cancelType');
+        const reactivateBtn = document.getElementById('reactivateSubscriptionBtn');
+
+        if (cancelType && reactivateBtn) {
+            // Only show reactivate button if period_end is selected
+            if (cancelType.value === 'period_end') {
+                reactivateBtn.style.display = 'block';
+                reactivateBtn.disabled = false;
+            } else {
+                reactivateBtn.style.display = 'none';
+                reactivateBtn.disabled = true;
+            }
+        }
+    }
+
+    // Function to open manage modal
+    function openManageModal(userId) {
+        const user = users.find(u => u.id === userId);
+        if (!user || !manageModal) return;
+
+        currentUserId = userId;
+        currentUser = user;
+
+        // Update user avatar and basic info
+        const avatarDiv = document.getElementById('modalUserAvatar');
+        if (avatarDiv) {
+            avatarDiv.className = `avatar-circle bg-${user.role === 'admin' ? 'primary' : user.role === 'developer' ? 'info' : 'secondary'}`;
+            avatarDiv.textContent = user.username.charAt(0).toUpperCase();
+        }
+
+        // Update user information
+        const elements = {
+            'modalUsername': user.username,
+            'modalEmail': user.email,
+            'modalRole': user.role.charAt(0).toUpperCase() + user.role.slice(1),
+            'modalTier': user.tier || 'Free',
+            'modalCredits': user.subscription?.credits || '0',
+            'modalCreatedAt': user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A',
+            'modalExpiresAt': user.subscription?.expires_at ? new Date(user.subscription.expires_at).toLocaleDateString() : 'N/A'
+        };
+
+        // Update pause status information
+        updatePauseStatusDisplay(user);
+        updateCouponDisplay(user);
+
+        // Update status display
+        let statusDisplay = 'Active';
+        let statusClass = 'success';
+        let statusIcon = 'check-circle';
+
+        if (user.status === 'cancelled') {
+            statusDisplay = 'Cancelled';
+            statusClass = 'danger';
+            statusIcon = 'times-circle';
+        } else if (user.status === 's_cancelled' || user.subscription?.is_scheduled_for_cancellation) {
+            statusDisplay = 'Scheduled Cancelled';
+            statusClass = 'warning';
+            statusIcon = 'clock';
+        } else if (user.status === 'pause') {
+            statusDisplay = 'Paused';
+            statusClass = 'info';
+            statusIcon = 'pause-circle';
+        } else if (!user.is_active) {
+            statusDisplay = 'Inactive';
+            statusClass = 'secondary';
+            statusIcon = 'ban';
+        }
+
+        // Update status elements
+        const statusIconEl = document.getElementById('modalStatusIcon');
+        if (statusIconEl) {
+            statusIconEl.className = `fas fa-${statusIcon} text-${statusClass} me-2`;
+        }
+
+        const statusEl = document.getElementById('modalStatus');
+        if (statusEl) {
+            statusEl.textContent = statusDisplay;
+        }
+
+        // Update role icon
+        const roleIconEl = document.getElementById('modalRoleIcon');
+        if (roleIconEl) {
+            roleIconEl.className = `fas fa-${user.role === 'admin' ? 'shield-alt' : user.role === 'developer' ? 'code' : 'user'} text-${user.role === 'admin' ? 'primary' : user.role === 'developer' ? 'info' : 'secondary'} me-2`;
+        }
+
+        // Update tier badge
+        const tierBadgeEl = document.getElementById('modalTierBadge');
+        const tierIconEl = document.getElementById('modalTierIcon');
+        if (tierBadgeEl && tierIconEl) {
+            tierBadgeEl.className = `badge ${getTierBadgeClass(user.tier)}`;
+            tierIconEl.className = `fas fa-${getTierIcon(user.tier)} me-1`;
+                }
+
+        // Update all text content
+        Object.entries(elements).forEach(([id, value]) => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = value;
+                    }
+        });
+
+        // Update email verification dropdown
+        const emailVerifiedSelect = document.getElementById('modalEmailVerified');
+        const updateEmailVerifiedBtn = document.getElementById('updateEmailVerifiedBtn');
+        if (emailVerifiedSelect) {
+            emailVerifiedSelect.value = user.is_email_verified ? 'true' : 'false';
+        }
+        if (updateEmailVerifiedBtn) {
+            updateEmailVerifiedBtn.style.display = 'none';
+        }
+
+        // Update action buttons visibility based on user status
+        updateActionButtons(user);
+
+        // Show modal
+        manageModal.show();
+    }
+
+    // Add toast notification function
+    function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center text-white bg-${type} border-0 position-fixed bottom-0 end-0 m-3`;
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+        document.body.appendChild(toast);
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+        toast.addEventListener('hidden.bs.toast', () => toast.remove());
+    }
+
+    // Event Listeners
+    document.getElementById('refreshBtn').addEventListener('click', () => { loadUsers(); fetchActivityStats(getSelectedDays()).catch(() => {}); });
+
+    // Wire up activity tile interactions
+    function getSelectedDays() {
+        const sel = document.getElementById('activityDaysSelect');
+        return sel ? parseInt(sel.value, 10) : 30;
+    }
+
+    const daysSelectEl = document.getElementById('activityDaysSelect');
+    if (daysSelectEl) {
+        daysSelectEl.addEventListener('change', () => fetchActivityStats(getSelectedDays()));
+    }
+
+    const activityTile = document.getElementById('activityRateTile');
+    const activityUsersModalEl = document.getElementById('activityUsersModal');
+    let activityUsersModal;
+    if (activityUsersModalEl) {
+        activityUsersModal = new bootstrap.Modal(activityUsersModalEl);
+    }
+    if (activityTile) {
+        activityTile.addEventListener('click', () => {
+            const days = getSelectedDays();
+            const modalDaysSelect = document.getElementById('activityDaysSelectModal');
+            if (modalDaysSelect) {
+                modalDaysSelect.value = String(days);
+            }
+            if (activityUsersModal) activityUsersModal.show();
+        });
+    }
+
+    // Load users button in modal
+    const loadUsersBtnModal = document.getElementById('loadActivityUsersBtnModal');
+    if (loadUsersBtnModal) {
+        loadUsersBtnModal.addEventListener('click', async () => {
+            const modalDaysSelect = document.getElementById('activityDaysSelectModal');
+            const days = modalDaysSelect ? parseInt(modalDaysSelect.value, 10) || 30 : 30;
+            const list = await fetchActiveUserList(days);
+            populateActivityUsersTable(list);
+
+            // sync the tile's selector
+            const tileSel = document.getElementById('activityDaysSelect');
+            if (tileSel) tileSel.value = String(days);
+            fetchActivityStats(days).catch(() => {});
+        });
+    }
+
+    // Search functionality
+    const searchInput = document.getElementById('activityUsersSearch');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const tbody = document.getElementById('activityUsersTbody');
+            const rows = tbody ? tbody.querySelectorAll('tr') : [];
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                const isVisible = text.includes(searchTerm);
+                row.style.display = isVisible ? '' : 'none';
+                if (isVisible) visibleCount++;
+            });
+
+            // Update counter
+            const counterEl = document.getElementById('activityUsersCounter');
+            if (counterEl) {
+                counterEl.textContent = `${visibleCount} of ${rows.length}`;
+            }
+        });
+    }
+
+    // Function to populate the activity users table
+    function populateActivityUsersTable(users) {
+        const tbody = document.getElementById('activityUsersTbody');
+        const counterEl = document.getElementById('activityUsersCounter');
+
+        if (tbody) {
+            tbody.innerHTML = '';
+            users.forEach(u => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${u.username || '-'}</td>
+                    <td>${u.email || '-'}</td>
+                    <td>${u.role || '-'}</td>
+                    <td>${u.last_login_at ? new Date(u.last_login_at).toLocaleString() : '—'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Update counter
+            if (counterEl) {
+                counterEl.textContent = `${users.length} of ${users.length}`;
+            }
+        }
+    }
+
+    // Add event listeners only if elements exist
+    const cancelBtn = document.getElementById('cancelSubscriptionBtn');
+    const reactivateBtn = document.getElementById('reactivateSubscriptionBtn');
+    const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+    const confirmReactivateBtn = document.getElementById('confirmReactivateBtn');
+    const addCreditsBtn = document.getElementById('addCreditsBtn');
+    const confirmAddCreditsBtn = document.getElementById('confirmAddCreditsBtn');
+
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', function() {
+            if (!currentUser || !cancelConfirmModal) return;
+            cancelConfirmModal.show();
+        });
+    }
+
+    if (reactivateBtn) {
+        reactivateBtn.addEventListener('click', function() {
+            if (!currentUser || !reactivateConfirmModal) return;
+            reactivateConfirmModal.show();
+        });
+    }
+
+    if (addCreditsBtn) {
+        addCreditsBtn.addEventListener('click', function() {
+            if (!currentUser || !addCreditsModal) return;
+
+            // Update modal content
+            const usernameEl = document.getElementById('addCreditsUsername');
+            const currentCreditsEl = document.getElementById('currentCreditsDisplay');
+            if (usernameEl) usernameEl.textContent = currentUser.username;
+            if (currentCreditsEl) currentCreditsEl.textContent = currentUser.subscription?.credits || 0;
+
+            addCreditsModal.show();
+        });
+    }
+
+    // Add event listener for cancellation type change
+    const cancelTypeSelect = document.getElementById('cancelType');
+    if (cancelTypeSelect) {
+        cancelTypeSelect.addEventListener('change', handleCancellationTypeChange);
+    }
+
+    // Add event listener for email verification dropdown
+    const emailVerifiedSelect = document.getElementById('modalEmailVerified');
+    const updateEmailVerifiedBtn = document.getElementById('updateEmailVerifiedBtn');
+
+    if (emailVerifiedSelect) {
+        emailVerifiedSelect.addEventListener('change', function() {
+            // Show the update button when dropdown value changes
+            if (updateEmailVerifiedBtn) {
+                updateEmailVerifiedBtn.style.display = 'inline-block';
+            }
+        });
+    }
+
+    if (updateEmailVerifiedBtn) {
+        updateEmailVerifiedBtn.addEventListener('click', async function() {
+            const thisButton = this;
+            const emailVerifiedSelect = document.getElementById('modalEmailVerified');
+
+            if (!currentUser || !emailVerifiedSelect) return;
+
+            const newStatus = emailVerifiedSelect.value === 'true';
+            const statusText = newStatus ? 'verified' : 'unverified';
+
+            // Show confirmation dialog
+            const confirmed = confirm(`Are you sure you want to mark ${currentUser.username}'s email as ${statusText}?`);
+
+            if (!confirmed) {
+                // Reset dropdown to original value
+                emailVerifiedSelect.value = currentUser.is_email_verified ? 'true' : 'false';
+                thisButton.style.display = 'none';
+                return;
+            }
+
+            try {
+                thisButton.classList.add('loading');
+                thisButton.disabled = true;
+
+                // Call API to update email verification status
+                const response = await fetch(`/api/admin/users/${currentUser.id}/set_email_verified`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        is_email_verified: newStatus
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to update email verification status');
+                }
+
+                // Update current user data
+                currentUser.is_email_verified = newStatus;
+
+                // Hide the update button
+                thisButton.style.display = 'none';
+
+                showToast(data.message || `Email verification status updated successfully`, 'success');
+            } catch (error) {
+                // Reset dropdown to original value on error
+                emailVerifiedSelect.value = currentUser.is_email_verified ? 'true' : 'false';
+                thisButton.style.display = 'none';
+                showToast(error.message || 'Failed to update email verification status', 'danger');
+            } finally {
+                if (thisButton) {
+                    thisButton.classList.remove('loading');
+                    thisButton.disabled = false;
+                }
+            }
+        });
+    }
+
+    if (confirmCancelBtn) {
+        confirmCancelBtn.addEventListener('click', async function() {
+            const thisButton = this; // Store button reference properly
+            try {
+                thisButton.classList.add('loading');
+                thisButton.disabled = true;
+
+                const cancelType = document.getElementById('cancelType').value;
+                const feedback = document.getElementById('cancelFeedback').value;
+
+                // Use admin endpoint to cancel user subscription
+                const response = await fetch(`/api/auth/user/${currentUser.id}/cancel_subscription`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        cancellation_type: cancelType,
+                        feedback: feedback,
+                        comment: feedback // Use feedback as comment
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to cancel subscription');
+                }
+
+                // Hide cancel confirmation modal and restore focus properly
+                if (cancelConfirmModal) {
+                    // Remove aria-hidden before hiding
+                    const modalElement = document.getElementById('cancelConfirmModal');
+                    if (modalElement) {
+                        modalElement.removeAttribute('aria-hidden');
+                    }
+                    cancelConfirmModal.hide();
+                }
+
+                // Close manage modal first to ensure clean state
+                if (manageModal) {
+                    manageModal.hide();
+                }
+
+                // Wait a bit for modals to close properly
+                await new Promise(resolve => setTimeout(resolve, 300));
+
+                // Reload users to get updated data
+                await loadUsers();
+
+                // Wait a bit more for data to be fully loaded
+                await new Promise(resolve => setTimeout(resolve, 200));
+
+                // Find and update current user data from the refreshed users array
+                const updatedUser = users.find(u => u.id === currentUser.id);
+                if (updatedUser) {
+                    currentUser = updatedUser;
+                    // Update modal content with new data
+                    openManageModal(currentUser.id);
+                } else {
+                    // If user not found in updated list, show error
+                    showToast('User data could not be updated. Please refresh the page.', 'warning');
+                }
+
+                showToast(data.message || 'Subscription cancelled successfully', 'success');
+            } catch (error) {
+                showToast(error.message || 'Failed to cancel subscription', 'danger');
+            } finally {
+                if (thisButton) {
+                    thisButton.classList.remove('loading');
+                    thisButton.disabled = false;
+                }
+            }
+        });
+    }
+
+    if (confirmReactivateBtn) {
+        confirmReactivateBtn.addEventListener('click', async function() {
+            const thisButton = this;
+            try {
+                thisButton.classList.add('loading');
+                thisButton.disabled = true;
+
+                // Use admin endpoint to reactivate user subscription
+                const response = await fetch(`/api/auth/user/${currentUser.id}/reactivate_subscription`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to reactivate subscription');
+                }
+
+                // Hide reactivate confirmation modal
+                if (reactivateConfirmModal) {
+                    reactivateConfirmModal.hide();
+                }
+
+                // Close manage modal first to ensure clean state
+                if (manageModal) {
+                    manageModal.hide();
+                }
+
+                // Wait a bit for modals to close properly
+                await new Promise(resolve => setTimeout(resolve, 300));
+
+                // Reload users to get updated data
+                await loadUsers();
+
+                // Wait a bit more for data to be fully loaded
+                await new Promise(resolve => setTimeout(resolve, 200));
+
+                // Find and update current user data from the refreshed users array
+                const updatedUser = users.find(u => u.id === currentUser.id);
+                if (updatedUser) {
+                    currentUser = updatedUser;
+                    // Update modal content with new data
+                    openManageModal(currentUser.id);
+                } else {
+                    // If user not found in updated list, show error
+                    showToast('User data could not be updated. Please refresh the page.', 'warning');
+                }
+
+                showToast(data.message || 'Subscription reactivated successfully', 'success');
+            } catch (error) {
+                showToast(error.message || 'Failed to reactivate subscription', 'danger');
+            } finally {
+                if (thisButton) {
+                    thisButton.classList.remove('loading');
+                    thisButton.disabled = false;
+                }
+            }
+        });
+    }
+
+    if (confirmAddCreditsBtn) {
+        confirmAddCreditsBtn.addEventListener('click', async function() {
+            const thisButton = this;
+            try {
+                thisButton.classList.add('loading');
+                thisButton.disabled = true;
+
+                const creditsToAdd = parseInt(document.getElementById('creditsToAdd').value);
+                const reason = document.getElementById('addCreditsReason').value;
+
+                if (!creditsToAdd || creditsToAdd <= 0) {
+                    throw new Error('Please enter a valid number of credits (greater than 0)');
+                }
+
+                // Use admin endpoint to add credits to user
+                const response = await fetch(`/api/admin/users/${currentUser.id}/add_credits`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        credits: creditsToAdd,
+                        reason: reason || 'Admin credit addition'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to add credits');
+                }
+
+                // Hide add credits modal
+                if (addCreditsModal) {
+                    addCreditsModal.hide();
+                }
+
+                // Update the user's credits in the users array
+                const userIndex = users.findIndex(u => u.id === currentUser.id);
+                if (userIndex !== -1) {
+                    // Update the credits in the users array
+                    users[userIndex].subscription = {
+                        ...users[userIndex].subscription,
+                        credits: (users[userIndex].subscription?.credits || 0) + creditsToAdd
+                    };
+
+                    // Update the table row directly
+                    const row = document.querySelector(`#usersTable tr[data-user-id="${currentUser.id}"]`);
+                    if (row) {
+                        const creditsCell = row.querySelector('td:nth-child(5)');
+                        if (creditsCell) {
+                            creditsCell.innerHTML = `
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-coins text-warning me-2"></i>
+                                    ${users[userIndex].subscription?.credits || 0}
+                                </div>
+                            `;
+                        }
+                    }
+
+                    // Update the modal if it's open
+                    const modalCredits = document.getElementById('modalCredits');
+                    if (modalCredits) {
+                        modalCredits.textContent = users[userIndex].subscription?.credits || 0;
+                    }
+
+                    // Update current user data
+                    currentUser = users[userIndex];
+                }
+
+                showToast(data.message || 'Credits added successfully', 'success');
+            } catch (error) {
+                showToast(error.message || 'Failed to add credits', 'danger');
+            } finally {
+                if (thisButton) {
+                    thisButton.classList.remove('loading');
+                    thisButton.disabled = false;
+                }
+            }
+        });
+    }
+
+    // Add modal event listeners for proper focus management
+    if (cancelConfirmModalElement) {
+        cancelConfirmModalElement.addEventListener('hidden.bs.modal', function () {
+            // Remove aria-hidden when modal is hidden
+            this.removeAttribute('aria-hidden');
+            // Reset form fields
+            const cancelType = document.getElementById('cancelType');
+            const cancelFeedback = document.getElementById('cancelFeedback');
+            if (cancelType) cancelType.value = 'immediate';
+            if (cancelFeedback) cancelFeedback.value = '';
+
+            // Remove loading states from buttons
+            const buttons = this.querySelectorAll('button');
+            buttons.forEach(btn => {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            });
+
+            // Reset reactivate button visibility
+            const reactivateBtn = document.getElementById('reactivateSubscriptionBtn');
+            if (reactivateBtn) {
+                reactivateBtn.style.display = 'none';
+                reactivateBtn.disabled = true;
+            }
+        });
+
+        cancelConfirmModalElement.addEventListener('show.bs.modal', function () {
+            // Ensure first focusable element gets focus
+            const firstFocusable = this.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+            if (firstFocusable) {
+                firstFocusable.focus();
+            }
+
+            // Initialize reactivate button visibility based on current selection
+            handleCancellationTypeChange();
+        });
+    }
+
+    if (reactivateConfirmModalElement) {
+        reactivateConfirmModalElement.addEventListener('hidden.bs.modal', function () {
+            // Remove loading state from confirm button
+            const confirmBtn = document.getElementById('confirmReactivateBtn');
+            if (confirmBtn) {
+                confirmBtn.classList.remove('loading');
+                confirmBtn.disabled = false;
+            }
+        });
+
+        reactivateConfirmModalElement.addEventListener('show.bs.modal', function () {
+            // Ensure first focusable element gets focus
+            const firstFocusable = this.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+            if (firstFocusable) {
+                firstFocusable.focus();
+            }
+        });
+    }
+
+    if (addCreditsModalElement) {
+        addCreditsModalElement.addEventListener('hidden.bs.modal', function () {
+            // Remove loading state from confirm button
+            const confirmBtn = document.getElementById('confirmAddCreditsBtn');
+            if (confirmBtn) {
+                confirmBtn.classList.remove('loading');
+                confirmBtn.disabled = false;
+            }
+        });
+
+        addCreditsModalElement.addEventListener('show.bs.modal', function () {
+            // Ensure first focusable element gets focus
+            const firstFocusable = this.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+            if (firstFocusable) {
+                firstFocusable.focus();
+            }
+        });
+    }
+
+    // Add Workspace Credit Button Event
+    const addWorkspaceCreditBtn = document.getElementById('addWorkspaceCreditBtn');
+    if (addWorkspaceCreditBtn) {
+        addWorkspaceCreditBtn.addEventListener('click', function() {
+            if (addWorkspaceCreditModal) {
+                addWorkspaceCreditModal.show();
+            }
+        });
+    }
+
+    // Confirm Add Workspace Credit Button Event
+    const confirmAddWorkspaceCreditBtn = document.getElementById('confirmAddWorkspaceCreditBtn');
+    if (confirmAddWorkspaceCreditBtn) {
+        confirmAddWorkspaceCreditBtn.addEventListener('click', async function() {
+            const thisButton = this;
+            try {
+                thisButton.classList.add('loading');
+                thisButton.disabled = true;
+
+                const email = document.getElementById('workspaceEmail').value.trim();
+
+                if (!email) {
+                    throw new Error('Please enter a valid email address');
+                }
+
+                // Email validation
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    throw new Error('Please enter a valid email format');
+                }
+
+                // Call the new API endpoint
+                const response = await fetch('/api/admin/add-credits-by-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        email: email
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to add credits');
+                }
+
+                // Hide modal
+                if (addWorkspaceCreditModal) {
+                    addWorkspaceCreditModal.hide();
+                }
+
+                // Show success message with details
+                showToast(`Successfully added 2000 credits to ${data.target_user} (${data.target_email})`, 'success');
+
+                // Refresh the user list to reflect changes
+                if (typeof loadUsers === 'function') {
+                    loadUsers();
+                }
+
+            } catch (error) {
+                showToast(error.message || 'Failed to add credits', 'danger');
+            } finally {
+                if (thisButton) {
+                    thisButton.classList.remove('loading');
+                    thisButton.disabled = false;
+                }
+            }
+        });
+    }
+
+    const syncCouponsBtn = document.getElementById('syncCouponsBtn');
+    if (syncCouponsBtn) {
+        syncCouponsBtn.addEventListener('click', async function() {
+            const thisButton = this;
+            try {
+                thisButton.classList.add('loading');
+                thisButton.disabled = true;
+
+                const response = await fetch('/api/coupons/sync-db', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to sync coupons');
+                }
+
+                showToast(data.message || 'Coupons synced successfully', 'success');
+
+                // Refresh the user list to reflect changes
+                loadUsers();
+
+            } catch (error) {
+                showToast(error.message || 'Failed to sync coupons', 'danger');
+            } finally {
+                if (thisButton) {
+                    thisButton.classList.remove('loading');
+                    thisButton.disabled = false;
+                }
+            }
+        });
+    }
+
+    // Apply Promo Code Button Event
+    const applyPromoBtn = document.getElementById('applyPromoBtn');
+    if (applyPromoBtn) {
+        applyPromoBtn.addEventListener('click', function() {
+            if (!currentUser) return;
+
+            // Redirect to the existing apply promo code page
+            window.open(`/coupons/apply-promo-to-user/${currentUser.id}`, '_blank');
+        });
+    }
+
+    // Initial load
+    loadUsers();
+    fetchActivityStats(getSelectedDays()).catch(() => {});
+    } catch (error) {
+        document.getElementById('usersTable').innerHTML = '<div class="alert alert-danger">Error initializing table. Please refresh the page or contact support.</div>';
+    }
+});
+
+$(document).ready(function() {
+    // after DataTables finish rendering, move info to before pagination and wrap in flex container
+    var dtWrapper = $('.dataTables_wrapper');
+    var info = dtWrapper.find('.dataTables_info');
+    var paginate = dtWrapper.find('.dataTables_paginate');
+    if (info.length && paginate.length) {
+        // Buat flex container jika belum ada
+        if (dtWrapper.find('.dt-pagination-bar').length === 0) {
+            var flexBar = $('<div class="dt-pagination-bar"></div>');
+            info.appendTo(flexBar);
+            paginate.appendTo(flexBar);
+            dtWrapper.append(flexBar);
+        } else {
+            var flexBar = dtWrapper.find('.dt-pagination-bar');
+            info.appendTo(flexBar);
+            paginate.appendTo(flexBar);
+        }
+        info.css({display: 'inline-flex', 'align-items': 'center', 'margin-right': '0'});
+    }
+});
+</script>
+{% endblock %}

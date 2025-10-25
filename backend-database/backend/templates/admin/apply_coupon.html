@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}Apply Promo Code to User{% endblock %}
+
+{% block additional_styles %}
+{{ super() }}
+<style>
+    /* Using styles from your examples for consistency */
+    .main-content {
+        max-width: 800px;
+        margin: 2rem auto;
+    }
+    .user-info-card, .promo-form-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        padding: 1.5rem;
+    }
+    .user-info-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    .avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+    .user-details h5 {
+        margin: 0;
+        font-weight: 600;
+        color: var(--text-color);
+    }
+    .user-details p {
+        margin: 0;
+        color: var(--text-muted);
+    }
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+    .info-item {
+        background: var(--background-color);
+        padding: 0.75rem;
+        border-radius: 8px;
+    }
+    .info-item .label {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        display: block;
+    }
+    .info-item .value {
+        font-size: 1rem;
+        font-weight: 500;
+        color: var(--text-color);
+    }
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+    .form-control {
+        background: var(--background-color);
+        color: var(--text-color);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+    }
+    .form-control:focus {
+        background: var(--background-color);
+        color: var(--text-color);
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px rgba(58, 129, 123, 0.25);
+    }
+    .btn-primary {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    .btn-primary:hover {
+        opacity: 0.9;
+    }
+    .alert-warning {
+        background-color: rgba(245, 158, 11, 0.2);
+        color: #f59e0b;
+        border: 1px solid #f59e0b;
+    }
+    .alert-danger {
+        background-color: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+        border: 1px solid #ef4444;
+    }
+    .alert-success {
+        background-color: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+        border: 1px solid #22c55e;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid main-content">
+    <h1 class="page-title">
+        Apply Promotion Code
+        <div class="title-line"></div>
+    </h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="user-info-card">
+        <div class="user-info-header">
+            <div class="avatar">{{ user.username[0]|upper }}</div>
+            <div class="user-details">
+                <h5>{{ user.username }}</h5>
+                <p>{{ user.email }}</p>
+            </div>
+        </div>
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="label">User Role</span>
+                <span class="value">{{ user.role|capitalize }}</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Current Tier</span>
+                <span class="value">{{ user.tier|capitalize }}</span>
+            </div>
+            {% if subscription %}
+                <div class="info-item">
+                    <span class="label">Subscription Plan</span>
+                    <span class="value">{{ subscription.plan_name or 'N/A' }}</span>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="promo-form-card">
+        <h5>Apply Code</h5>
+        <hr style="border-color: var(--border-color); margin: 1rem 0;">
+
+        {% if subscription %}
+        <form method="POST" action="{{ url_for('coupon.apply_promo_to_user', user_id=user.user_id) }}">
+            <div class="form-group">
+                <label for="promo_code" class="form-label">Promotion Code</label>
+                <input type="text" class="form-control" id="promo_code" name="promo_code" placeholder="Enter Stripe Promo Code" required>
+            </div>
+            <div class="d-grid gap-2 d-sm-flex">
+                <button type="submit" class="btn btn-primary flex-grow-1">Apply Code</button>
+                <a href="{{ url_for('user_management.user_management') }}" class="btn btn-outline-secondary flex-grow-1">Cancel</a>
+            </div>
+        </form>
+        {% else %}
+        <div class="alert alert-warning" role="alert">
+            <strong>No Subscription Found:</strong> This user does not have an active subscription. A promotion code cannot be applied.
+        </div>
+        <form>
+            <fieldset disabled>
+                <div class="form-group">
+                    <label for="promo_code_disabled" class="form-label">Promotion Code</label>
+                    <input type="text" class="form-control" id="promo_code_disabled" placeholder="No subscription available">
+                </div>
+                <div class="d-grid gap-2 d-sm-flex">
+                    <button type="submit" class="btn btn-primary flex-grow-1">Apply Code</button>
+                    <a href="{{ url_for('user_management.user_management') }}" class="btn btn-outline-secondary flex-grow-1">Cancel</a>
+                </div>
+            </fieldset>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

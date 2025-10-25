@@ -1,0 +1,808 @@
+{% extends "base.html" %}
+
+{% block title %}Task Submissions - Notifications{% endblock %}
+
+{% block additional_styles %}
+{{ super() }}
+<style>
+    .submissions-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+        background: var(--card-bg);
+        min-height: 100vh;
+    }
+    
+    .page-header {
+        background: var(--card-bg);
+        border-bottom: 1px solid var(--border-color);
+        padding: 1.5rem 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .page-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-color);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .submission-stats {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .stat-card {
+        background: var(--bg-color);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1rem;
+        text-align: center;
+        min-width: 120px;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .submissions-grid {
+        display: grid;
+        gap: 1.5rem;
+        margin-top: 2rem;
+    }
+    
+    .submission-card {
+        background: var(--bg-color);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .submission-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .submission-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+    
+    .submission-info {
+        flex: 1;
+    }
+    
+    .submission-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-color);
+        margin: 0 0 0.5rem 0;
+    }
+    
+    .submission-meta {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+    }
+    
+    .submission-type-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .type-completion { background: #28a745; color: white; }
+    .type-review { background: #ffc107; color: #212529; }
+    .type-approval { background: #dc3545; color: white; }
+    .type-update { background: #17a2b8; color: white; }
+    
+    .submission-status {
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-pending { background: #667eea; color: white; }
+    .status-under_review { background: #ffc107; color: #212529; }
+    .status-approved { background: #28a745; color: white; }
+    .status-rejected { background: #dc3545; color: white; }
+    
+    .submission-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .btn-action {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-approve {
+        background: #28a745;
+        color: white;
+    }
+    
+    .btn-approve:hover {
+        background: #218838;
+        transform: translateY(-1px);
+    }
+    
+    .btn-reject {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .btn-reject:hover {
+        background: #c82333;
+        transform: translateY(-1px);
+    }
+    
+    .btn-review {
+        background: #ffc107;
+        color: #212529;
+    }
+    
+    .btn-review:hover {
+        background: #e0a800;
+        transform: translateY(-1px);
+    }
+    
+    .btn-view {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .btn-view:hover {
+        background: var(--secondary-color);
+        transform: translateY(-1px);
+    }
+    
+    .submission-content {
+        margin-top: 1rem;
+    }
+    
+    .task-info {
+        background: rgba(var(--primary-color-rgb), 0.1);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .task-title {
+        font-weight: 600;
+        color: var(--text-color);
+        margin: 0 0 0.5rem 0;
+    }
+    
+    .task-description {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        margin: 0;
+    }
+    
+    .submission-message {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .message-label {
+        font-weight: 600;
+        color: var(--text-color);
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .message-content {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        line-height: 1.5;
+        margin: 0;
+    }
+    
+    .submitter-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+    }
+    
+    .submitter-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1rem;
+        font-weight: bold;
+    }
+    
+    .submitter-details {
+        flex: 1;
+    }
+    
+    .submitter-name {
+        font-weight: 600;
+        color: var(--text-color);
+        margin: 0;
+    }
+    
+    .submitter-email {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        margin: 0;
+    }
+    
+    .submission-time {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: var(--text-muted);
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+    
+    .empty-state h3 {
+        margin: 0 0 0.5rem 0;
+        color: var(--text-color);
+    }
+    
+    .empty-state p {
+        margin: 0;
+        font-size: 1.1rem;
+    }
+    
+    .filter-bar {
+        background: var(--bg-color);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .filter-controls {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .filter-label {
+        font-weight: 600;
+        color: var(--text-color);
+        font-size: 0.875rem;
+    }
+    
+    .filter-select {
+        padding: 0.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: var(--card-bg);
+        color: var(--text-color);
+        font-size: 0.875rem;
+    }
+    
+    @media (max-width: 768px) {
+        .submissions-container {
+            padding: 1rem;
+        }
+        
+        .page-header {
+            padding: 1rem;
+        }
+        
+        .header-content {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        
+        .submission-stats {
+            justify-content: center;
+        }
+        
+        .submission-header {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .submission-actions {
+            justify-content: flex-start;
+        }
+        
+        .filter-controls {
+            flex-direction: column;
+            align-items: stretch;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="submissions-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <div>
+                <h1 class="page-title">
+                    <i class="fas fa-bell"></i>
+                    Task Submissions
+                </h1>
+                <p style="color: var(--text-muted); margin: 0.5rem 0 0 0;">
+                    Review and manage task submissions from team members
+                </p>
+            </div>
+            <div class="submission-stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="pendingCount">0</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="reviewCount">0</div>
+                    <div class="stat-label">Under Review</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalCount">0</div>
+                    <div class="stat-label">Total</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+        <div class="filter-controls">
+            <div class="filter-group">
+                <label class="filter-label">Status:</label>
+                <select id="statusFilter" class="filter-select" onchange="filterSubmissions()">
+                    <option value="">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="under_review">Under Review</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Type:</label>
+                <select id="typeFilter" class="filter-select" onchange="filterSubmissions()">
+                    <option value="">All Types</option>
+                    <option value="completion">Completion</option>
+                    <option value="review">Review</option>
+                    <option value="approval">Approval</option>
+                    <option value="update">Update</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Sort:</label>
+                <select id="sortFilter" class="filter-select" onchange="filterSubmissions()">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="submitter">By Submitter</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Submissions Grid -->
+    <div class="submissions-grid" id="submissionsGrid">
+        <div class="empty-state">
+            <i class="fas fa-spinner fa-spin"></i>
+            <h3>Loading submissions...</h3>
+            <p>Please wait while we fetch the latest submissions</p>
+        </div>
+    </div>
+</div>
+
+<!-- Review Modal -->
+<div id="reviewModal" class="modal" style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.75);">
+    <div class="modal-dialog" style="margin: 5% auto; max-width: 500px; max-height: 90vh; overflow-y: auto; width: 90%;">
+        <div class="modal-content" style="padding: 0; border-radius: 18px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); background: var(--card-bg); color: var(--text-color); animation: fadeInUp 0.3s;">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding: 24px 32px 12px 32px;">
+                <h4 class="modal-title" style="font-weight: 700; font-size: 1.5rem; color: var(--primary-color); letter-spacing: 1px;">
+                    <i class="fas fa-check-circle"></i>
+                    Review Submission
+                </h4>
+                <button type="button" class="btn-close" onclick="closeReviewModal()" style="font-size: 2rem; background: none; border: none; color: var(--text-muted); cursor: pointer;">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 24px 32px 32px 32px;">
+                <div style="margin-bottom: 1.5rem;">
+                    <h5 style="color: var(--text-color); margin-bottom: 1rem;">Submission Details</h5>
+                    <div id="reviewSubmissionInfo" style="background: var(--bg-color); border-radius: 8px; padding: 1rem;">
+                        <!-- Submission info will be loaded here -->
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: var(--text-color); font-weight: 500;">Action</label>
+                    <select id="reviewAction" onchange="toggleActualHoursField()" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-color); color: var(--text-color); font-size: 0.875rem;">
+                        <option value="approve">Approve</option>
+                        <option value="reject">Reject</option>
+                        <option value="under_review">Mark as Under Review</option>
+                    </select>
+                </div>
+                
+                <div id="actualHoursField" style="margin-bottom: 1.5rem; display: none;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: var(--text-color); font-weight: 500;">Actual Hours (Optional)</label>
+                    <input type="number" id="reviewActualHours" step="0.1" min="0" placeholder="Enter actual hours spent..." style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-color); color: var(--text-color); font-size: 0.875rem;" />
+                    <small style="color: var(--text-muted); font-size: 0.75rem;">Only used when approving completion submissions</small>
+                </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: var(--text-color); font-weight: 500;">Notes (Optional)</label>
+                    <textarea id="reviewNotes" rows="4" placeholder="Add your review notes..." style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-color); color: var(--text-color); font-size: 0.875rem; resize: vertical;"></textarea>
+                </div>
+                
+                <div class="form-actions" style="display: flex; gap: 1rem; justify-content: end;">
+                    <button type="button" onclick="closeReviewModal()" style="background: var(--bg-color); color: var(--text-color); border: 1px solid var(--border-color); padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 500;">Cancel</button>
+                    <button type="button" onclick="submitReview()" style="background: var(--primary-color); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 500;">Submit Review</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+let currentSubmissions = [];
+let currentSubmissionId = null;
+
+// Load submissions on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadSubmissions();
+});
+
+async function loadSubmissions() {
+    try {
+        const workspaceId = '{{ workspace.workspace_id if workspace else "" }}';
+        if (!workspaceId) {
+            showAlert('Workspace ID not found', 'danger');
+            return;
+        }
+        
+        const response = await fetch(`/api/task-submission/workspace/${workspaceId}/pending`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to load submissions');
+        }
+        
+        const data = await response.json();
+        currentSubmissions = data.submissions || [];
+        
+        updateStats();
+        renderSubmissions(currentSubmissions);
+        
+    } catch (error) {
+        showAlert('Failed to load submissions', 'danger');
+        renderEmptyState('Failed to load submissions');
+    }
+}
+
+function updateStats() {
+    const pending = currentSubmissions.filter(s => s.status === 'pending').length;
+    const underReview = currentSubmissions.filter(s => s.status === 'under_review').length;
+    const total = currentSubmissions.length;
+    
+    document.getElementById('pendingCount').textContent = pending;
+    document.getElementById('reviewCount').textContent = underReview;
+    document.getElementById('totalCount').textContent = total;
+}
+
+function renderSubmissions(submissions) {
+    const grid = document.getElementById('submissionsGrid');
+    
+    if (!submissions || submissions.length === 0) {
+        renderEmptyState('No submissions found');
+        return;
+    }
+    
+    const submissionsHtml = submissions.map(submission => {
+        const task = submission.task;
+        const submitter = submission.submitter;
+        const submissionDate = new Date(submission.submitted_at).toLocaleDateString();
+        const submissionTime = new Date(submission.submitted_at).toLocaleTimeString();
+        
+        return `
+            <div class="submission-card" data-submission-id="${submission.submission_id}" data-status="${submission.status}" data-type="${submission.submission_type}">
+                <div class="submission-header">
+                    <div class="submission-info">
+                        <h3 class="submission-title">${task.title}</h3>
+                        <div class="submission-meta">
+                            <span class="submission-type-badge type-${submission.submission_type}">${submission.submission_type.replace('_', ' ')}</span>
+                            <span class="submission-status status-${submission.status}">${submission.status.replace('_', ' ')}</span>
+                            <span>•</span>
+                            <span>${submissionDate} at ${submissionTime}</span>
+                        </div>
+                    </div>
+                    <div class="submission-actions">
+                        <button class="btn-action btn-view" onclick="viewSubmission('${submission.submission_id}')" title="View Details">
+                            <i class="fas fa-eye"></i>
+                            View
+                        </button>
+                        ${submission.status === 'pending' ? `
+                            <button class="btn-action btn-approve" onclick="openReviewModal('${submission.submission_id}', 'approve')" title="Approve">
+                                <i class="fas fa-check"></i>
+                                Approve
+                            </button>
+                            <button class="btn-action btn-reject" onclick="openReviewModal('${submission.submission_id}', 'reject')" title="Reject">
+                                <i class="fas fa-times"></i>
+                                Reject
+                            </button>
+                            <button class="btn-action btn-review" onclick="openReviewModal('${submission.submission_id}', 'under_review')" title="Mark Under Review">
+                                <i class="fas fa-clock"></i>
+                                Review
+                            </button>
+                        ` : ''}
+                        ${submission.status === 'under_review' ? `
+                            <button class="btn-action btn-approve" onclick="openReviewModal('${submission.submission_id}', 'approve')" title="Approve">
+                                <i class="fas fa-check"></i>
+                                Approve
+                            </button>
+                            <button class="btn-action btn-reject" onclick="openReviewModal('${submission.submission_id}', 'reject')" title="Reject">
+                                <i class="fas fa-times"></i>
+                                Reject
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+                
+                <div class="submission-content">
+                    <div class="task-info">
+                        <h4 class="task-title">${task.title}</h4>
+                        <p class="task-description">${task.description || 'No description provided'}</p>
+                        <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+                            <span style="background: #667eea; color: white; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.7rem; font-weight: 500;">${task.status.replace('_', ' ')}</span>
+                            <span style="background: #ff6b6b; color: white; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.7rem; font-weight: 500;">${task.priority}</span>
+                        </div>
+                    </div>
+                    
+                    ${submission.message ? `
+                        <div class="submission-message">
+                            <div class="message-label">Message from submitter:</div>
+                            <p class="message-content">${submission.message}</p>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="submitter-info">
+                        <div class="submitter-avatar">
+                            ${submitter.username ? submitter.username.substring(0, 2).toUpperCase() : 'U'}
+                        </div>
+                        <div class="submitter-details">
+                            <h5 class="submitter-name">${submitter.username}</h5>
+                            <p class="submitter-email">${submitter.email}</p>
+                        </div>
+                        <div class="submission-time">
+                            ${submissionDate}<br>${submissionTime}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    grid.innerHTML = submissionsHtml;
+}
+
+function renderEmptyState(message) {
+    const grid = document.getElementById('submissionsGrid');
+    grid.innerHTML = `
+        <div class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <h3>No Submissions</h3>
+            <p>${message}</p>
+        </div>
+    `;
+}
+
+function filterSubmissions() {
+    const statusFilter = document.getElementById('statusFilter').value;
+    const typeFilter = document.getElementById('typeFilter').value;
+    const sortFilter = document.getElementById('sortFilter').value;
+    
+    let filtered = [...currentSubmissions];
+    
+    // Apply status filter
+    if (statusFilter) {
+        filtered = filtered.filter(s => s.status === statusFilter);
+    }
+    
+    // Apply type filter
+    if (typeFilter) {
+        filtered = filtered.filter(s => s.submission_type === typeFilter);
+    }
+    
+    // Apply sort
+    if (sortFilter === 'oldest') {
+        filtered.sort((a, b) => new Date(a.submitted_at) - new Date(b.submitted_at));
+    } else if (sortFilter === 'newest') {
+        filtered.sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at));
+    } else if (sortFilter === 'submitter') {
+        filtered.sort((a, b) => a.submitter.username.localeCompare(b.submitter.username));
+    }
+    
+    renderSubmissions(filtered);
+}
+
+function viewSubmission(submissionId) {
+    const submission = currentSubmissions.find(s => s.submission_id === submissionId);
+    if (submission) {
+        // For now, just show an alert with submission details
+        showAlert(`Viewing submission: ${submission.task.title}`, 'info');
+    }
+}
+
+function openReviewModal(submissionId, action) {
+    currentSubmissionId = submissionId;
+    const submission = currentSubmissions.find(s => s.submission_id === submissionId);
+    
+    if (submission) {
+        document.getElementById('reviewAction').value = action;
+        document.getElementById('reviewNotes').value = '';
+        document.getElementById('reviewActualHours').value = '';
+        
+        // Store submission data on modal for reference
+        document.getElementById('reviewModal').dataset.submissionType = submission.submission_type;
+        
+        // Populate submission info
+        const infoDiv = document.getElementById('reviewSubmissionInfo');
+        infoDiv.innerHTML = `
+            <h5 style="margin: 0 0 0.5rem 0; color: var(--text-color);">${submission.task.title}</h5>
+            <p style="margin: 0; color: var(--text-muted); font-size: 0.875rem;">${submission.task.description || 'No description'}</p>
+            <div style="margin-top: 0.5rem;">
+                <span style="background: #667eea; color: white; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.7rem; font-weight: 500;">${submission.submission_type}</span>
+                <span style="background: #ff6b6b; color: white; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.7rem; font-weight: 500;">${submission.status}</span>
+            </div>
+            ${submission.message ? `<p style="margin: 0.5rem 0 0 0; color: var(--text-muted); font-size: 0.875rem;"><strong>Message:</strong> ${submission.message}</p>` : ''}
+        `;
+        
+        // Show/hide actual hours field based on action and submission type
+        toggleActualHoursField();
+        
+        document.getElementById('reviewModal').style.display = 'block';
+    }
+}
+
+function toggleActualHoursField() {
+    const action = document.getElementById('reviewAction').value;
+    const modal = document.getElementById('reviewModal');
+    const submissionType = modal.dataset.submissionType;
+    const actualHoursField = document.getElementById('actualHoursField');
+    
+    // Show actual hours field only when approving completion submissions
+    if (action === 'approve' && submissionType === 'completion') {
+        actualHoursField.style.display = 'block';
+    } else {
+        actualHoursField.style.display = 'none';
+    }
+}
+
+function closeReviewModal() {
+    document.getElementById('reviewModal').style.display = 'none';
+    currentSubmissionId = null;
+}
+
+async function submitReview() {
+    try {
+        if (!currentSubmissionId) {
+            showAlert('No submission selected', 'danger');
+            return;
+        }
+        
+        const action = document.getElementById('reviewAction').value;
+        const notes = document.getElementById('reviewNotes').value;
+        const actualHours = document.getElementById('reviewActualHours').value;
+        
+        const requestData = {
+            action: action,
+            notes: notes
+        };
+        
+        // Only include actual_hours if it's provided and we're approving
+        if (actualHours && action === 'approve') {
+            requestData.actual_hours = parseFloat(actualHours);
+        }
+        
+        const response = await fetch(`/api/task-submission/submissions/${currentSubmissionId}/review`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify(requestData)
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to review submission');
+        }
+        
+        const result = await response.json();
+        showAlert(`Submission ${action} successfully!`, 'success');
+        closeReviewModal();
+        
+        // Reload submissions
+        loadSubmissions();
+        
+    } catch (error) {
+        showAlert(error.message, 'danger');
+    }
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const reviewModal = document.getElementById('reviewModal');
+    if (event.target === reviewModal) {
+        closeReviewModal();
+    }
+}
+</script>
+{% endblock %} 

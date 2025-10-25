@@ -1,0 +1,20 @@
+flask>=2.3.0
+requests>=2.31.0
+openai>=1.0.0
+python-dotenv>=1.0.0
+gunicorn>=21.2.0
+tqdm>=4.66.0
+beautifulsoup4>=4.12.0
+pandas>=2.2.0
+lxml[html_clean]>=5.1.0
+newspaper3k>=0.2.8
+feedparser>=6.0.10
+wikipedia>=1.4.0
+wptools>=0.4.17
+yfinance>=0.2.37
+textblob>=0.18.0
+boilerpy3>=1.0.6
+groq>=0.5.0 
+tkcalendar>=1.6.1  # For calendar widget in GUI
+# tkinter is required for GUI but is included with most Python installations 
+scikit-learn>=1.2.0  # For TF-IDF cosine similarity in match_score 

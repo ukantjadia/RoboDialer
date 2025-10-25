@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+
+{% block title %}Credit Transfer Logs{% endblock %}
+
+{% block additional_styles %}
+{{ super() }}
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.css" rel="stylesheet">
+<style>
+    .filter-bar {
+        background: var(--card-bg);
+        padding: 1rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+    .filter-bar select,
+    .filter-bar input,
+    .dataTables_wrapper .dataTables_length select,
+    .dataTables_wrapper .dataTables_filter input {
+        background: var(--background-color) !important;
+        color: var(--text-color) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 8px !important;
+    }
+    .badge-transfer { background-color: rgba(59, 130, 246, 0.2); color: #3b82f6; border: 1px solid #3b82f6; }
+
+    .card, .dataTables_wrapper {
+        border: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        padding: 0 !important;
+    }
+    .card-body {
+        padding: 0 !important;
+    }
+
+    .table, .table td, .table th, .table-hover tbody tr {
+        background-color: var(--card-bg) !important;
+        color: var(--text-color) !important;
+        border-color: var(--border-color) !important;
+    }
+    .table thead th {
+        background-color: var(--background-color) !important;
+        color: var(--text-muted) !important;
+    }
+    .table-hover tbody tr:hover {
+        background-color: var(--background-color) !important;
+    }
+
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_filter,
+    .dataTables_wrapper .dataTables_info {
+        color: var(--text-muted) !important;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .page-link {
+        background: var(--card-bg) !important;
+        color: var(--primary-color) !important;
+        border: 1px solid var(--primary-color) !important;
+        box-shadow: none !important;
+        margin: 0 3px;
+        border-radius: 6px;
+    }
+    .dataTables_wrapper .dataTables_paginate .page-link:hover {
+        background: var(--primary-color) !important;
+        color: white !important;
+    }
+    .page-item.active .page-link {
+        background: var(--primary-color) !important;
+        color: white !important;
+        border-color: var(--primary-color) !important;
+    }
+
+    .ts-control {
+        background-color: var(--background-color) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 8px !important;
+    }
+    .ts-control input::placeholder {
+        color: var(--text-muted) !important;
+    }
+    .ts-dropdown {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+    }
+    .ts-dropdown .option {
+        color: var(--text-color);
+    }
+    .ts-dropdown .option.active,
+    .ts-dropdown .option:hover {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .ts-control.focus,
+    .ts-control:focus,
+    .ts-wrapper.form-control:focus-within .ts-control {
+        border-color: var(--primary-color) !important;
+        box-shadow: none !important;
+    }
+    .dataTables_processing {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(24, 31, 42, 0.7);
+        backdrop-filter: blur(2px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1055;
+        color: white;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    .date-inputs {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .date-inputs input {
+        flex: 1;
+        min-width: 120px;
+    }
+
+    .apply-filters-btn {
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .apply-filters-btn:hover {
+        background: var(--primary-hover);
+        transform: translateY(-1px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid main-content">
+    <h1 class="page-title">
+        Credit Transfer Logs
+        <div class="title-line"></div>
+    </h1>
+
+    <div class="filter-bar">
+        <select class="form-select" id="companyFilter">
+        </select>
+        <select class="form-select" id="userFilter">
+        </select>
+        <select class="form-select" id="adminFilter">
+        </select>
+        <div class="date-inputs">
+            <input type="date" class="form-control" id="dateFromFilter" placeholder="From Date">
+            <input type="date" class="form-control" id="dateToFilter" placeholder="To Date">
+        </div>
+        <button class="apply-filters-btn" id="applyFiltersBtn">
+            <i class="fas fa-search"></i> Apply Filters
+        </button>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-container">
+                <table id="creditTransferTable" class="table table-hover" style="width:100%;">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>From Admin</th>
+                            <th>To User</th>
+                            <th>Company</th>
+                            <th>Amount</th>
+                            <th>Note</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        const companyData = {{ filters.companies | tojson }};
+        const userData = {{ filters.users | tojson }};
+        const adminData = {{ filters.admins | tojson }};
+
+        // Company Filter
+        const companyOptions = companyData.map(function(company) {
+            return { value: company.id, text: company.name };
+        });
+
+        new TomSelect('#companyFilter', {
+            placeholder: 'Filter by Company...',
+            options: [
+                { value: '', text: 'All Companies' },
+                { value: 'NULL', text: 'N/A (Personal)' },
+                ...companyOptions
+            ],
+            sortField: { field: "text", direction: "asc" }
+        });
+
+        // User Filter
+        const userOptions = userData.map(function(user) {
+            return { value: user.id, text: user.name };
+        });
+
+        new TomSelect('#userFilter', {
+            placeholder: 'Filter by User...',
+            options: [
+                { value: '', text: 'All Users' },
+                ...userOptions
+            ],
+            sortField: { field: "text", direction: "asc" }
+        });
+
+        // Admin Filter
+        const adminOptions = adminData.map(function(admin) {
+            return { value: admin.id, text: admin.name };
+        });
+
+        new TomSelect('#adminFilter', {
+            placeholder: 'Filter by Admin...',
+            options: [
+                { value: '', text: 'All Admins' },
+                ...adminOptions
+            ],
+            sortField: { field: "text", direction: "asc" }
+        });
+
+        const table = $('#creditTransferTable').DataTable({
+            "processing": true,
+            "serverSide": true,
+            "ajax": {
+                "url": "{{ url_for('credit_transfer_log.get_credit_transfers_api') }}",
+                "type": "POST",
+                "beforeSend": function() {
+                    if (typeof showAlert === 'function') {
+                        showAlert('Loading transfer logs...', 'info');
+                    }
+                },
+                "complete": function() {
+                    if (typeof showAlert === 'function') {
+                        showAlert('Transfer logs loaded', 'success');
+                    }
+                },
+                "data": function (d) {
+                    // Add custom filters to the request
+                    d.company_id = $('#companyFilter').val();
+                    d.user_id = $('#userFilter').val();
+                    d.admin_id = $('#adminFilter').val();
+                    d.date_from = $('#dateFromFilter').val();
+                    d.date_to = $('#dateToFilter').val();
+                }
+            },
+            "columns": [
+                {
+                    "data": "transferred_at",
+                    "render": function(data) {
+                        return data ? new Date(data).toLocaleString() : 'N/A';
+                    }
+                },
+                { "data": "from_username" },
+                {
+                    "data": "to_username",
+                    "render": function(data, type, row) {
+                        return `${data}<br><small class="text-muted">${row.to_email}</small>`;
+                    }
+                },
+                { "data": "company_name" },
+                {
+                    "data": "amount",
+                    "render": function(data) {
+                        return `<strong style="color: var(--success-color);">+${data}</strong>`;
+                    }
+                },
+                {
+                    "data": "note",
+                    "render": function(data) {
+                        return data || 'No note provided';
+                    }
+                }
+            ],
+            "order": [[0, "desc"]], // Default sort by date descending
+            "pageLength": 25,
+            "language": {
+                "search": "",
+                "searchPlaceholder": "Search transfers...",
+                "processing": `
+                    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
+                    <span class="ms-3 fs-5">Loading...</span>
+                `
+            },
+            "dom": '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+                   '<"table-responsive"t>' +
+                   '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>'
+        });
+
+        // Apply filters button click handler
+        $('#applyFiltersBtn').on('click', function() {
+            table.ajax.reload();
+        });
+
+        // Auto-apply filters when dropdowns change (optional)
+        $('#companyFilter, #userFilter, #adminFilter').on('change', function() {
+            // Uncomment the line below if you want auto-apply on dropdown change
+            // table.ajax.reload();
+        });
+    });
+</script>
+{% endblock %}

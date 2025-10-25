@@ -1,0 +1,37 @@
+{
+    "api_settings": {
+        "url": "https://sandbox-api.saasquatchleads.com/scraper/scrape-stream",
+        "timeout": 600,
+        "headers": {
+            "Content-Type": "application/json"
+        }
+    },
+    "resource_limits": {
+        "max_memory_percent": 90.0,
+        "max_cpu_percent": 90.0,
+        "max_workers": 1,
+        "calls_per_second": 0.1,
+        "batch_size": 10
+    },
+    "csv_settings": {
+        "industry_column": "industry",
+        "city_column": "city",
+        "state_column": "state",
+        "country_column": "country",
+        "encoding": "utf-8"
+    },
+    "auth": {
+        "login_url": "https://sandbox-api.saasquatchleads.com/api/auth/login",
+        "email": "developer@example.com",
+        "password": "developer123"
+    },
+    "output_settings": {
+        "save_intermediate_results": true,
+        "save_errors_separately": true,
+        "log_level": "INFO"
+    },
+    "processing_settings": {
+        "check_interval": 10.0,
+        "progress_log_interval": 5
+    }
+}

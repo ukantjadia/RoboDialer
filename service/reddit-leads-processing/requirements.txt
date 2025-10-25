@@ -1,0 +1,11 @@
+greenlet==3.2.3
+psycopg2-binary==2.9.10
+python-dotenv==1.1.1
+SQLAlchemy==2.0.42
+typing_extensions==4.14.1
+pandas
+openpyxl
+rapidfuzz
+numpy==1.26.4
+gspread==5.12.4
+oauth2client==4.1.3

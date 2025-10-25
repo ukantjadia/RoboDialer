@@ -1,0 +1,493 @@
+{% extends "base.html" %}
+
+{% block title %}Company Dashboard{% endblock %}
+
+{% block additional_styles %}
+{{ super() }}
+<style>
+    .company-dashboard {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+
+    .company-header {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .company-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        color: var(--secondary-color);
+        font-size: 0.875rem;
+    }
+
+    .credit-usage {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .progress-bar {
+        width: 100%;
+        height: 20px;
+        background: var(--border-color);
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 1rem 0;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: var(--primary-color);
+        transition: width 0.3s ease;
+    }
+
+    .members-section {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 2rem;
+    }
+
+    .member-card {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .member-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .member-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+    }
+
+    .btn-invite {
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+    }
+
+    .btn-invite:hover {
+        opacity: 0.9;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+    }
+
+    .modal-content {
+        background: var(--card-bg);
+        margin: 5% auto;
+        padding: 2rem;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 500px;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--text-color);
+        font-weight: 500;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--background-color);
+        color: var(--text-color);
+    }
+
+    .btn-close {
+        float: right;
+        font-size: 1.5rem;
+        font-weight: bold;
+        cursor: pointer;
+        color: var(--secondary-color);
+    }
+
+    .btn-close:hover {
+        color: var(--text-color);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="company-dashboard">
+    <div class="company-header">
+        <h1 id="companyName">Company Dashboard</h1>
+        <p id="companyDescription" class="text-muted">Manage your team and credits</p>
+    </div>
+
+    <div class="company-stats">
+        <div class="stat-card">
+            <div class="stat-number" id="memberCount">0</div>
+            <div class="stat-label">Team Members</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="totalCredits">0</div>
+            <div class="stat-label">Total Credits</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="usedCredits">0</div>
+            <div class="stat-label">Credits Used</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="remainingCredits">0</div>
+            <div class="stat-label">Credits Remaining</div>
+        </div>
+    </div>
+
+    <div class="credit-usage">
+        <h3>Credit Usage</h3>
+        <div class="progress-bar">
+            <div class="progress-fill" id="creditProgress" style="width: 0%"></div>
+        </div>
+        <div class="d-flex justify-content-between">
+            <span id="usageText">0 / 0 credits used</span>
+            <span id="usagePercentage">0%</span>
+        </div>
+    </div>
+
+    {% if current_user.is_company_admin %}
+    <div class="members-section">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3>Team Members & Credit Allocation</h3>
+            <button class="btn-invite" onclick="openCreateMemberModal()">Add Member</button>
+        </div>
+        <div id="membersList">
+            <!-- Members and credit controls will be loaded here -->
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Create Member Modal -->
+<div id="createMemberModal" class="modal">
+    <div class="modal-content">
+        <span class="btn-close" onclick="closeCreateMemberModal()">&times;</span>
+        <h3>Add Company Member</h3>
+        <form id="createMemberForm">
+            <div class="form-group">
+                <label class="form-label">Username</label>
+                <input type="text" class="form-control" id="createUsername" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" class="form-control" id="createEmail" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" class="form-control" id="createPassword" required>
+            </div>
+            <button type="submit" class="btn-invite">Create Member</button>
+        </form>
+    </div>
+</div>
+
+<!-- Transfer Credit Modal -->
+<div id="transferCreditModal" class="modal">
+  <div class="modal-content">
+    <span class="btn-close" onclick="closeTransferCreditModal()">&times;</span>
+    <h3>Transfer Credits</h3>
+    <form id="transferCreditForm">
+      <input type="hidden" id="transferFromUserId">
+      <div class="form-group">
+        <label class="form-label">To Member</label>
+        <select class="form-control" id="transferToUserId" required></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Amount</label>
+        <input type="number" class="form-control" id="transferAmount" min="1" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Note (optional)</label>
+        <input type="text" class="form-control" id="transferNote">
+      </div>
+      <button type="submit" class="btn-invite">Transfer</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+let companyData = null;
+let membersCache = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadCompanyData();
+});
+
+async function loadCompanyData() {
+    try {
+        const response = await fetch('/api/companies/my-company');
+        if (response.ok) {
+            companyData = await response.json();
+            updateDashboard();
+        } else {
+        }
+    } catch (error) {
+    }
+}
+
+function updateDashboard() {
+    if (!companyData) return;
+
+    // Update company info
+    document.getElementById('companyName').textContent = companyData.name;
+    document.getElementById('companyDescription').textContent = 
+        `${companyData.industry || 'Company'} • ${companyData.size || 'Medium'} size`;
+
+    // Check for platinum plan (unlimited)
+    const isPlatinum = (companyData.subscription_tier || '').toLowerCase().startsWith('platinum');
+
+    // Update stats
+    document.getElementById('memberCount').textContent = companyData.member_count || 0;
+    document.getElementById('totalCredits').textContent = isPlatinum ? 'Unlimited' : (companyData.total_credits || 0);
+    document.getElementById('usedCredits').textContent = isPlatinum ? '-' : (companyData.credits_used || 0);
+    document.getElementById('remainingCredits').textContent = isPlatinum ? 'Unlimited' : ((companyData.total_credits || 0) - (companyData.credits_used || 0));
+
+    // Update credit usage
+    if (isPlatinum) {
+        document.getElementById('creditProgress').style.width = '100%';
+        document.getElementById('usageText').textContent = 'Unlimited credits';
+        document.getElementById('usagePercentage').textContent = '∞';
+    } else {
+        const usagePercentage = companyData.total_credits > 0 ? 
+            (companyData.credits_used / companyData.total_credits * 100) : 0;
+        document.getElementById('creditProgress').style.width = `${usagePercentage}%`;
+        document.getElementById('usageText').textContent = 
+            `${companyData.credits_used || 0} / ${companyData.total_credits || 0} credits used`;
+        document.getElementById('usagePercentage').textContent = `${usagePercentage.toFixed(1)}%`;
+    }
+
+    // Load members
+    loadMembers();
+}
+
+async function loadMembers() {
+    // Only load members if the user is a company admin (membersList element exists)
+    const membersList = document.getElementById('membersList');
+    if (!membersList) {
+        return; // Exit early if user is not a company admin
+    }
+    
+    try {
+        const response = await fetch(`/api/companies/${companyData.company_id}/members`);
+        if (response.ok) {
+            const data = await response.json();
+            renderMembers(data.members);
+        }
+    } catch (error) {
+    }
+}
+
+function renderMembers(members) {
+    membersCache = members;
+    const membersList = document.getElementById('membersList');
+    if (!membersList) {
+        return; // Exit early if element doesn't exist
+    }
+    if (members.length === 0) {
+        membersList.innerHTML = '<p class="text-muted">No members yet. Add your first team member!</p>';
+        return;
+    }
+    const currentUserId = '{{ current_user.user_id }}';
+    membersList.innerHTML = members.map(member => `
+        <div class="member-card">
+            <div class="member-info">
+                <div class="member-avatar">${member.username ? member.username.charAt(0).toUpperCase() : 'U'}</div>
+                <div>
+                    <div class="fw-bold">${member.username || 'Unknown User'}</div>
+                    <div class="text-muted">${member.email || 'No email'}</div>
+                    <small class="badge ${member.is_company_admin ? 'bg-primary' : 'bg-secondary'}">
+                        ${member.company_role || 'member'}
+                    </small>
+                </div>
+            </div>
+            <div>
+                <span>Credits: <b>${member.credits_allocated || 0}</b></span>
+                <button class="btn btn-sm btn-outline-danger" onclick="removeMember('${member.user_id}')">Remove</button>
+                ${member.user_id !== currentUserId && !member.is_company_admin ? `<button class='btn btn-sm btn-outline-success' onclick="openTransferCreditModal('${member.user_id}')">Transfer</button>` : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+function openCreateMemberModal() {
+    document.getElementById('createMemberModal').style.display = 'block';
+}
+
+function closeCreateMemberModal() {
+    document.getElementById('createMemberModal').style.display = 'none';
+    document.getElementById('createMemberForm').reset();
+}
+
+document.getElementById('createMemberForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const formData = {
+        username: document.getElementById('createUsername').value,
+        email: document.getElementById('createEmail').value,
+        password: document.getElementById('createPassword').value
+    };
+    try {
+        const response = await fetch(`/api/companies/${companyData.company_id}/members`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+        const result = await response.json();
+        if (response.ok) {
+            alert('Company member created successfully!');
+            closeCreateMemberModal();
+            loadCompanyData();
+        } else {
+            alert(`Error: ${result.error}`);
+        }
+    } catch (error) {
+        alert('Failed to create company member');
+    }
+});
+
+async function removeMember(userId) {
+    if (!confirm('Are you sure you want to remove this member?')) return;
+    try {
+        const response = await fetch(`/api/companies/${companyData.company_id}/members/${userId}`, {
+            method: 'DELETE'
+        });
+        const result = await response.json();
+        if (response.ok) {
+            alert('Member removed successfully!');
+            loadCompanyData();
+        } else {
+            alert(`Error: ${result.error}`);
+        }
+    } catch (error) {
+        alert('Failed to remove member');
+    }
+}
+
+function openTransferCreditModal(toUserId) {
+    const modal = document.getElementById('transferCreditModal');
+    const fromUserId = '{{ current_user.user_id }}';
+    document.getElementById('transferFromUserId').value = fromUserId;
+    // Populate dropdown with all members except self
+    const select = document.getElementById('transferToUserId');
+    select.innerHTML = '';
+    membersCache.forEach(member => {
+        if (member.user_id !== fromUserId && !member.is_company_admin) {
+            const option = document.createElement('option');
+            option.value = member.user_id;
+            option.textContent = member.username + ' (' + (member.credits_allocated || 0) + ' credits)';
+            if (member.user_id === toUserId) option.selected = true;
+            select.appendChild(option);
+        }
+    });
+    document.getElementById('transferAmount').value = '';
+    document.getElementById('transferNote').value = '';
+    modal.style.display = 'block';
+}
+
+function closeTransferCreditModal() {
+    document.getElementById('transferCreditModal').style.display = 'none';
+    document.getElementById('transferCreditForm').reset();
+}
+
+document.getElementById('transferCreditForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const fromUserId = document.getElementById('transferFromUserId').value;
+    const toUserId = document.getElementById('transferToUserId').value;
+    const amount = parseInt(document.getElementById('transferAmount').value);
+    const note = document.getElementById('transferNote').value;
+    try {
+        const response = await fetch(`/api/companies/${companyData.company_id}/transfer-credits`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ from_user_id: fromUserId, to_user_id: toUserId, amount, note })
+        });
+        const result = await response.json();
+        if (response.ok) {
+            alert('Transfer successful!');
+            closeTransferCreditModal();
+            loadCompanyData();
+        } else {
+            alert('Error: ' + result.error);
+        }
+    } catch (error) {
+        alert('Failed to transfer credits');
+    }
+});
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('createMemberModal');
+    if (event.target === modal) {
+        closeCreateMemberModal();
+    }
+}
+</script>
+{% endblock %} 

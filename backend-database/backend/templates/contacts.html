@@ -1,0 +1,665 @@
+{% extends "base.html" %}
+
+{% block title %}Contact Management{% endblock %}
+
+{% block additional_styles %}
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+<style>
+:root {
+    --background-color: #181f2a;
+    --text-color: #f8f9fa;
+    --border-color: #232b3b;
+    --card-bg: #232b3a;
+    --card-border: #232b3b;
+    --primary-color: #3a817b;
+    --secondary-color: #64748b;
+    --success-color: #22c55e;
+    --danger-color: #ef4444;
+    --shadow: 0 4px 24px rgba(0,0,0,0.07);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background-color: #181f2a;
+    --text-color: #f8f9fa;
+    --border-color: #232b3b;
+    --card-bg: #232b3a;
+    --card-border: #232b3b;
+  }
+  table.dataTable tbody tr:hover {
+    background: #232b3a;
+  }
+}
+body, .container-fluid, .main-content {
+    background-color: var(--background-color) !important;
+    color: var(--text-color);
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+}
+.card, .modal-content, .table, .dataTables_wrapper, .form-control, .form-select {
+    background-color: var(--card-bg) !important;
+    color: var(--text-color) !important;
+    border-color: var(--card-border) !important;
+    border-radius: 16px !important;
+    box-shadow: var(--shadow);
+}
+.card-header, .modal-header, .modal-footer {
+    background-color: var(--card-bg) !important;
+    border-color: var(--card-border) !important;
+    border-radius: 16px 16px 0 0 !important;
+}
+.table > :not(caption) > * > * {
+    background-color: var(--card-bg) !important;
+    color: #fff !important;
+    border-color: var(--card-border) !important;
+}
+.avatar-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    background: var(--secondary-color);
+    font-size: 1.2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.card, .modal-content, .table {
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.btn, .form-control, .form-select {
+    border-radius: 10px !important;
+}
+::-webkit-scrollbar {
+    width: 8px;
+    background: var(--background-color);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    color: #3a817b !important;
+    border-radius: 8px !important;
+    margin: 0 2px;
+    padding: 4px 14px;
+    background: var(--card-bg) !important;
+    border: 1px solid #3a817b !important;
+    transition: background 0.2s, color 0.2s;
+    min-width: 40px;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button.current,
+.dataTables_wrapper .dataTables_paginate .paginate_button:active {
+    background: #3a817b !important;
+    color: #fff !important;
+    border: 1px solid #3a817b !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover:not(.current) {
+    background: #3a817b !important;
+    color: #fff !important;
+}
+table.dataTable {
+    background: var(--card-bg);
+    color: var(--text-color);
+    border-radius: 16px;
+    overflow: hidden;
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow);
+}
+table.dataTable thead th {
+    background: var(--background-color);
+    color: #fff;
+    font-weight: 700;
+    border-bottom: 2px solid var(--border-color);
+    padding: 14px 10px;
+    font-size: 15px;
+}
+table.dataTable tbody td {
+    background: var(--card-bg);
+    color: #fff;
+    border-bottom: 1px solid var(--border-color);
+    padding: 12px 10px;
+    font-size: 14px;
+    vertical-align: middle;
+}
+table.dataTable tbody tr:hover {
+    background: inherit;
+    transition: none;
+}
+.badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-right: 4px;
+    background: var(--background-color);
+    color: #fff !important;
+    border: 1px solid #3a817b;
+}
+.btn-outline-primary {
+    background: #3a817b !important;
+    color: #ffffff  !important;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    border: 1px solid #3a817b !important;
+}
+.badge.active {
+    background: var(--success-color);
+    color: #fff !important;
+    border: none;
+}
+.badge.free {
+    background: #64748B;
+    color: #fff !important;
+    border: none;
+}
+.badge.bronze {
+    background: #cd7f32;
+    color: #fff !important;
+    border: none;
+}
+.badge.silver {
+    background: #b0b0b0;
+    color: #232b3a;
+    border: none;
+}
+.badge.gold {
+    background: #ffd700;
+    color: #232b3a;
+    border: none;
+}
+.badge.platinum {
+    background: #e5e4e2;
+    color: #232b3a;
+    border: none;
+}
+.badge.user {
+    background: var(--secondary-color);
+    color: #fff !important;
+    border: none;
+}
+.badge.admin {
+    background: #3a817b;
+    color: #fff !important;
+    border: none;
+}
+.badge.developer {
+    background: #22c55e;
+    color: #fff !important;
+    border: none;
+}
+.btn {
+    border-radius: 10px !important;
+    font-weight: 600;
+    font-size: 14px;
+}
+.dataTables_length label, .dataTables_filter label {
+    color: var(--text-muted);
+}
+.dataTables_info {
+    color: var(--text-muted);
+}
+
+/* Container and Card Spacing */
+.container-fluid {
+    padding: 32px 24px !important;
+}
+.card {
+    margin-bottom: 2rem;
+    padding: 1.5rem 1.5rem 1rem 1.5rem;
+}
+
+/* Table Spacing */
+.table {
+    padding: 0.5rem 0.5rem 1.5rem 0.5rem;
+}
+#contactsTable {
+    margin-bottom: 0 !important;
+}
+.dataTables_wrapper {
+    padding: 0.5rem 0 1.5rem 0;
+}
+
+/* Bootstrap Pagination (if used) */
+.page-item .page-link {
+    background: var(--card-bg) !important;
+    color: #3a817b !important;
+    border: 1px solid #3a817b !important;
+    border-radius: 8px !important;
+    margin: 0 2px;
+    min-width: 40px;
+    transition: background 0.2s, color 0.2s;
+}
+.page-item.active .page-link {
+    background: #3a817b !important;
+    color: #fff !important;
+    border: 1px solid #3a817b !important;
+}
+.page-item.disabled .page-link {
+    background: var(--card-bg) !important;
+    color: #888 !important;
+    border: 1px solid var(--border-color) !important;
+    cursor: not-allowed !important;
+    opacity: 0.7;
+}
+
+/* Table Row Spacing */
+table.dataTable tbody td {
+    padding-top: 16px;
+    padding-bottom: 16px;
+}
+
+/* Avatar and Button Spacing */
+.avatar-circle {
+    margin-right: 12px;
+}
+.btn {
+    margin-right: 4px;
+    margin-bottom: 4px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-light">Contacts for {{ company or '-' }}</h1>
+            <p class="text-muted">Lead ID: {{ lead_id }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary" id="refreshBtn">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+            <button class="btn btn-success" id="addContactBtn">
+                <i class="fas fa-plus-circle"></i> Add Contact
+            </button>
+        </div>
+    </div>
+
+    <!-- Contacts Table Card -->
+    <div class="card bg-dark border-secondary">
+        <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center py-3">
+            <div>
+                <i class="fas fa-address-book me-2"></i>
+                <span class="h5 mb-0 text-light">Contacts List</span>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table">
+                <table class="table table-dark mb-0" id="contactsTable">
+                    <thead class="bg-dark text-light">
+                        <tr>
+                            <th class="border-0">Primary</th>
+                            <th class="border-0">Company Phone</th>
+                            <th class="border-0">Owner Name</th>
+                            <th class="border-0">Owner Title</th>
+                            <th class="border-0">Owner LinkedIn</th>
+                            <th class="border-0">Owner Phone</th>
+                            <th class="border-0">Owner Email</th>
+                            <th class="border-0">Phone</th>
+                            <th class="border-0">City</th>
+                            <th class="border-0">State</th>
+                            <th class="border-0 text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Data will be populated via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Contact Modal -->
+<div class="modal fade" id="manageContactModal" tabindex="-1" aria-labelledby="manageContactModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark text-light border-secondary">
+            <div class="modal-header bg-dark border-secondary">
+                <h5 class="modal-title" id="manageContactModalLabel">
+                    <i class="fas fa-user-plus me-2"></i>
+                    Manage Contact
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="contactForm">
+                    <input type="hidden" id="contactId" name="contact_id">
+                    <div class="mb-3">
+                        <label for="companyPhone" class="form-label">Company Phone</label>
+                        <input type="text" class="form-control" id="companyPhone" name="company_phone">
+                    </div>
+                    <div class="mb-3">
+                        <label for="ownerFirstName" class="form-label">Owner First Name</label>
+                        <input type="text" class="form-control" id="ownerFirstName" name="owner_first_name">
+                    </div>
+                    <div class="mb-3">
+                        <label for="ownerLastName" class="form-label">Owner Last Name</label>
+                        <input type="text" class="form-control" id="ownerLastName" name="owner_last_name">
+                    </div>
+                    <div class="mb-3">
+                        <label for="ownerTitle" class="form-label">Owner Title</label>
+                        <input type="text" class="form-control" id="ownerTitle" name="owner_title">
+                    </div>
+                    <div class="mb-3">
+                        <label for="ownerLinkedIn" class="form-label">Owner LinkedIn</label>
+                        <input type="text" class="form-control" id="ownerLinkedIn" name="owner_linkedin">
+                    </div>
+                    <div class="mb-3">
+                        <label for="ownerPhoneNumber" class="form-label">Owner Phone Number</label>
+                        <input type="text" class="form-control" id="ownerPhoneNumber" name="owner_phone_number">
+                    </div>
+                    <div class="mb-3">
+                        <label for="ownerEmail" class="form-label">Owner Email</label>
+                        <input type="email" class="form-control" id="ownerEmail" name="owner_email">
+                    </div>
+                     <div class="mb-3">
+                        <label for="phone" class="form-label">Phone</label>
+                        <input type="text" class="form-control" id="phone" name="phone">
+                    </div>
+                    <div class="mb-3">
+                        <label for="city" class="form-label">City</label>
+                        <input type="text" class="form-control" id="city" name="city">
+                    </div>
+                    <div class="mb-3">
+                        <label for="state" class="form-label">State</label>
+                        <input type="text" class="form-control" id="state" name="state">
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="isPrimary" name="is_primary">
+                        <label class="form-check-label" for="isPrimary">
+                            Set as Primary Contact
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Contact</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof jQuery === 'undefined') {
+        document.getElementById('contactsTable').innerHTML = '<div class="alert alert-danger">Error: jQuery is not loaded. Please refresh the page or contact support.</div>';
+        return;
+    }
+
+    if (typeof jQuery.fn.DataTable === 'undefined') {
+        document.getElementById('contactsTable').innerHTML = '<div class="alert alert-danger">Error: DataTables is not loaded. Please refresh the page or contact support.</div>';
+        return;
+    }
+
+    let contacts = [];
+    let dataTable = null;
+    const leadId = "{{ lead_id }}"; // Lead ID passed from Flask backend
+
+    const contactsTable = document.getElementById('contactsTable');
+    const manageContactModal = new bootstrap.Modal(document.getElementById('manageContactModal'));
+    const contactForm = document.getElementById('contactForm');
+    const manageContactModalLabel = document.getElementById('manageContactModalLabel');
+
+    function initializeDataTable() {
+        if (dataTable) {
+            dataTable.destroy();
+        }
+
+        dataTable = jQuery('#contactsTable').DataTable({
+            ordering: false,
+            pageLength: 10,
+            dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rtip',
+            language: {
+                search: "",
+                searchPlaceholder: "Search contacts...",
+                emptyTable: "No contacts found for this lead",
+                zeroRecords: "No matching contacts found"
+            },
+            drawCallback: function() {
+                document.querySelectorAll('.edit-contact-btn').forEach(btn => {
+                    btn.addEventListener('click', () => openManageContactModal(btn.dataset.contactId));
+                });
+                document.querySelectorAll('.delete-contact-btn').forEach(btn => {
+                    btn.addEventListener('click', () => deleteContact(btn.dataset.contactId));
+                });
+            }
+        });
+    }
+
+    // Tambahkan fungsi prioritas primary
+    function getPrimaryContactIndex(contactsArr) {
+        const priorities = [
+            'owner', 'ceo', 'chief executive', 'founder', 'manager', 'director', 'team lead', 'lead'
+        ];
+        let bestIdx = 0, bestPriority = 99;
+        contactsArr.forEach((c, idx) => {
+            const title = (c.owner_title || '').toLowerCase();
+            let p = priorities.findIndex(prio => title.includes(prio));
+            if (p === -1) p = 99;
+            if (p < bestPriority) {
+                bestPriority = p;
+                bestIdx = idx;
+            }
+        });
+        return bestIdx;
+    }
+
+    async function loadContacts() {
+        try {
+            const response = await fetch(`/api/contacts/?lead_id=${leadId}`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            contacts = data || [];
+            const tbody = contactsTable.querySelector('tbody');
+            tbody.innerHTML = '';
+
+            // Tentukan primary contact secara dinamis
+            const primaryIdx = getPrimaryContactIndex(contacts);
+
+            contacts.forEach((contact, idx) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <span class="badge ${idx === primaryIdx ? 'bg-success' : 'bg-secondary'} rounded-pill">
+                            <i class="fas fa-${idx === primaryIdx ? 'check' : 'times'}-circle me-1"></i>
+                            ${idx === primaryIdx ? 'Yes' : 'No'}
+                        </span>
+                    </td>
+                    <td>${contact.company_phone || '-'}</td>
+                    <td>${contact.owner_first_name || ''} ${contact.owner_last_name || ''}</td>
+                    <td>${contact.owner_title || '-'}</td>
+                    <td>${contact.owner_linkedin ? `<a href="${contact.owner_linkedin}" target="_blank">Link</a>` : '-'}</td>
+                    <td>${contact.owner_phone_number || '-'}</td>
+                    <td>${contact.owner_email || '-'}</td>
+                    <td>${contact.phone || '-'}</td>
+                    <td>${contact.city || '-'}</td>
+                    <td>${contact.state || '-'}</td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-primary edit-contact-btn" data-contact-id="${contact.contact_id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger delete-contact-btn" data-contact-id="${contact.contact_id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            initializeDataTable();
+
+        } catch (error) {
+            showToast(error.message || 'Error loading contacts', 'error');
+        }
+    }
+
+    function openManageContactModal(contactId = null) {
+        contactForm.reset();
+        document.getElementById('contactId').value = '';
+        document.getElementById('isPrimary').checked = false;
+
+        if (contactId) {
+            manageContactModalLabel.textContent = 'Edit Contact';
+            const contact = contacts.find(c => c.contact_id === contactId);
+            if (contact) {
+                document.getElementById('contactId').value = contact.contact_id;
+                document.getElementById('companyPhone').value = contact.company_phone || '';
+                document.getElementById('ownerFirstName').value = contact.owner_first_name || '';
+                document.getElementById('ownerLastName').value = contact.owner_last_name || '';
+                document.getElementById('ownerTitle').value = contact.owner_title || '';
+                document.getElementById('ownerLinkedIn').value = contact.owner_linkedin || '';
+                document.getElementById('ownerPhoneNumber').value = contact.owner_phone_number || '';
+                document.getElementById('ownerEmail').value = contact.owner_email || '';
+                document.getElementById('phone').value = contact.phone || '';
+                document.getElementById('city').value = contact.city || '';
+                document.getElementById('state').value = contact.state || '';
+                document.getElementById('isPrimary').checked = contact.is_primary;
+            }
+        } else {
+            manageContactModalLabel.textContent = 'Add Contact';
+        }
+        manageContactModal.show();
+    }
+
+    contactForm.addEventListener('submit', async function(event) {
+        event.preventDefault();
+        const contactId = document.getElementById('contactId').value;
+        const method = contactId ? 'PUT' : 'POST';
+        const url = contactId ? `/api/contacts/${contactId}` : '/api/contacts/'; // Corrected URL
+
+        const formData = {
+            company_phone: document.getElementById('companyPhone').value,
+            owner_first_name: document.getElementById('ownerFirstName').value,
+            owner_last_name: document.getElementById('ownerLastName').value,
+            owner_title: document.getElementById('ownerTitle').value,
+            owner_linkedin: document.getElementById('ownerLinkedIn').value,
+            owner_phone_number: document.getElementById('ownerPhoneNumber').value,
+            owner_email: document.getElementById('ownerEmail').value,
+            phone: document.getElementById('phone').value,
+            city: document.getElementById('city').value,
+            state: document.getElementById('state').value,
+            is_primary: document.getElementById('isPrimary').checked
+        };
+
+        let payload = {};
+        if (method === 'POST') {
+            payload = {
+                lead_id: leadId,
+                contact_data: formData
+            };
+        } else {
+            payload = formData;
+        }
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || `Failed to ${contactId ? 'update' : 'add'} contact`);
+            }
+
+            showToast(result.message || `Contact ${contactId ? 'updated' : 'added'} successfully`);
+            manageContactModal.hide();
+            loadContacts();
+
+        } catch (error) {
+            showToast(error.message || `Error ${contactId ? 'updating' : 'adding'} contact`, 'error');
+        }
+    });
+
+    async function deleteContact(contactId) {
+        if (!confirm('Are you sure you want to delete this contact?')) {
+            return;
+        }
+        try {
+            const response = await fetch(`/api/contacts/${contactId}`, { // Corrected URL
+                method: 'DELETE',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Failed to delete contact');
+            }
+
+            showToast(result.message || 'Contact deleted successfully');
+            loadContacts();
+
+        } catch (error) {
+            showToast(error.message || 'Error deleting contact', 'error');
+        }
+    }
+
+    function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center text-white bg-${type} border-0 position-fixed bottom-0 end-0 m-3`;
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+        document.body.appendChild(toast);
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+        toast.addEventListener('hidden.bs.toast', () => toast.remove());
+    }
+
+    // Event Listeners
+    document.getElementById('refreshBtn').addEventListener('click', loadContacts);
+    document.getElementById('addContactBtn').addEventListener('click', () => openManageContactModal(null));
+
+    // Initial load
+    loadContacts();
+});
+</script>
+{% endblock %}

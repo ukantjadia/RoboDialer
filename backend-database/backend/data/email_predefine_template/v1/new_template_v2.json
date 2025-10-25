@@ -1,0 +1,5 @@
+{
+  "template_name": "Professional Outreach",
+  "template_content": "Dear {{person_name}},\n\nI hope this email finds you well. I'm reaching out from {{company_name}} regarding our innovative solutions in the {{industry}} sector.\n\n{{context}}\n\nI believe our approach could provide significant value to your organization. Our team has been closely following the developments in your industry and we're excited about the potential for collaboration.\n\nI look forward to hearing from you.\n\nBest regards,\n{{company_name}}",
+  "cta_line": ""
+}

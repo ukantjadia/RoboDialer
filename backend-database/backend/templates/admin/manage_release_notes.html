@@ -1,0 +1,385 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Release Notes{% endblock %}
+
+{% block additional_styles %}
+{{ super() }}
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+<style>
+    .release-notes-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+
+    .release-note-form {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .form-label {
+        color: var(--text-color);
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control, .form-select {
+        background: var(--background-color);
+        border: 1px solid var(--border-color);
+        color: var(--text-color);
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+    }
+
+    .form-control:focus, .form-select:focus {
+        background: var(--background-color);
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(58, 129, 123, 0.25);
+    }
+
+    .release-notes-list {
+        margin-top: 3rem;
+    }
+
+    .release-note-item {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .release-note-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .release-note-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-color);
+        margin: 0;
+    }
+
+    .release-note-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-icon {
+        background: none;
+        border: none;
+        color: var(--text-color);
+        padding: 0.5rem;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+
+    .btn-icon:hover {
+        color: var(--primary-color);
+    }
+
+    .btn-delete:hover {
+        color: var(--danger-color);
+    }
+
+    .release-note-meta {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        color: var(--secondary-color);
+        font-size: 0.875rem;
+    }
+
+    .release-note-content {
+        color: var(--text-color);
+        margin-bottom: 1rem;
+    }
+
+    .release-note-type {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .type-feature {
+        background: rgba(34, 197, 94, 0.1);
+        color: #4ade80;
+    }
+
+    .type-bug {
+        background: rgba(239, 68, 68, 0.1);
+        color: #f87171;
+    }
+
+    .type-improvement {
+        background: rgba(6, 182, 212, 0.1);
+        color: #67e8f9;
+    }
+
+    .release-notes-container,
+    .release-note-form,
+    .release-note-item,
+    .release-note-title,
+    .release-note-content,
+    .release-note-meta,
+    .release-note-type,
+    .form-label,
+    .form-control,
+    .form-select,
+    input,
+    textarea,
+    select,
+    option {
+        color: #fff !important;
+    }
+
+    .expired-badge {
+        background: #ef4444;
+        color: #fff;
+        border-radius: 8px;
+        padding: 2px 10px;
+        font-size: 0.92rem;
+        margin-left: 8px;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="release-notes-container">
+    <h1 class="mb-4">Manage Release Notes</h1>
+
+    <div class="release-note-form">
+        <h2 class="h4 mb-4">Create New Release Note</h2>
+        <form id="createNoteForm">
+            <div class="mb-3">
+                <label for="title" class="form-label">Title</label>
+                <input type="text" class="form-control" id="title" name="title" required>
+            </div>
+            <div class="mb-3">
+                <label for="content" class="form-label">Content</label>
+                <textarea class="form-control" id="content" name="content" rows="4" required></textarea>
+            </div>
+            <div class="mb-3">
+                <label for="type" class="form-label">Type</label>
+                <select class="form-select" id="type" name="type" required>
+                    <option value="feature">Feature</option>
+                    <option value="bug">Bug Fix</option>
+                    <option value="improvement">Improvement</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="audience" class="form-label">Audience</label>
+                <select class="form-select" id="audience" name="audience" required>
+                    <option value="all">All Users</option>
+                    <option value="admin_dev">Admin & Developer Only</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Create Release Note</button>
+        </form>
+    </div>
+
+    <div class="release-notes-list" id="releaseNotesList">
+        <!-- Release notes will be dynamically inserted here -->
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const createForm = document.getElementById('createNoteForm');
+    const notesList = document.getElementById('releaseNotesList');
+
+    // Fetch and render release notes
+    async function fetchNotes() {
+        try {
+            const response = await fetch('/api/release-notes/all');
+            if (!response.ok) throw new Error('Failed to fetch notes');
+            const data = await response.json();
+            renderNotes(data.notes);
+        } catch (error) {
+            showError('Failed to load release notes');
+        }
+    }
+
+    // Render notes list
+    function renderNotes(notes) {
+        
+        const uniqueNotes = [];
+        const seenIds = new Set();
+        for (const note of notes) {
+            if (!seenIds.has(note.id)) {
+                uniqueNotes.push(note);
+                seenIds.add(note.id);
+            }
+        }
+        if (!uniqueNotes.length) {
+            notesList.innerHTML = '<p class="text-center text-muted">No release notes yet</p>';
+            return;
+        }
+
+        const now = new Date();
+        notesList.innerHTML = uniqueNotes.map(note => {
+            let expiredBadge = '';
+            if (note.expired_date) {
+                const exp = new Date(note.expired_date);
+                const diff = (exp - now) / (1000 * 60 * 60 * 24);
+                if (diff < 7 && diff >= 0) {
+                    expiredBadge = `<span class='expired-badge'>Expired: ${exp.toLocaleDateString('en-US', {year:'numeric', month:'short', day:'numeric'})}</span>`;
+                }
+            }
+            return `
+            <div class="release-note-item" data-id="${note.id}">
+                <div class="release-note-header">
+                    <h3 class="release-note-title">${escapeHtml(note.title)}</h3>
+                    <div class="release-note-actions">
+                        <button class="btn-icon" onclick="editNote(${note.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-icon btn-delete" onclick="deleteNote(${note.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="release-note-meta">
+                    <span><i class="far fa-clock"></i> ${formatDate(note.created_at)}</span>
+                    <span><i class="far fa-user"></i> ${note.created_by.username}</span>
+                    <span class="audience-label" style="background:#232b3b; color:#67e8f9; border-radius:8px; padding:2px 10px; font-size:0.92rem; margin-left:8px;">
+                        ${note.audience === 'admin_dev' ? 'Admin & Dev Only' : 'All Users'}
+                    </span>
+                    ${expiredBadge}
+                </div>
+                <div class="release-note-content">${escapeHtml(note.content)}</div>
+                <span class="release-note-type type-${note.type}">
+                    ${capitalizeFirst(note.type)}
+                </span>
+            </div>
+            `;
+        }).join('');
+    }
+
+    // Create new note
+    createForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(createForm);
+        const data = {
+            title: formData.get('title'),
+            content: formData.get('content'),
+            type: formData.get('type'),
+            audience: formData.get('audience')
+        };
+
+        try {
+            const response = await fetch('/api/release-notes', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) throw new Error('Failed to create note');
+
+            createForm.reset();
+            // After create, fetch all notes from backend
+            fetchNotes();
+        } catch (error) {
+            showError('Failed to create release note');
+        }
+    });
+
+    // Delete note
+    window.deleteNote = async (noteId) => {
+        if (!confirm('Are you sure you want to delete this release note?')) return;
+
+        try {
+            const response = await fetch(`/api/release-notes/${noteId}`, {
+                method: 'DELETE'
+            });
+
+            if (!response.ok) throw new Error('Failed to delete note');
+
+            fetchNotes();
+        } catch (error) {
+            showError('Failed to delete release note');
+        }
+    };
+
+    // Edit note
+    window.editNote = async (noteId) => {
+        const noteElement = document.querySelector(`.release-note-item[data-id="${noteId}"]`);
+        const title = noteElement.querySelector('.release-note-title').textContent;
+        const content = noteElement.querySelector('.release-note-content').textContent;
+        const type = noteElement.querySelector('.release-note-type').textContent.toLowerCase();
+
+        const newTitle = prompt('Edit title:', title);
+        if (!newTitle) return;
+
+        const newContent = prompt('Edit content:', content);
+        if (!newContent) return;
+
+        try {
+            const response = await fetch(`/api/release-notes/${noteId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    title: newTitle,
+                    content: newContent,
+                    type: type
+                })
+            });
+
+            if (!response.ok) throw new Error('Failed to update note');
+
+            fetchNotes();
+        } catch (error) {
+            showError('Failed to update release note');
+        }
+    };
+
+    // Helper functions
+    function formatDate(dateString) {
+        return new Date(dateString).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    function capitalizeFirst(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    function escapeHtml(unsafe) {
+        return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    function showError(message) {
+        // You can implement a better error notification system here
+        alert(message);
+    }
+
+    // Initial load
+    fetchNotes();
+});
+</script>
+{% endblock %} 

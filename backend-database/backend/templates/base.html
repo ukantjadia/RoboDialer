@@ -1,0 +1,1488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>{% block title %}Lead Management System{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+    <style>
+        :root {
+            --primary-color: #3a817b;
+            --secondary-color: #22d3ee;
+            --accent-color: #22c55e;
+            --background-color: #181f2a;
+            --card-bg: #232b3a;
+            --text-color: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --success-color: #4ad66d;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --sidebar-width: 280px;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--background-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            position: relative;
+            /* Prevent zoom and unwanted gestures on mobile */
+            touch-action: manipulation;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            /* Prevent overscroll behavior on mobile */
+            overscroll-behavior: none;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Menu Toggle Button */
+        #menuToggle {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 2001;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(67, 97, 238, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        #menuToggle:hover {
+            transform: translateY(-2px);
+            background: var(--secondary-color);
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.4);
+        }
+
+        #menuToggle:focus {
+            outline: none;
+        }
+
+        #menuToggle i {
+            font-size: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        #menuToggle.active {
+            background: var(--secondary-color);
+        }
+
+        #menuToggle.active i {
+            transform: rotate(90deg);
+        }
+
+        /* Navbar Styles */
+        .navbar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 0;
+            height: 70px;
+            background: var(--card-bg);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px 0 70px;
+            z-index: 1030;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-image {
+            width: 35px;
+            height: 35px;
+            margin-right: 5px;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .logo:hover {
+            color: var(--secondary-color);
+        }
+
+        .navbar-menu {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .nav-link {
+            color: var(--dark-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--primary-color);
+        }
+
+        .nav-link.active {
+            color: var(--primary-color) !important;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--primary-color);
+            border-radius: 1px;
+        }
+
+        /* Dropdown styles */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-toggle {
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .dropdown-toggle i {
+            transition: transform 0.2s ease;
+            font-size: 0.8rem;
+            margin-left: 3px;
+        }
+
+        .dropdown-toggle:hover i {
+            transform: translateY(2px);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 40px;
+            left: 0;
+            background: var(--card-bg);
+            min-width: 200px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            padding: 8px 0;
+            z-index: 1050;
+            display: none;
+            animation: fadeIn 0.2s ease;
+            transform-origin: top center;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dropdown-item {
+            display: block;
+            padding: 10px 16px;
+            color: var(--dark-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--light-color);
+            color: var(--primary-color);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .username {
+            font-weight: 500;
+            color: var(--dark-color);
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: var(--secondary-color);
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            position: fixed;
+            top: 70px;
+            left: -280px;
+            height: calc(100vh - 70px);
+            width: var(--sidebar-width);
+            font: var(--text-color);
+            background: var(--card-bg);
+            box-shadow: 2px 0 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease-in-out;
+            z-index: 1040;
+            overflow-y: auto;
+            padding: 15px 0;
+        }
+
+        .sidebar.show {
+            transform: translateX(280px);
+        }
+
+        .nav-section {
+            padding: 15px 0;
+            margin-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nav-section:last-child {
+            border-bottom: none;
+        }
+
+        .nav-section-title {
+            padding: 0 25px;
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #c6cbd3;
+            font-weight: 600;
+            margin-bottom: 12px;
+            letter-spacing: 0.7px;
+        }
+
+        .nav-item {
+            padding: 12px 25px;
+            display: flex;
+            align-items: center;
+            color: #aeb5bf;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            margin-bottom: 2px;
+            border-radius: 0 6px 6px 0;
+        }
+
+        .nav-item:hover {
+            background: #f1f5f9;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .nav-item.active {
+            background: rgba(67, 97, 238, 0.08);
+            color: var(--primary-color);
+            border-left-color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .nav-item i {
+            margin-right: 12px;
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+            color: #64748b;
+            transition: color 0.2s ease;
+        }
+
+        .nav-item:hover i,
+        .nav-item.active i {
+            color: var(--primary-color);
+        }
+
+        .nav-item span {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            min-height: 100vh;
+            padding: 90px 20px 20px;
+            transition: all 0.3s ease;
+        }
+
+        /* Overlay */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1030;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .navbar * {
+            color: #94a3b8  !important;
+        }
+        .navbar .logo {
+            color: #3a817b !important;
+        }
+        .navbar .logo-image {
+            filter: none;
+        }
+        .navbar .btn-primary, .navbar .btn-outline {
+            color: #fff !important;
+        }
+        .navbar .btn-outline {
+            border-color: linear-gradient(135deg, #3a817b 0%, #255652 100%);
+        }
+        .navbar .btn-outline:hover {
+            background: #3a817b !important;
+            color: #94a3b8  !important;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            position: relative;
+        }
+
+        .notification-dropdown {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0;
+            min-width: 300px;
+            max-width: 400px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .notification-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notification-title {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .notification-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.2s;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .notification-content {
+            margin-bottom: 0.5rem;
+        }
+
+        .notification-meta {
+            font-size: 0.875rem;
+            color: var(--secondary-color);
+        }
+
+        .notification-footer {
+            padding: 0.75rem 1rem;
+            text-align: center;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .notification-footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .notification-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .inbox-modal {
+            display: none;
+            position: fixed;
+            z-index: 3000;
+            left: 0; top: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.15);
+            align-items: flex-start;
+            justify-content: flex-end;
+            padding: 60px 40px 0 0;
+        }
+        .inbox-dropdown {
+            background: #1a2233;
+            color: #fff;
+            border-radius: 18px;
+            width: 380px;
+            max-width: 98vw;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+        }
+        .inbox-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 20px 0 20px;
+        }
+        .inbox-title {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: #fff;
+        }
+        .close-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        .inbox-search-row {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px 0 20px;
+            gap: 10px;
+        }
+        .inbox-search {
+            flex: 1;
+            border-radius: 8px;
+            border: none;
+            padding: 7px 12px;
+            background: #232b3b;
+            color: #fff;
+            font-size: 1rem;
+        }
+        .inbox-new-message {
+            color: #67e8f9;
+            font-weight: 600;
+            font-size: 0.98rem;
+            cursor: pointer;
+        }
+        .inbox-list {
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px 0 10px 0;
+        }
+        .inbox-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 20px;
+            border-bottom: 1px solid #232b3b;
+            background: none;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .inbox-item:last-child { border-bottom: none; }
+        .inbox-item.unread { background: #202a3d; }
+        .inbox-item:hover { background: #232b3b; }
+        .inbox-item-icon {
+            margin-top: 2px;
+            font-size: 1.3rem;
+            color: #67e8f9;
+        }
+        .inbox-item-content {
+            flex: 1;
+            min-width: 0;
+        }
+        .inbox-item-title {
+            font-weight: 700;
+            font-size: 1.05rem;
+            margin-bottom: 2px;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .inbox-item-desc {
+            font-size: 0.97rem;
+            color: #b6c2d6;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .inbox-item-meta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+            min-width: 48px;
+        }
+        .inbox-item-date {
+            font-size: 0.93rem;
+            color: #7e8ba3;
+        }
+        .inbox-dot {
+            width: 10px; height: 10px;
+            background: #3fa7ff;
+            border-radius: 50%;
+            display: inline-block;
+            margin-top: 2px;
+        }
+        .inbox-empty {
+            text-align: center;
+            color: #94a3b8;
+            font-style: italic;
+            padding: 1.2rem;
+        }
+        .inbox-check-btn {
+            background: none;
+            border: none;
+            color: #67e8f9;
+            font-size: 1.3rem;
+            margin-left: 6px;
+            cursor: pointer;
+            transition: color 0.2s;
+            vertical-align: middle;
+        }
+        .inbox-check-btn:hover {
+            color: #4ade80;
+        }
+    </style>
+
+    {% block additional_styles %}{% endblock %}
+</head>
+<body {% block body_attributes %}{% endblock %}>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <img src="{{ url_for('static', filename='image/image.png') }}" alt="SaaSquatch Logo" class="logo-image">
+            <a href="{{ url_for('main.index') }}" class="logo">
+                <span class="logo-saasquatch">SaaSquatch</span> <span class="logo-leads">Leads</span>
+            </a>
+        </div>
+        <div class="navbar-menu">
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('main.index') }}" class="nav-link">Home</a>
+
+            <a href="https://app.saasquatchleads.com" class="nav-link">Scraper Tool</a>
+            <a href="{{ url_for('customer_portal.customer_portal') }}" class="nav-link">Portal</a>
+
+            {% if current_user.is_authenticated and (current_user.is_admin() or current_user.role == 'developer') %}
+            <a href="{{ url_for('dashboard.admin_dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard.admin_dashboard' %}active{% endif %}">Dashboard</a>
+            {% endif %}
+
+            <!-- Plan Button (minimal, inline, no border) -->
+            <button id="plan-navbar-btn" style="background: none; border: none; color: var(--primary-color); font-weight: 600; margin-right: 12px; padding: 0 8px; cursor: pointer; font-size: 15px;" onclick="showPlanInfoModal()">
+                <span id="navbar-plan-name">...</span>
+            </button>
+
+            <!-- Company Info (if user is part of a company) -->
+            {% if current_user.company_id %}
+            <div class="dropdown" style="display:inline-block; margin-right: 12px;">
+                <button class="btn btn-outline dropdown-toggle" type="button" id="companyDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="background: none; border: 1px solid var(--primary-color); color: var(--primary-color); font-size: 13px; padding: 4px 8px;">
+                    <i class="bi bi-building" style="margin-right: 4px;"></i>
+                    <span id="company-name">Company</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="companyDropdown">
+                    <li><a class="dropdown-item" href="{{ url_for('company.company_dashboard') }}">Company Dashboard</a></li>
+                    {% if current_user.is_company_admin %}
+                    {% endif %}
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="{{ url_for('company.company_dashboard') }}">View Company Info</a></li>
+                </ul>
+            </div>
+            {% endif %}
+
+            <button
+                type="button"
+                class="btn btn-primary position-relative"
+                style="background: none; border: none; color: var(--primary-color); margin-right: 12px; padding: 0 8px; cursor: pointer; font-size: 15px;"
+                onclick="openInboxModal()">
+                <i class="bi bi-bell"></i>
+                {% set unread_count = release_notes|selectattr('read', 'equalto', False)|list|length if release_notes else 0 %}
+                {% if unread_count > 0 %}
+                <span id="notif-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:0.7rem; min-width:18px;">{{ unread_count }}</span>
+                {% endif %}
+            </button>
+
+            <!-- Invitation Button -->
+            <button
+                type="button"
+                class="btn btn-primary position-relative"
+                style="background: none; border: none; color: var(--primary-color); margin-right: 12px; padding: 0 8px; cursor: pointer; font-size: 15px;"
+                onclick="toggleInvitationSidebar()">
+                <i class="bi bi-envelope"></i>
+                <span id="invitation-count-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:0.7rem; min-width:18px; display: none;">0</span>
+            </button>
+
+            <!-- Dropdown Profil -->
+            <div class="dropdown" style="display:inline-block;">
+                <button class="btn btn-profile dropdown-toggle" type="button" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="profile-icon">👤</span> {{ current_user.username }}
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                    <li>
+                        <div class="dropdown-header" style="padding: 8px 16px; font-size: 12px; color: #6c757d; border-bottom: 1px solid #dee2e6;">
+                            <div style="font-weight: 600; color: #495057;">{{ current_user.username }}</div>
+                            <div style="font-size: 11px; color: #6c757d;">{{ current_user.email }}</div>
+                        </div>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="/logout">Logout</a></li>
+                </ul>
+            </div>
+            {% else %}
+                <div class="auth-buttons">
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline">Login</a>
+                    <a href="{{ url_for('auth.signup') }}" class="btn btn-primary">Sign Up</a>
+                </div>
+            {% endif %}
+        </div>
+    </nav>
+
+    <!-- Menu Toggle Button -->
+    {% if current_user.is_authenticated %}
+    <button class="menu-toggle" id="menuToggle">
+        <i class="bi bi-list"></i>
+    </button>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <!-- Main Navigation -->
+        <div class="nav-section">
+            <div class="nav-section-title">MAIN</div>
+            <a href="{{ url_for('lead.view_leads') }}" class="nav-item {% if request.endpoint == 'lead.view_leads' %}active{% endif %}">
+                <i class="bi bi-pencil-square"></i>
+                <span>View Leads</span>
+            </a>
+
+            <a href="/release-notes" class="nav-item {% if request.endpoint == 'release_notes.view_notes' %}active{% endif %}">
+                <i class="bi bi-megaphone"></i>
+                <span>Release Notes</span>
+            </a>
+            {% if current_user.is_authenticated and (current_user.is_admin() or current_user.role == 'developer') %}
+            <a href="{{ url_for('main.audit_log') }}" class="nav-item {% if request.endpoint == 'main.audit_log' %}active{% endif %}">
+                <i class="bi bi-clipboard-data"></i>
+                <span>Audit Log</span>
+            </a>
+            <a href="{{ url_for('credits_log.view_credit_logs') }}" class="nav-item {% if request.endpoint == 'credits_log.view_credit_logs' %}active{% endif %}">
+                <i class="bi bi-clipboard-data"></i>
+                <span>Credit Log</span>
+            </a>
+            <a href="{{ url_for('credit_transfer_log.view_credit_transfers') }}" class="nav-item {% if request.endpoint == 'credit_transfer_log.view_credit_transfers' %}active{% endif %}">
+                <i class="bi bi-arrow-left-right"></i>
+                <span>Credit Transfers</span>
+            </a>
+            {% endif %}
+        </div>
+
+        <!-- Contacts Section -->
+        <div class="nav-section">
+            <div class="nav-section-title">CONTACTS</div>
+            <a href="{{ url_for('contact.view_all_contacts_page') }}" class="nav-item {% if request.endpoint == 'contact.view_all_contacts_page' %}active{% endif %}">
+                <i class="bi bi-people"></i>
+                <span>All Contacts</span>
+            </a>
+        </div>
+
+        <!-- Company Account Section -->
+        <!-- {% if current_user.is_authenticated and current_user.tier in ['silver', 'gold', 'platinum'] %}
+        <div class="nav-section">
+            <div class="nav-section-title">COMPANY</div>
+            <a href="{{ url_for('company.company_dashboard') }}" class="nav-item {% if request.endpoint == 'company.company_dashboard' %}active{% endif %}">
+                <i class="bi bi-building"></i>
+                <span>Company Dashboard</span>
+            </a>
+        </div>
+        {% endif %} -->
+
+        <!-- Team Workspace Section -->
+        {% if current_user.is_authenticated %}
+        <div class="nav-section">
+            <div class="nav-section-title">WORKSPACE</div>
+            <a href="{{ url_for('workspace_web.workspace_list') }}" class="nav-item {% if request.endpoint == 'workspace_web.workspace_list' %}active{% endif %}">
+                <i class="bi bi-grid-3x3-gap"></i>
+                <span>My Workspaces</span>
+            </a>
+            <a href="{{ url_for('workspace_web.invitation_sidebar') }}" class="nav-item">
+                <i class="bi bi-envelope"></i>
+                <span>Invitations</span>
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- {% if current_user.is_authenticated and current_user.is_admin() %}
+        <div class="nav-section">
+            <div class="nav-section-title">ADMIN</div>
+            <a href="{{ url_for('admin.companies') }}" class="nav-item {% if request.endpoint == 'admin.companies' %}active{% endif %}">
+                <i class="bi bi-building"></i>
+                <span>All Companies</span>
+            </a>
+        </div>
+        {% endif %} -->
+
+        <!-- Import Section -->
+        {% if current_user.is_authenticated and current_user.role in ['admin', 'developer'] %}
+        <div class="nav-section">
+            <div class="nav-section-title">IMPORT</div>
+            <a href="{{ url_for('lead.form') }}" class="nav-item {% if request.endpoint == 'lead.form' %}active{% endif %}">
+                <i class="bi bi-person-plus"></i>
+                <span>Single Import</span>
+            </a>
+            <a href="{{ url_for('lead.upload_page') }}" class="nav-item {% if request.endpoint == 'lead.upload_page' %}active{% endif %}">
+                <i class="bi bi-cloud-upload"></i>
+                <span>Bulk Import</span>
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Drafts Section -->
+        <div class="nav-section">
+            <div class="nav-section-title">DRAFTS</div>
+            {% if current_user.is_authenticated and (current_user.is_admin() or current_user.role == 'developer') %}
+            <a href="{{ url_for('lead.view_edited_leads') }}" class="nav-item {% if request.endpoint == 'lead.view_edited_leads' %}active{% endif %}">
+                <i class="bi bi-pencil"></i>
+                <span>Edited Leads</span>
+            </a>
+            <a href="{{ url_for('lead.view_deleted_leads') }}" class="nav-item {% if request.endpoint == 'lead.view_deleted_leads' %}active{% endif %}">
+                <i class="bi bi-trash"></i>
+                <span>Deleted Leads</span>
+            </a>
+            {% endif %}
+            <a href="{{ url_for('lead.view_drafts') }}" class="nav-item {% if request.endpoint == 'lead.view_drafts' %}active{% endif %}">
+                <i class="bi bi-file-earmark-text"></i>
+                <span>Lead Drafts</span>
+            </a>
+        </div>
+
+        <!-- Documentation Section -->
+        <!-- <div class="nav-section">
+            <div class="nav-section-title">DOCUMENTATION</div>
+            <a href="{{ url_for('main.user_docs') }}" class="nav-item {% if request.endpoint == 'main.user_docs' %}active{% endif %}">
+                <i class="bi bi-file-text"></i>
+                <span>User Guide</span>
+            </a>
+            {% if current_user.is_authenticated and current_user.role in ['admin', 'developer'] %}
+            <a href="{{ url_for('main.admin_docs') }}" class="nav-item {% if request.endpoint == 'main.admin_docs' %}active{% endif %}">
+                <i class="bi bi-shield-lock"></i>
+                <span>Admin Guide</span>
+            </a>
+            {% endif %}
+        </div> -->
+
+        <!-- System Section -->
+        <!-- <div class="nav-section">
+            <div class="nav-section-title">SYSTEM</div>
+            <a href="#" class="nav-item">
+                <i class="bi bi-gear"></i>
+                <span>Settings</span>
+            </a>
+        </div> -->
+
+        <!-- User Management (Admin and Developer) -->
+        {% if current_user.is_authenticated and (current_user.is_admin() or current_user.role == 'developer') %}
+        <div class="nav-section">
+            <div class="nav-section-title">USER MANAGEMENT</div>
+            <a href="{{ url_for('auth.manage_users') }}" class="nav-item {% if request.endpoint == 'auth.manage_users' %}active{% endif %}">
+                <i class="bi bi-people"></i>
+                <span>User Roles & Access</span>
+            </a>
+            <a href="{{ url_for('user_management.user_management') }}" class="nav-item {% if request.endpoint == 'user_management.user_management' %}active{% endif %}">
+                <i class="bi bi-person"></i>
+                <span>User Subscriptions</span>
+            </a>
+            <a href="{{ url_for('user_management.user_draft') }}" class="nav-item {% if request.endpoint == 'user_management.user_draft' %}active{% endif %}">
+                <i class="bi bi-file-earmark-person"></i>
+                <span>User Lead Drafts</span>
+            </a>
+            <a href="/admin/release-notes" class="nav-item {% if request.endpoint == 'admin.manage_release_notes' %}active{% endif %}">
+                <i class="bi bi-gear"></i>
+                <span>Manage Release Notes</span>
+            </a>
+        </div>
+        {% endif %}
+    </nav>
+    {% endif %}
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Plan Info Modal -->
+    <div id="planInfoModal" class="modal" style="display:none; position:fixed; z-index:3000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
+      <div class="modal-content" style="background:var(--card-bg); color:var(--text-color); margin:5% auto; padding:32px; border-radius:12px; width:90%; max-width:400px; position:relative;">
+        <h4 style="margin-top:0;">Your Plan Details</h4>
+        <div><strong>Plan Name:</strong> <span id="modal-plan-name">...</span></div>
+        <div><strong>Credits Remaining:</strong> <span id="modal-credits-remaining">...</span></div>
+        <div><strong>Plan Ends:</strong> <span id="modal-plan-end-date">...</span></div>
+        <button onclick="window.location.href='/choose_plan'" class="btn btn-primary" style="margin-top:24px;">Upgrade</button>
+        <button onclick="closePlanInfoModal()" class="btn btn-outline" style="margin-top:24px; margin-left:8px;">Close</button>
+      </div>
+    </div>
+
+    <!-- Notification Dropdown Modal -->
+    <div id="inboxModal" class="inbox-modal">
+      <div class="inbox-dropdown">
+        <div class="inbox-header">
+          <span class="inbox-title">Inbox</span>
+          <button class="close-btn" onclick="closeInboxModal()">&times;</button>
+        </div>
+        <div class="inbox-list">
+          {% if release_notes is not none and release_notes|length > 0 %}
+            {% for note in release_notes %}
+              <div class="inbox-item{% if not note.read %} unread{% endif %}">
+                <div class="inbox-item-icon">
+                  <i class="bi bi-megaphone"></i>
+                </div>
+                <div class="inbox-item-content">
+                  <div class="inbox-item-title">{{ note.title }}</div>
+                  <div class="inbox-item-desc">{{ note.content[:60] ~ ('...' if note.content|length > 60 else '') }}</div>
+                </div>
+                <div class="inbox-item-meta">
+                  <span class="inbox-item-date">{{ note.created_at|todate('%b %d') }}</span>
+                  {% if not note.read %}
+                    <span class="inbox-dot"></span>
+                    <button class="inbox-check-btn" title="Mark as read" onclick="markAsReadInbox(this, '{{ note.id }}')" type="button">
+                      <i class="bi bi-check2-circle"></i>
+                    </button>
+                  {% endif %}
+                  <button class="inbox-dismiss-btn" title="Dismiss" onclick="dismissInboxNote(this, '{{ note.id }}')" type="button" style="background:none; border:none; color:#f87171; margin-left:8px; font-size:1.1em; cursor:pointer;">
+                    <i class="bi bi-x-circle"></i>
+                  </button>
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="inbox-empty">No release notes yet.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const menuToggle = document.getElementById('menuToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            function toggleSidebar() {
+                sidebar.classList.toggle('show');
+                menuToggle.classList.toggle('active');
+                sidebarOverlay.classList.toggle('show');
+                document.body.style.overflow = sidebar.classList.contains('show') ? 'hidden' : '';
+            }
+
+            // Toggle sidebar
+            if (menuToggle) {
+                menuToggle.addEventListener('click', toggleSidebar);
+            }
+
+            // Close sidebar when clicking overlay
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', toggleSidebar);
+            }
+
+            // Simple sidebar functionality - no team ID required
+            // Update links when sidebar is opened
+            if (menuToggle) {
+                menuToggle.addEventListener('click', function() {
+                    if (!sidebar.classList.contains('show')) {
+                    }
+                });
+            }
+
+            // Documentation dropdown functionality
+            const docDropdown = document.getElementById('docDropdown');
+            const dropdownMenu = document.querySelector('.dropdown-menu');
+
+            if (docDropdown && dropdownMenu) {
+                // Toggle dropdown on click
+                docDropdown.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
+                });
+
+                // Add hover effect to dropdown items
+                const dropdownItems = document.querySelectorAll('.dropdown-item');
+                dropdownItems.forEach(item => {
+                    item.addEventListener('mouseenter', function() {
+                        this.style.backgroundColor = '#f1f5f9';
+                    });
+                    item.addEventListener('mouseleave', function() {
+                        this.style.backgroundColor = 'transparent';
+                    });
+                });
+
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!e.target.closest('.dropdown')) {
+                        dropdownMenu.style.display = 'none';
+                    }
+                });
+            }
+        });
+
+        function fetchNavbarPlanInfo() {
+          fetch('/api/user/subscription_info')
+            .then(res => res.json())
+            .then(data => {
+              // Use subscription.plan_name for plan name
+              const planName = data.subscription?.plan_name || 'N/A';
+              // Use subscription.plan_expiration_timestamp for end date
+              let planEndDate = '-';
+              if (data.subscription?.plan_expiration_timestamp) {
+                planEndDate = new Date(data.subscription.plan_expiration_timestamp).toLocaleDateString();
+              }
+              // Navbar button
+              document.getElementById('navbar-plan-name').textContent = planName;
+              // Modal
+              document.getElementById('modal-plan-name').textContent = planName;
+              document.getElementById('modal-credits-remaining').textContent = data.subscription?.credits_remaining ?? '-';
+              document.getElementById('modal-plan-end-date').textContent = planEndDate;
+            });
+        }
+        function showPlanInfoModal() {
+          document.getElementById('planInfoModal').style.display = 'block';
+          fetchNavbarPlanInfo();
+        }
+        function closePlanInfoModal() {
+          document.getElementById('planInfoModal').style.display = 'none';
+        }
+        document.addEventListener('DOMContentLoaded', fetchNavbarPlanInfo);
+    </script>
+
+    <script>
+    function openInboxModal() {
+      document.getElementById('inboxModal').style.display = 'flex';
+    }
+    function closeInboxModal() {
+      document.getElementById('inboxModal').style.display = 'none';
+    }
+    function markAsReadInbox(btn, noteId) {
+      btn.disabled = true;
+      const dot = btn.parentElement.querySelector('.inbox-dot');
+
+      fetch(`/api/release-notes/${noteId}/read`, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      })
+      .then(res => res.json())
+      .then(data => {
+        btn.style.display = 'none';
+        if(dot) dot.style.display = 'none';
+        // Update notif badge count
+        var badge = document.getElementById('notif-badge');
+        if (badge) {
+          var count = parseInt(badge.textContent, 10);
+          if (!isNaN(count) && count > 0) {
+            count -= 1;
+            if (count > 0) {
+              badge.textContent = count;
+              badge.style.display = 'inline-block';
+            } else {
+              badge.style.display = 'none';
+            }
+          }
+        }
+      })
+      .catch(() => { btn.disabled = false; });
+    }
+    // Tambahkan handler dismissInboxNote
+    function dismissInboxNote(btn, noteId) {
+      if (btn.disabled) return;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="bi bi-x-circle"></i>...';
+      fetch(`/api/release-notes/${noteId}/dismiss`, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      })
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to dismiss');
+        // Hapus item dari modal
+        const inboxItem = btn.closest('.inbox-item');
+        if (inboxItem) {
+          inboxItem.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+          inboxItem.style.opacity = '0';
+          inboxItem.style.transform = 'scale(0.97)';
+          setTimeout(() => {
+            inboxItem.remove();
+            // Jika tidak ada item tersisa, tampilkan pesan kosong
+            if (document.querySelectorAll('.inbox-item').length === 0) {
+              const inboxList = document.querySelector('.inbox-list');
+              if (inboxList) inboxList.innerHTML = '<div class="inbox-empty">No release notes yet.</div>';
+            }
+          }, 300);
+        }
+        // Update notif badge count
+        var badge = document.getElementById('notif-badge');
+        if (badge) {
+          var count = parseInt(badge.textContent, 10);
+          if (!isNaN(count) && count > 0) {
+            count -= 1;
+            if (count > 0) {
+              badge.textContent = count;
+              badge.style.display = 'inline-block';
+            } else {
+              badge.style.display = 'none';
+            }
+          }
+        }
+      })
+      .catch(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-x-circle"></i>';
+        alert('Failed to dismiss note. Please try again.');
+      });
+    }
+    </script>
+
+    <script>
+    // Invitation Sidebar Functions
+    let invitationSidebarOpen = false;
+    let invitations = [];
+
+    // Toggle invitation sidebar
+    function toggleInvitationSidebar() {
+        const sidebar = document.getElementById('invitationSidebar');
+        if (!sidebar) {
+            // Create sidebar if it doesn't exist
+            createInvitationSidebar();
+        }
+
+        invitationSidebarOpen = !invitationSidebarOpen;
+        const sidebarElement = document.getElementById('invitationSidebar');
+        if (sidebarElement) {
+            sidebarElement.classList.toggle('open', invitationSidebarOpen);
+        }
+    }
+
+    // Create invitation sidebar
+    function createInvitationSidebar() {
+        const sidebarHTML = `
+            <div class="invitation-sidebar" id="invitationSidebar">
+                <div class="sidebar-header">
+                    <h4>Team Invitations</h4>
+                    <button onclick="toggleInvitationSidebar()" style="background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer;">&times;</button>
+                </div>
+                <div class="sidebar-content" id="invitationContent">
+                    <div class="no-invitations">
+                        <i class="fas fa-envelope-open" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                        <p>Loading invitations...</p>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', sidebarHTML);
+
+        // Add CSS for invitation sidebar
+        const style = document.createElement('style');
+        style.textContent = `
+            .invitation-sidebar {
+                position: fixed;
+                right: 0;
+                top: 0;
+                height: 100vh;
+                width: 400px;
+                background: var(--card-bg);
+                border-left: 1px solid var(--border-color);
+                box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+                z-index: 1000;
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+                overflow-y: auto;
+            }
+            .invitation-sidebar.open {
+                transform: translateX(0);
+            }
+            .sidebar-header {
+                padding: 1.5rem;
+                border-bottom: 1px solid var(--border-color);
+                background: var(--primary-color);
+                color: white;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .sidebar-content {
+                padding: 1rem;
+            }
+            .invitation-item {
+                background: var(--background-color);
+                border: 1px solid var(--border-color);
+                border-radius: 8px;
+                padding: 1rem;
+                margin-bottom: 1rem;
+                transition: all 0.2s ease;
+            }
+            .invitation-item:hover {
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            }
+            .invitation-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                margin-bottom: 0.5rem;
+            }
+            .invitation-email {
+                font-weight: 600;
+                color: var(--text-color);
+            }
+            .invitation-role {
+                background: var(--primary-color);
+                color: white;
+                padding: 0.25rem 0.5rem;
+                border-radius: 4px;
+                font-size: 0.75rem;
+                font-weight: 500;
+            }
+            .invitation-details {
+                font-size: 0.875rem;
+                color: var(--secondary-color);
+                margin-bottom: 1rem;
+            }
+            .invitation-actions {
+                display: flex;
+                gap: 0.5rem;
+            }
+            .btn-accept {
+                background: var(--success-color, #28a745);
+                color: white;
+                border: none;
+                padding: 0.5rem 1rem;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 0.875rem;
+                flex: 1;
+            }
+            .btn-decline {
+                background: var(--danger-color, #dc3545);
+                color: white;
+                border: none;
+                padding: 0.5rem 1rem;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 0.875rem;
+                flex: 1;
+            }
+            .btn-accept:hover, .btn-decline:hover {
+                opacity: 0.9;
+            }
+            .invitation-expired {
+                background: var(--warning-color, #ffc107);
+                color: var(--text-color);
+                padding: 0.5rem;
+                border-radius: 4px;
+                font-size: 0.875rem;
+                margin-bottom: 1rem;
+            }
+            .no-invitations {
+                text-align: center;
+                padding: 2rem;
+                color: var(--secondary-color);
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Load invitations
+        fetchInvitations();
+    }
+
+    // Fetch invitations
+    async function fetchInvitations() {
+        try {
+            const response = await fetch('/api/invitations/pending', {
+                credentials: 'include'
+            });
+
+            // Check if response is JSON
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+
+                return;
+            }
+
+            if (!response.ok) {
+
+                return;
+            }
+
+            const data = await response.json();
+            invitations = Array.isArray(data) ? data : (data.invitations || []);
+
+            renderInvitations();
+            updateInvitationCount();
+        } catch (error) {
+            // Don't render anything on error to avoid issues
+        }
+    }
+
+    // Render invitations
+    function renderInvitations() {
+        const content = document.getElementById('invitationContent');
+        if (!content) return;
+
+        if (!invitations.length) {
+            content.innerHTML = `
+                <div class="no-invitations">
+                    <i class="fas fa-envelope-open" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                    <p>No pending invitations</p>
+                </div>
+            `;
+            return;
+        }
+
+        content.innerHTML = invitations.map(invitation => `
+            <div class="invitation-item">
+                <div class="invitation-header">
+                    <div class="invitation-email">${invitation.email}</div>
+                    <div class="invitation-role">${invitation.role}</div>
+                </div>
+
+                <div class="invitation-details">
+                    <div><strong>Workspace:</strong> ${invitation.workspace_name || 'Unknown'}</div>
+                    <div><strong>Invited by:</strong> ${invitation.invited_by_email || 'Unknown'}</div>
+                    <div><strong>Sent:</strong> ${new Date(invitation.sent_at).toLocaleDateString()}</div>
+                    <div><strong>Expires:</strong> ${new Date(invitation.expires_at).toLocaleDateString()}</div>
+                    <div><strong>Days left:</strong> ${invitation.days_until_expiry}</div>
+                </div>
+
+                ${invitation.is_expired ? `
+                    <div class="invitation-expired">
+                        <i class="fas fa-exclamation-triangle"></i> This invitation has expired
+                    </div>
+                ` : ''}
+
+                <div class="invitation-actions">
+                    <button class="btn-accept" onclick="acceptInvitation('${invitation.invitation_id}')" ${invitation.is_expired ? 'disabled' : ''}>
+                        <i class="fas fa-check"></i> Accept
+                    </button>
+                    <button class="btn-decline" onclick="declineInvitation('${invitation.invitation_id}')">
+                        <i class="fas fa-times"></i> Decline
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // Update invitation count
+    function updateInvitationCount() {
+        const countElement = document.getElementById('invitation-count-badge');
+        if (!countElement) return;
+
+        const validInvitations = invitations.filter(inv => !inv.is_expired);
+
+        if (validInvitations.length > 0) {
+            countElement.textContent = validInvitations.length;
+            countElement.style.display = 'inline-block';
+        } else {
+            countElement.style.display = 'none';
+        }
+    }
+
+    // Accept invitation
+    async function acceptInvitation(invitationId) {
+        try {
+            const response = await fetch(`/api/invitations/${invitationId}/accept`, {
+                method: 'POST',
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to accept invitation');
+            }
+
+            const result = await response.json();
+
+            if (result.success) {
+                showAlert('Invitation accepted successfully!', 'success');
+                fetchInvitations(); // Refresh the list
+            } else {
+                showAlert(result.message || 'Failed to accept invitation', 'danger');
+            }
+        } catch (error) {
+
+            showAlert('Failed to accept invitation', 'danger');
+        }
+    }
+
+    // Decline invitation
+    async function declineInvitation(invitationId) {
+        try {
+            const response = await fetch(`/api/invitations/${invitationId}/decline`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({ reason: '' })
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                showAlert('Invitation declined successfully!', 'success');
+                await fetchInvitations(); // Refresh the list
+            } else {
+                throw new Error(result.message || 'Failed to decline invitation');
+            }
+        } catch (error) {
+
+            showAlert(error.message || 'Failed to decline invitation', 'danger');
+        }
+    }
+
+    // Show alert helper
+    function showAlert(message, type = 'success') {
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type}`;
+        alert.style.position = 'fixed';
+        alert.style.top = '20px';
+        alert.style.right = '20px';
+        alert.style.zIndex = 2000;
+        alert.textContent = message;
+        document.body.appendChild(alert);
+        setTimeout(() => alert.remove(), 3000);
+    }
+
+    // Initialize invitation system
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if we're on mobile
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+        // Prevent unwanted reloads on mobile
+        if (isMobile) {
+            // Prevent pull-to-refresh
+            document.body.style.overscrollBehavior = 'none';
+
+            // Prevent double-tap zoom
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', function (event) {
+                const now = (new Date()).getTime();
+                if (now - lastTouchEnd <= 300) {
+                    event.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, false);
+        }
+
+        // Check for invitations on page load
+        fetchInvitations();
+
+        // Refresh invitations less frequently on mobile to prevent reload issues
+        if (!isMobile) {
+            setInterval(fetchInvitations, 30000); // 30 seconds on desktop
+        } else {
+            setInterval(fetchInvitations, 120000); // 2 minutes on mobile
+        }
+    });
+
+    // Close sidebar when clicking outside
+    document.addEventListener('click', function(event) {
+        const sidebar = document.getElementById('invitationSidebar');
+        const invitationBtn = document.querySelector('[onclick="toggleInvitationSidebar()"]');
+
+        if (invitationSidebarOpen &&
+            sidebar &&
+            !sidebar.contains(event.target) &&
+            !invitationBtn.contains(event.target)) {
+            toggleInvitationSidebar();
+        }
+    });
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,3 @@
+	[submodule "backend-database/backend/services/RoboDialer/frontend/frontend_ui"]
+		path = backend-database/backend/services/RoboDialer/frontend/frontend_ui
+		url = https://github.com/Gouravbirwaz/Ai_powered_soft_phone.git

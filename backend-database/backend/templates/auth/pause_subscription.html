@@ -1,0 +1,567 @@
+{% extends "base.html" %} {% block title %}Pause Subscription -
+SaasquatchLeads{% endblock %} {% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="fas fa-pause-circle me-2"></i>
+                        Pause Your Subscription
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Current Subscription Info -->
+                    <div class="alert alert-info mb-4">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-info-circle me-2"></i>Current
+                            Subscription
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Plan:</strong> {{
+                                subscription_info.subscription.plan_name }}<br />
+                                <strong>Credits Remaining:</strong> {{
+                                subscription_info.subscription.credits_remaining
+                                }}
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Tier:</strong> {{ user_tier|title }}<br />
+                                <strong>Status:</strong>
+                                {% if subscription_info.subscription.is_paused
+                                %}
+                                <span class="badge bg-warning text-dark"
+                                    >Paused</span
+                                >
+                                {% else %}
+                                <span class="badge bg-success">Active</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Resume Button for Paused Subscriptions -->
+                        {% if subscription_info.subscription.is_paused and subscription_info.subscription.pause_status == 'active' %}
+                        <div class="mt-3">
+                            <div
+                                class="d-flex justify-content-between align-items-center p-3 bg-warning bg-opacity-10 border border-warning rounded"
+                            >
+                                <div>
+                                    <h6 class="text-dark mb-1">
+                                        <i class="fas fa-pause-circle me-2"></i
+                                        >Subscription is Paused
+                                    </h6>
+                                    <small class="text-muted">
+                                        Started: {{
+                                        subscription_info.subscription.pause_start_date[:10]
+                                        if
+                                        subscription_info.subscription.pause_start_date
+                                        else 'Unknown' }} |
+                                        Duration: {{
+                                        subscription_info.subscription.pause_duration_days
+                                        or 'Unknown' }} days |
+                                        Ends: {{
+                                        subscription_info.subscription.pause_end_date[:10]
+                                        if
+                                        subscription_info.subscription.pause_end_date
+                                        else 'Unknown' }}
+                                    </small>
+                                </div>
+                                <div>
+                                    <button
+                                        class="btn btn-success"
+                                        onclick="resumeSubscription()"
+                                        id="resumeBtn"
+                                    >
+                                        <i class="fas fa-play me-2"></i>Resume
+                                        Now
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- How Pause Works -->
+                    <div class="mb-4">
+                        <h5>
+                            <i
+                                class="fas fa-question-circle me-2 text-primary"
+                            ></i
+                            >How does the pause feature work?
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    <li>
+                                        <i
+                                            class="fas fa-check text-success me-2"
+                                        ></i
+                                        >Pay a small storage fee to keep your
+                                        data safe
+                                    </li>
+                                    <li>
+                                        <i
+                                            class="fas fa-check text-success me-2"
+                                        ></i
+                                        >Your subscription days are preserved
+                                    </li>
+                                    <li>
+                                        <i
+                                            class="fas fa-check text-success me-2"
+                                        ></i
+                                        >Account downgraded to Free tier during
+                                        pause
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    <li>
+                                        <i
+                                            class="fas fa-check text-success me-2"
+                                        ></i
+                                        >Resume anytime before the end date
+                                    </li>
+                                    <li>
+                                        <i
+                                            class="fas fa-check text-success me-2"
+                                        ></i
+                                        >Automatic restoration after pause
+                                        period
+                                    </li>
+                                    <li>
+                                        <i
+                                            class="fas fa-check text-success me-2"
+                                        ></i
+                                        >No loss of remaining subscription time
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pause Duration Options -->
+                    {% if not subscription_info.subscription.is_paused and user_tier != 'free' %}
+                    <div class="mb-4">
+                        <h5>
+                            <i class="fas fa-clock me-2 text-primary"></i>Choose
+                            Pause Duration:
+                        </h5>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Important:</strong> Storage fees are
+                            non-refundable, even if you resume early. Your
+                            subscription pause will begin immediately after
+                            payment and you'll be switched to the free plan.
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div
+                                    class="card pause-option h-100"
+                                    data-duration="pause_30_days"
+                                >
+                                    <div
+                                        class="card-body text-center d-flex flex-column"
+                                    >
+                                        <h6 class="card-title text-dark">
+                                            <strong>30 Days</strong>
+                                        </h6>
+                                        <div class="flex-grow-1">
+                                            <p class="text-muted mb-2">
+                                                Perfect for monthly breaks
+                                            </p>
+                                            <h4 class="text-success mb-3">
+                                                $7
+                                            </h4>
+                                        </div>
+                                        <button
+                                            class="btn btn-outline-warning btn-block"
+                                            onclick="selectPauseDuration('pause_30_days')"
+                                        >
+                                            <i
+                                                class="fas fa-play-circle me-1"
+                                            ></i
+                                            >Select 30 Days
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div
+                                    class="card pause-option h-100"
+                                    data-duration="pause_60_days"
+                                >
+                                    <div
+                                        class="card-body text-center d-flex flex-column"
+                                    >
+                                        <h6 class="card-title text-dark">
+                                            <strong>60 Days</strong>
+                                        </h6>
+                                        <div class="flex-grow-1">
+                                            <p class="text-muted mb-2">
+                                                Ideal for extended vacations
+                                            </p>
+                                            <h4 class="text-success mb-3">
+                                                $14
+                                            </h4>
+                                        </div>
+                                        <button
+                                            class="btn btn-outline-warning btn-block"
+                                            onclick="selectPauseDuration('pause_60_days')"
+                                        >
+                                            <i
+                                                class="fas fa-play-circle me-1"
+                                            ></i
+                                            >Select 60 Days
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div
+                                    class="card pause-option h-100"
+                                    data-duration="pause_90_days"
+                                >
+                                    <div
+                                        class="card-body text-center d-flex flex-column"
+                                    >
+                                        <h6 class="card-title text-dark">
+                                            <strong>90 Days</strong>
+                                        </h6>
+                                        <div class="flex-grow-1">
+                                            <p class="text-muted mb-2">
+                                                Extended time off
+                                            </p>
+                                            <h4 class="text-success mb-3">
+                                                $21
+                                            </h4>
+                                        </div>
+                                        <button
+                                            class="btn btn-outline-warning btn-block"
+                                            onclick="selectPauseDuration('pause_90_days')"
+                                        >
+                                            <i
+                                                class="fas fa-play-circle me-1"
+                                            ></i
+                                            >Select 90 Days
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% elif subscription_info.subscription.is_paused and subscription_info.subscription.pause_status == 'active' %}
+                    <div class="alert alert-warning">
+                        <h6 class="text-dark">
+                            <i class="fas fa-info-circle me-2"></i>Subscription
+                            Currently Paused
+                        </h6>
+                        <p class="mb-2 text-dark">
+                            Your subscription is currently paused. You can resume it
+                            at any time using the "Resume Now" button above.
+                            <strong>Note:</strong> Storage fees are
+                            non-refundable, even if you resume early.
+                        </p>
+                        <p class="mb-0 text-muted">
+                            <small>
+                                <strong>Pause Period:</strong> {{
+                                subscription_info.subscription.pause_duration_days
+                                or 'Unknown' }} days |
+                                <strong>Days Saved:</strong> {{
+                                subscription_info.subscription.current_plan_days_remaining
+                                or
+                                subscription_info.subscription.original_plan_days_remaining
+                                or 'Unknown' }} days |
+                                <strong>Original Plan:</strong> {{
+                                subscription_info.subscription.original_plan_name
+                                or 'Unknown' }}
+                            </small>
+                        </p>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <h6 class="text-dark">
+                            <i class="fas fa-info-circle me-2"></i>Free Plan
+                        </h6>
+                        <p class="mb-0 text-dark">
+                            You are currently on the free plan. To pause a subscription, you need to have an active paid plan first.
+                        </p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Timeline Info -->
+                    <div class="alert alert-light border">
+                        <h6 class="text-dark">
+                            <i class="fas fa-timeline me-2"></i>What happens
+                            next?
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <i
+                                        class="fas fa-credit-card fa-2x text-warning mb-2"
+                                    ></i>
+                                    <h6 class="text-dark">1. Payment</h6>
+                                    <small class="text-muted"
+                                        >Pay storage fee</small
+                                    >
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <i
+                                        class="fas fa-pause fa-2x text-info mb-2"
+                                    ></i>
+                                    <h6 class="text-dark">2. Pause Active</h6>
+                                    <small class="text-muted"
+                                        >Immediately: Pause begins, account
+                                        downgraded to Free</small
+                                    >
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <i
+                                        class="fas fa-undo fa-2x text-success mb-2"
+                                    ></i>
+                                    <h6 class="text-dark">3. Auto Resume</h6>
+                                    <small class="text-muted"
+                                        >After pause period</small
+                                    >
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Navigation -->
+                    <div class="text-center mt-4">
+                        <a
+                            href="{{ url_for('auth.choose_plan') }}"
+                            class="btn btn-secondary me-2"
+                        >
+                            <i class="fas fa-arrow-left me-1"></i>
+                            Back to Plans
+                        </a>
+                        <span class="text-muted"
+                            >Or select a pause duration above to continue</span
+                        >
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <div class="spinner-border text-warning mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h5 class="text-dark">Processing your pause request...</h5>
+                <p class="text-muted">
+                    Please wait while we set up your subscription pause.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .pause-option {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid #e9ecef;
+    }
+
+    .pause-option:hover {
+        border-color: #ffc107;
+        transform: translateY(-3px);
+        box-shadow: 0 6px 15px rgba(255, 193, 7, 0.3);
+    }
+
+    .pause-option.selected {
+        border-color: #ffc107;
+        background-color: #fff3cd;
+        transform: translateY(-3px);
+        box-shadow: 0 6px 15px rgba(255, 193, 7, 0.4);
+    }
+
+    .card-title {
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .alert-heading {
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .btn-block {
+        width: 100%;
+    }
+
+    h4,
+    h5,
+    h6 {
+        color: #212529 !important;
+        font-weight: 600;
+    }
+
+    .text-dark {
+        color: #212529 !important;
+    }
+
+    .list-unstyled li {
+        margin-bottom: 0.5rem;
+        color: #495057;
+        font-weight: 500;
+    }
+</style>
+
+<script>
+    let selectedDuration = null;
+
+    async function resumeSubscription() {
+        try {
+            const resumeBtn = document.getElementById("resumeBtn");
+            const originalText = resumeBtn.innerHTML;
+
+            // Show loading state
+            resumeBtn.disabled = true;
+            resumeBtn.innerHTML =
+                '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Resuming...';
+
+            // Make API call to resume subscription
+            const response = await fetch("/api/subscription/resume", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                credentials: "include",
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                showAlert(
+                    "success",
+                    result.message || "Subscription resumed successfully!",
+                );
+                // Reload page after 2 seconds to show updated status
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            } else {
+                showAlert(
+                    "error",
+                    result.error || "Failed to resume subscription",
+                );
+                // Reset button state
+                resumeBtn.disabled = false;
+                resumeBtn.innerHTML = originalText;
+            }
+        } catch (error) {
+            showAlert(
+                "error",
+                "An error occurred while resuming your subscription",
+            );
+            // Reset button state
+            const resumeBtn = document.getElementById("resumeBtn");
+            resumeBtn.disabled = false;
+            resumeBtn.innerHTML = '<i class="fas fa-play me-2"></i>Resume Now';
+        }
+    }
+
+    async function selectPauseDuration(duration) {
+        try {
+            // Clear previous selections
+            document.querySelectorAll(".pause-option").forEach((el) => {
+                el.classList.remove("selected");
+            });
+
+            // Mark current selection
+            document
+                .querySelector(`[data-duration="${duration}"]`)
+                .classList.add("selected");
+            selectedDuration = duration;
+
+            // Show loading modal
+            const loadingModal = new bootstrap.Modal(
+                document.getElementById("loadingModal"),
+            );
+            loadingModal.show();
+
+            // Make API call to create pause checkout session
+            const response = await fetch("/api/subscription/pause", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    pause_duration: duration,
+                }),
+            });
+
+            const result = await response.json();
+
+            // Hide loading modal
+            loadingModal.hide();
+
+            if (response.ok && result.sessionId) {
+                // Redirect to Stripe Checkout
+                const stripe = Stripe("{{ config.STRIPE_PUBLIC_KEY }}");
+                await stripe.redirectToCheckout({
+                    sessionId: result.sessionId,
+                });
+            } else {
+                // Show error
+                showAlert("error", result.error || "Unknown error occurred");
+            }
+        } catch (error) {
+            // Hide loading modal
+            const loadingModal = bootstrap.Modal.getInstance(
+                document.getElementById("loadingModal"),
+            );
+            if (loadingModal) {
+                loadingModal.hide();
+            }
+            showAlert("error", "Payment failed: " + error.message);
+        }
+    }
+
+    function showAlert(type, message) {
+        // Create alert element
+        const alertDiv = document.createElement("div");
+        alertDiv.className = `alert alert-${type === "error" ? "danger" : "success"} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+        <i class="fas fa-${type === "error" ? "exclamation-triangle" : "check-circle"} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+
+        // Insert at top of card body
+        const cardBody = document.querySelector(".card-body");
+        cardBody.insertBefore(alertDiv, cardBody.firstChild);
+
+        // Auto dismiss after 5 seconds
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
+    }
+
+    // Add keyboard navigation
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && selectedDuration) {
+            selectPauseDuration(selectedDuration);
+        }
+    });
+</script>
+
+<!-- Load Stripe.js -->
+<script src="https://js.stripe.com/v3/"></script>
+{% endblock %}

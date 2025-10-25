@@ -1,0 +1,784 @@
+{% extends "base.html" %}
+
+{% block title %}User Draft{% endblock %}
+
+{% block additional_styles %}
+{{ super() }}
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+<style>
+:root {
+    --background-color: #181f2a;
+    --text-color: #f8f9fa;
+    --border-color: #232b3b;
+    --card-bg: #232b3a;
+    --card-border: #232b3b;
+    --primary-color: #3a817b;
+    --secondary-color: #64748b;
+    --success-color: #22c55e;
+    --danger-color: #ef4444;
+    --shadow: 0 4px 24px rgba(0,0,0,0.07);
+}
+
+body, .container-fluid, .main-content {
+    background-color: var(--background-color) !important;
+    color: var(--text-color);
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box;
+}
+
+.container-fluid {
+    padding: 32px 24px !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
+}
+
+.card {
+    background-color: var(--card-bg) !important;
+    color: var(--text-color) !important;
+    border-color: var(--card-border) !important;
+    border-radius: 16px !important;
+    box-shadow: var(--shadow);
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto 2rem auto;
+    padding: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.table-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 16px;
+    background: var(--card-bg);
+    box-shadow: var(--shadow);
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.table {
+    width: 100% !important;
+    min-width: 100% !important;
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: auto;
+}
+
+.table th,
+.table td {
+    padding: 14px 16px;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--card-bg);
+    color: var(--text-color);
+}
+
+.table th {
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: var(--background-color);
+    border-bottom: 2px solid var(--border-color);
+}
+
+.table tbody tr:hover {
+    background: rgba(58, 129, 123, 0.1);
+}
+
+/* DataTables customization */
+.dataTables_wrapper {
+    padding: 1rem;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    color: var(--primary-color) !important;
+    border-radius: 8px;
+    margin: 0 2px;
+    padding: 6px 12px;
+    background: var(--card-bg) !important;
+    border: 1px solid var(--primary-color) !important;
+    transition: all 0.2s ease;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current,
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover:not(.current) {
+    background: var(--primary-color) !important;
+    color: #fff !important;
+}
+
+.dataTables_wrapper .dataTables_filter input {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    border-radius: 8px;
+    padding: 8px 12px;
+}
+
+/* User badge styles */
+.badge {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge.free { background: var(--secondary-color); }
+.badge.bronze { background: #cd7f32; }
+.badge.silver { background: #b0b0b0; }
+.badge.gold { background: #ffd700; color: #232b3a; }
+.badge.platinum { background: #e5e4e2; color: #232b3a; }
+
+/* Draft badge styles */
+.badge.has-draft {
+    background: var(--success-color);
+    color: white;
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    margin-left: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.badge.no-draft {
+    background: var(--border-color);
+    color: var(--text-muted);
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    margin-left: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.badge.has-draft svg,
+.badge.no-draft svg {
+    width: 12px;
+    height: 12px;
+}
+
+/* Avatar styles */
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--secondary-color);
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+    margin-right: 12px;
+}
+
+/* Draft child table styles */
+.draft-child-table-wrapper {
+    padding: 1rem;
+    background: var(--card-bg);
+    border-radius: 8px;
+    margin-top: 1rem;
+    overflow-x: auto;
+    width: 100%;
+}
+
+.draft-child-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 900px;
+    table-layout: auto;
+}
+
+.draft-child-table th,
+.draft-child-table td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 13px;
+}
+
+.draft-child-table th {
+    font-weight: 600;
+    background: var(--background-color);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.page-link {
+    background: var(--card-bg) !important;
+    color: var(--primary-color) !important;
+    border: 1px solid var(--primary-color) !important;
+    border-radius: 8px !important;
+    margin: 0 2px;
+    transition: background 0.2s, color 0.2s;
+}
+.page-link.active, .page-link:focus, .page-link:hover {
+    background: var(--primary-color) !important;
+    color: #fff !important;
+    border: 1px solid var(--primary-color) !important;
+}
+
+.pagination-bar-flex {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin: 1rem 0;
+    padding: 0.5rem;
+    background: var(--card-bg);
+    border-radius: 8px;
+}
+.pagination-numbers {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.btn-pagination {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    height: 2rem;
+    padding: 0 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--card-bg);
+    color: #c7cdd6;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.btn-pagination:hover:not(.active) {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #1e293b;
+}
+.btn-pagination.active {
+    background: var(--primary-color, #3a817b);
+    border-color: var(--primary-color, #3a817b);
+    color: white;
+    font-weight: 600;
+}
+.pagination-ellipsis {
+    color: #64748b;
+    font-weight: bold;
+    padding: 0 0.25rem;
+}
+.rows-per-page select {
+    padding: 0.25rem 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--card-bg);
+    font-size: 0.875rem;
+}
+.page-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: #475569;
+}
+.page-info input[type="number"] {
+    text-align: center;
+}
+@media (max-width: 640px) {
+    .pagination-bar-flex {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    .pagination-numbers {
+        order: -1;
+    }
+    .btn-pagination {
+        min-width: 1.75rem;
+        height: 1.75rem;
+        font-size: 0.75rem;
+    }
+}
+
+.search-form {
+    margin: 1rem;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    width: calc(100% - 2rem);
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.search-input-wrapper {
+    position: relative;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    max-width: 100%;
+}
+
+.search-input {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: 2px solid #3a817b;
+    border-radius: 8px;
+    background: var(--background-color);
+    color: var(--text-color);
+    font-size: 14px;
+    transition: all 0.2s ease-in-out;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.search-input::placeholder {
+    color: #64748b;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(58, 129, 123, 0.2);
+    background: var(--card-bg);
+}
+
+.search-button {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    background: var(--primary-color);
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.search-button:hover {
+    background: var(--secondary-color);
+    transform: translateY(-1px);
+}
+
+.search-button:active {
+    transform: translateY(0);
+}
+
+.clear-search:hover {
+    color: var(--danger-color) !important;
+}
+
+.page-header {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.page-title {
+    color: var(--text-color);
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.page-title::after {
+    content: '';
+    display: block;
+    width: 50px;
+    height: 3px;
+    background: var(--primary-color);
+    border-radius: 2px;
+    margin-top: 4px;
+}
+
+.container-fluid {
+    background-color: var(--background-color);
+    min-height: 100vh;
+}
+
+.page-title {
+    position: relative;
+    padding-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.title-line {
+    flex: 0 0 auto;
+    width: 3px;
+    height: 24px;
+    background-color: var(--primary-color);
+    margin-left: 0.5rem;
+}
+
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+.main-content {
+    padding: 1.5rem;
+    margin-top: 2rem;
+    min-height: calc(100vh - 4rem);
+    background-color: var(--background-color);
+}
+
+.page-title {
+    color: #f8f9fa;
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.25rem 0;
+}
+
+.title-line {
+    flex: 0 0 auto;
+    width: 3px;
+    height: 24px;
+    background-color: var(--primary-color);
+    margin-left: 0.5rem;
+}
+
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid main-content">
+    <h1 class="page-title">
+        User Draft List
+        <div class="title-line"></div>
+    </h1>
+
+    <div class="card">
+        <div class="card-body">
+            <form class="search-form" id="searchForm" onsubmit="return false;">
+                <div class="search-input-wrapper" style="position: relative; flex: 1;">
+                    <input type="text" 
+                           name="search" 
+                           id="searchInput"
+                           value="{{ search }}" 
+                           class="search-input" 
+                           placeholder="Search by username or email...">
+                    <button type="button" 
+                            class="clear-search" 
+                            id="clearSearch" 
+                            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); 
+                                   background: none; border: none; color: #64748b; cursor: pointer; 
+                                   padding: 5px; display: flex; align-items: center; display: none;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M18 6L6 18M6 6l12 12" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                </div>
+                <button type="button" class="search-button" id="searchButton">Search</button>
+            </form>
+
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Tier</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr class="user-row" data-username="{{ user.username }}" data-userid="{{ user.id }}">
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle">
+                                        {{ user.username[0]|upper }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">
+                                            {{ user.username }}
+                                            {% if user.has_draft %}
+                                            <span class="badge has-draft">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                    <path d="M9 12l2 2 4-4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                </svg>
+                                                Has Draft
+                                            </span>
+                                            {% else %}
+                                            <span class="badge no-draft">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                    <path d="M12 8v4m0 4h.01" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                </svg>
+                                                No Draft
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="small text-muted">{{ user.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge {{
+                                    'free' if user.tier == 'free' else
+                                    'bronze' if user.tier == 'bronze' else
+                                    'silver' if user.tier == 'silver' else
+                                    'gold' if user.tier == 'gold' else
+                                    'platinum' if user.tier == 'platinum' else
+                                    'secondary'
+                                }}">
+                                    {{ user.tier|capitalize }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="3" class="text-center text-muted">No users found</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination Controls -->
+    <div class="pagination-bar-flex justify-content-end">
+        <div class="rows-per-page">
+            Rows per page:
+            <form id="paginationForm" method="get" style="display:inline;">
+                <select id="perPageSelect" name="per_page" class="rows-select" style="color: #fff;" onchange="this.form.submit()">
+                    <option value="10" {% if per_page==10 %}selected{% endif %}>10</option>
+                    <option value="25" {% if per_page==25 %}selected{% endif %}>25</option>
+                    <option value="50" {% if per_page==50 %}selected{% endif %}>50</option>
+                    <option value="100" {% if per_page==100 %}selected{% endif %}>100</option>
+                </select>
+                {% if search %}
+                    <input type="hidden" name="search" value="{{ search }}">
+                {% endif %}
+                <input type="hidden" name="page" value="{{ page }}">
+            </form>
+        </div>
+        <div class="page-info" style="color: #fff;">
+            {% if total > 0 %}
+                Showing {{ start_index }} to {{ end_index }} of {{ total }} entries
+            {% else %}
+                No entries found
+            {% endif %}
+        </div>
+        {% if total > 0 %}
+        <div class="pagination-numbers">
+            {% if page > 1 %}
+                <a href="?page={{ page-1 }}&per_page={{ per_page }}{% if search %}&search={{ search }}{% endif %}" class="btn-pagination" title="Previous page">&lt;</a>
+            {% endif %}
+
+            {% if start_page > 1 %}
+                <a href="?page=1&per_page={{ per_page }}{% if search %}&search={{ search }}{% endif %}" class="btn-pagination">1</a>
+                {% if start_page > 2 %}
+                    <span class="pagination-ellipsis">...</span>
+                {% endif %}
+            {% endif %}
+
+            {% for p in range(start_page, end_page + 1) %}
+                {% if p == page %}
+                    <span class="btn-pagination active">{{ p }}</span>
+                {% else %}
+                    <a href="?page={{ p }}&per_page={{ per_page }}{% if search %}&search={{ search }}{% endif %}" class="btn-pagination">{{ p }}</a>
+                {% endif %}
+            {% endfor %}
+
+            {% if end_page < pages %}
+                {% if end_page < pages - 1 %}
+                    <span class="pagination-ellipsis">...</span>
+                {% endif %}
+                <a href="?page={{ pages }}&per_page={{ per_page }}{% if search %}&search={{ search }}{% endif %}" class="btn-pagination">{{ pages }}</a>
+            {% endif %}
+
+            {% if page < pages %}
+                <a href="?page={{ page+1 }}&per_page={{ per_page }}{% if search %}&search={{ search }}{% endif %}" class="btn-pagination" title="Next page">&gt;</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Handle row click to show/hide drafts
+    $('.user-row').on('click', function(e) {
+        var userId = $(this).data('userid');
+        var $this = $(this);
+        var $nextRow = $this.next('.draft-row');
+        
+        if ($nextRow.length) {
+            $nextRow.remove();
+            return;
+        }
+        
+        // Show loading
+        $this.after('<tr class="draft-row"><td colspan="2"><div style="color:#fff;padding:16px;">Loading drafts...</div></td></tr>');
+        
+        // Load drafts
+        $.get('/api/admin/user-drafts/' + userId, function(response) {
+            var drafts = response.drafts;
+            var html = '';
+            if (drafts && drafts.length) {
+                html = buildDraftsTable(drafts);
+            } else {
+                html = '<div style="color:#fff;padding:16px;">No drafts found for this user.</div>';
+            }
+            $this.next('.draft-row').find('td').html(html);
+        });
+    });
+});
+
+function buildDraftsTable(drafts) {
+    if (!drafts.length) return '<div style="color:#fff;padding:16px;">No drafts found for this user.</div>';
+    
+    let allKeys = new Set();
+    drafts.forEach(d => {
+        if (d.draft_data && typeof d.draft_data === 'object') {
+            Object.keys(d.draft_data).forEach(k => allKeys.add(k));
+        }
+    });
+    
+    const columns = Array.from(allKeys);
+    let thead = columns.map(col => `<th>${col}</th>`).join('');
+    let rows = drafts.map(d => {
+        let data = d.draft_data || {};
+        return '<tr>' + columns.map(col => `<td>${data[col] !== undefined && data[col] !== null ? data[col] : '-'}</td>`).join('') + '</tr>';
+    }).join('');
+    
+    return `
+        <div class="draft-child-table-wrapper">
+            <table class="table table-dark table-bordered mb-0 draft-child-table">
+                <thead><tr>${thead}</tr></thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>
+    `;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const searchForm = document.getElementById('searchForm');
+    const searchInput = document.getElementById('searchInput');
+    const clearButton = document.getElementById('clearSearch');
+    const searchButton = document.getElementById('searchButton');
+    let searchTimeout;
+
+    function performSearch(searchTerm) {
+        // Show loading state
+        document.querySelector('.table-container').style.opacity = '0.6';
+        
+        fetch(`{{ url_for('user_management.user_draft') }}?search=${encodeURIComponent(searchTerm)}&per_page={{ per_page }}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            // Extract table content from response
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newTable = doc.querySelector('.table-container').innerHTML;
+            const newPagination = doc.querySelector('.pagination-bar-flex').innerHTML;
+            
+            // Update the content
+            document.querySelector('.table-container').innerHTML = newTable;
+            document.querySelector('.pagination-bar-flex').innerHTML = newPagination;
+            
+            // Update URL without reload
+            const url = new URL(window.location.href);
+            if (searchTerm) {
+                url.searchParams.set('search', searchTerm);
+            } else {
+                url.searchParams.delete('search');
+            }
+            window.history.pushState({}, '', url);
+            
+            // Reset loading state
+            document.querySelector('.table-container').style.opacity = '1';
+            
+            // Show/hide clear button
+            clearButton.style.display = searchTerm ? 'flex' : 'none';
+        })
+        .catch(error => {
+            document.querySelector('.table-container').style.opacity = '1';
+        });
+    }
+
+    // Handle search input with debounce
+    searchInput.addEventListener('input', function(e) {
+        clearTimeout(searchTimeout);
+        const searchTerm = e.target.value.trim();
+        
+        // Show/hide clear button immediately on input
+        clearButton.style.display = searchTerm ? 'flex' : 'none';
+        
+        // Debounce the search
+        searchTimeout = setTimeout(() => {
+            performSearch(searchTerm);
+        }, 300); // Wait 300ms after user stops typing
+    });
+
+    // Handle clear button
+    clearButton.addEventListener('click', function(e) {
+        e.preventDefault();
+        searchInput.value = '';
+        clearButton.style.display = 'none';
+        performSearch('');
+    });
+
+    // Handle search button click
+    searchButton.addEventListener('click', function(e) {
+        e.preventDefault();
+        performSearch(searchInput.value.trim());
+    });
+
+    // Handle Enter key
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            performSearch(this.value.trim());
+        }
+    });
+});
+</script>
+{% endblock %} 
